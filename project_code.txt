@@ -1,0 +1,3468 @@
+=================================== FILE: index.html ===================================
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1a202c" />
+    <title>Poker Replayer Interactivo</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+
+=================================== FILE: package.json ===================================
+
+{
+  "name": "poker-replayer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@kurkle/color": "^0.4.0",
+    "chart.js": "^4.5.0",
+    "pinia": "^3.0.3",
+    "uuid": "^13.0.0",
+    "vite-plugin-pwa": "^1.0.3",
+    "vue": "^3.5.21",
+    "vue-chartjs": "^5.3.2",
+    "vue-i18n": "^11.1.12"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "vite": "^7.1.6"
+  }
+}
+
+
+=================================== FILE: src/App.vue ===================================
+
+<template>
+  <div id="main-container">
+    <nav>
+      <button @click="currentView = 'CurrentHandView'" :class="{ active: currentView === 'CurrentHandView' }">
+        {{ $t('nav.currentHand') }}
+      </button>
+      <button @click="currentView = 'SavedHandsView'" :class="{ active: currentView === 'SavedHandsView' }">
+        {{ $t('nav.savedHands') }}
+      </button>
+      <button @click="currentView = 'LiveSessionView'" :class="{ active: currentView === 'LiveSessionView' }">
+        {{ $t('nav.liveSession') }}
+      </button>
+      <button @click="currentView = 'SavedSessionsView'" :class="{ active: currentView === 'SavedSessionsView' }">
+        {{ $t('nav.savedSessions') }}
+      </button>
+      <button @click="currentView = 'ChartsView'" :class="{ active: currentView === 'ChartsView' }">
+        {{ $t('nav.charts') }}
+      </button>
+      <!-- ===== BOTÓN SUMARIO AÑADIDO ===== -->
+      <button @click="currentView = 'SummaryView'" :class="{ active: currentView === 'SummaryView' }">
+        {{ $t('nav.summary') }}
+      </button>
+      <button @click="currentView = 'SettingsView'" :class="{ active: currentView === 'SettingsView' }">
+        {{ $t('nav.settings') }}
+      </button>
+    </nav>
+    <main>
+      <component :is="views[currentView]" @switch-view="switchToCurrentHandView" />
+    </main>
+  </div>
+</template>
+
+<script setup>
+import { ref, shallowRef } from 'vue';
+import CurrentHandView from './views/CurrentHandView.vue';
+import SavedHandsView from './views/SavedHandsView.vue';
+import LiveSessionView from './views/LiveSessionView.vue';
+import SavedSessionsView from './views/SavedSessionsView.vue';
+import ChartsView from './views/ChartsView.vue';
+import SettingsView from './views/SettingsView.vue';
+import SummaryView from './views/SummaryView.vue'; // <-- 1. IMPORTAR LA NUEVA VISTA
+
+const currentView = ref('CurrentHandView');
+
+const views = shallowRef({
+  CurrentHandView,
+  SavedHandsView,
+  LiveSessionView,
+  SavedSessionsView,
+  ChartsView,
+  SettingsView,
+  SummaryView, // <-- 2. REGISTRAR LA NUEVA VISTA
+});
+
+function switchToCurrentHandView() {
+  currentView.value = 'CurrentHandView';
+}
+</script>
+
+<style scoped>
+#main-container {
+  width: 100%;
+}
+nav {
+  padding: 10px;
+  background-color: #2d3748;
+  border-bottom: 2px solid var(--border-color);
+}
+nav button {
+  margin: 0 10px;
+  background-color: transparent;
+  border: 1px solid var(--primary-color);
+}
+nav button.active {
+  background-color: var(--primary-color);
+}
+main {
+  width: 100%;
+}
+</style>
+
+=================================== FILE: src/components/ActionPanel.vue ===================================
+
+<template>
+  <div class="action-panel-wrapper">
+    
+    <div class="actions-grid">
+      <!-- Fila 1 -->
+      <div class="grid-turn-info">{{ $t('actionPanel.turnOf') }} <strong>{{ gameStore.activePlayer?.name }}</strong></div>
+      <button @click="gameStore.performAction('fold')" class="grid-fold btn-fold">{{ $t('actionPanel.fold') }}</button>
+      <button @click="handleCheckCall" :disabled="isCallDisabled" class="grid-call btn-call">{{ checkOrCallLabel.toUpperCase() }}</button>
+      
+      <!-- Fila 2 -->
+      <button @click="handleBetRaise" :disabled="isRaiseDisabled" class="grid-raise btn-raise">{{ betOrRaiseLabel.toUpperCase() }}</button>
+      
+      <!-- Input ahora usa 'displayRaiseAmount' para ser dinámico -->
+      <input type="number" v-model="displayRaiseAmount" class="grid-input" />
+      
+      <input 
+        type="range" 
+        :min="minRaiseValue" 
+        :max="maxSliderValue"
+        :step="gameStore.bigBlind"
+        v-model.number="raiseAmount"
+        class="grid-slider"
+        @wheel="handleWheelScroll"
+        :style="sliderStyle" 
+      />
+
+      <!-- Fila 3 -->
+      <div class="grid-quick-bets">
+        <button @click="setRaiseAmountByPot(0.25)">25%</button>
+        <button @click="setRaiseAmountByPot(0.33)">33%</button>
+        <button @click="setRaiseAmountByPot(0.50)">50%</button>
+        <button @click="setRaiseAmountByPot(0.75)">75%</button>
+        <button @click="setRaiseAmountByPot(1)">{{ $t('actionPanel.pot') }}</button>
+        <button @click="gameStore.performAction('all-in')" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
+      </div>
+
+      <!-- Controles de la mesa -->
+      <select class="grid-color-select" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
+        <option value="#28563a">Verde</option>
+        <option value="#3a4c8a">Azul</option>
+        <option value="#8a3a3a">Rojo</option>
+        <option value="#553c9a">Morado</option>
+        <option value="#b7791f">Oro</option>
+        <option value="#1A202C">Negro</option>
+        <option value="#4A5568">Gris</option>
+      </select>
+      <button class="grid-bbs-toggle" @click="gameStore.toggleDisplayMode()">
+        {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n'; // <-- 1. IMPORTAR useI18n
+import { useGameStore } from '../store/game';
+
+const { t } = useI18n(); // <-- 2. INICIALIZAR LA FUNCIÓN DE TRADUCCIÓN
+
+const props = defineProps({ modelValue: String });
+const emit = defineEmits(['update:modelValue']);
+const gameStore = useGameStore();
+
+const amountToCall = computed(() => {
+  if (!gameStore.activePlayer) return 0;
+  return gameStore.currentBet - gameStore.activePlayer.betThisRound;
+});
+
+const checkOrCallLabel = computed(() => {
+  if (amountToCall.value <= 0) return t('actionPanel.check'); // <-- 3. USAR t()
+  if (gameStore.displayInBBs) {
+    const bbValue = (amountToCall.value / gameStore.bigBlind).toFixed(1);
+    return `${t('actionPanel.call')} ${bbValue} BB`; // <-- 3. USAR t()
+  }
+  return `${t('actionPanel.call')} ${amountToCall.value}`; // <-- 3. USAR t()
+});
+
+const maxSliderValue = computed(() => {
+    if (!gameStore.activePlayer) return 0;
+    return gameStore.activePlayer.stack + gameStore.activePlayer.betThisRound;
+});
+
+const minRaiseValue = computed(() => {
+  if (!gameStore.activePlayer) return 0;
+  const raiseDifference = gameStore.currentBet - (gameStore.lastRaiseAmount || 0);
+  const min = gameStore.currentBet + Math.max(raiseDifference, gameStore.bigBlind);
+  return Math.min(min, maxSliderValue.value);
+});
+
+const raiseAmount = ref(minRaiseValue.value);
+watch(minRaiseValue, (newVal) => {
+    if(raiseAmount.value < newVal) {
+        raiseAmount.value = newVal;
+    }
+});
+watch(() => gameStore.activePlayerIndex, () => {
+    raiseAmount.value = minRaiseValue.value;
+});
+
+const displayRaiseAmount = computed({
+  get() {
+    if (gameStore.displayInBBs) {
+      return (raiseAmount.value / gameStore.bigBlind).toFixed(1);
+    }
+    return raiseAmount.value;
+  },
+  set(newValue) {
+    if (gameStore.displayInBBs) {
+      raiseAmount.value = Math.round(parseFloat(newValue) * gameStore.bigBlind);
+    } else {
+      raiseAmount.value = parseInt(newValue) || 0; // Añadido '|| 0' por seguridad
+    }
+  }
+});
+
+const sliderStyle = computed(() => {
+  if (!gameStore.activePlayer) return {};
+  const min = minRaiseValue.value;
+  const max = maxSliderValue.value;
+  const current = raiseAmount.value;
+  if (max <= min) {
+    return { '--slider-fill-percentage': '100%' };
+  }
+  const percentage = ((current - min) / (max - min)) * 100;
+  return {
+    '--slider-fill-percentage': `${percentage}%`
+  };
+});
+
+const betOrRaiseLabel = computed(() => (gameStore.currentBet > 0 ? t('actionPanel.raise') : t('actionPanel.bet'))); // <-- 3. USAR t()
+const isCallDisabled = computed(() => !gameStore.activePlayer || amountToCall.value > gameStore.activePlayer.stack);
+const isRaiseDisabled = computed(() => !gameStore.activePlayer || raiseAmount.value < minRaiseValue.value || raiseAmount.value > maxSliderValue.value);
+
+function handleCheckCall() {
+  const action = amountToCall.value > 0 ? 'call' : 'check';
+  gameStore.performAction(action);
+}
+function handleBetRaise() {
+  const action = gameStore.currentBet > 0 ? 'raise' : 'bet';
+  gameStore.performAction(action, raiseAmount.value);
+}
+function setRaiseAmountByPot(multiplier) {
+  if (!gameStore.activePlayer) return;
+  const potSize = gameStore.pot + gameStore.currentBet;
+  let betValue = Math.round(potSize * multiplier) + gameStore.currentBet;
+  betValue = Math.max(minRaiseValue.value, betValue);
+  betValue = Math.min(maxSliderValue.value, betValue);
+  raiseAmount.value = betValue;
+}
+
+function handleWheelScroll(event) {
+  event.preventDefault();
+  const step = gameStore.bigBlind;
+  let newValue;
+  if (event.deltaY < 0) {
+    newValue = raiseAmount.value + step;
+  } else {
+    newValue = raiseAmount.value - step;
+  }
+  newValue = Math.max(minRaiseValue.value, newValue);
+  newValue = Math.min(maxSliderValue.value, newValue);
+  raiseAmount.value = newValue;
+}
+</script>
+
+<style scoped>
+/* El CSS es idéntico al que me pasaste */
+.action-panel-wrapper {
+  --btn-red: #FA5637;
+  --btn-red-hover: #e04a2f;
+  --btn-green: #6CCF4E;
+  --btn-green-hover: #59b33f;
+  --btn-orange: #F5A342;
+  --btn-orange-hover: #de8f32;
+  --btn-purple: #AF62D1;
+  --btn-purple-hover: #9c51bb;
+  --btn-grey: #4A5568;
+  --btn-grey-hover: #2D3748;
+  --slider-color-active: #FAB76B;
+  --slider-color-inactive: #1A202C;
+  background-color: #2d3748;
+  border-radius: 12px;
+  padding: 20px;
+  width: 900px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  color: white;
+}
+.actions-grid {
+  display: grid;
+  grid-template-columns: 180px 120px 1fr 120px 120px;
+  grid-template-rows: auto auto auto;
+  gap: 15px;
+  align-items: center;
+  grid-template-areas:
+    "fold       call       turn-info  color-select bbs-toggle"
+    "raise      input      slider     slider       slider"
+    "quick-bets quick-bets quick-bets quick-bets   quick-bets";
+}
+.grid-turn-info { grid-area: turn-info; text-align: center; font-size: 1.4rem; }
+.grid-fold { grid-area: fold; }
+.grid-call { grid-area: call; }
+.grid-raise { grid-area: raise; }
+.grid-input { grid-area: input; }
+.grid-slider { grid-area: slider; margin-right: 20px; }
+.grid-quick-bets { grid-area: quick-bets; }
+.grid-color-select { grid-area: color-select; }
+.grid-bbs-toggle { grid-area: bbs-toggle; }
+.grid-fold, .grid-call, .grid-raise {
+  height: 65px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border: 1px solid #000;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  line-height: 1.2;
+  padding: 2px;
+}
+.grid-input {
+  height: 65px;
+  border-radius: 8px;
+  border: 1px solid #000;
+  background-color: #1A202C;
+  color: white;
+  font-size: 2rem;
+  text-align: center;
+  width: 100%;
+}
+.grid-quick-bets {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.grid-quick-bets button {
+  flex-grow: 1;
+  padding: 12px;
+  font-size: 1rem;
+  border: 1px solid #000;
+  border-radius: 6px;
+  background-color: var(--btn-grey);
+  color: white;
+  cursor: pointer;
+}
+.grid-quick-bets button:hover {
+  background-color: var(--btn-grey-hover);
+}
+.grid-color-select, .grid-bbs-toggle {
+  height: 65px;
+  padding: 0 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 1px solid #000;
+  border-radius: 8px;
+  background-color: #718096;
+  color: white;
+  cursor: pointer;
+}
+.btn-fold { background-color: var(--btn-red); }
+.btn-fold:hover { background-color: var(--btn-red-hover); }
+.btn-call { background-color: var(--btn-green); }
+.btn-call:hover { background-color: var(--btn-green-hover); }
+.btn-raise { background-color: var(--btn-orange); }
+.btn-raise:hover { background-color: var(--btn-orange-hover); }
+.btn-allin { background-color: var(--btn-purple) !important; }
+.btn-allin:hover { background-color: var(--btn-purple-hover) !important; }
+button:disabled {
+  background-color: #718096 !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.grid-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  background: transparent;
+  outline: none;
+  border-radius: 8px;
+}
+.grid-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid #000;
+  background: linear-gradient(to right, 
+    var(--slider-color-active) var(--slider-fill-percentage), 
+    var(--slider-color-inactive) var(--slider-fill-percentage)
+  );
+}
+.grid-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 1px solid #000;
+  height: 30px;
+  width: 20px;
+  border-radius: 4px;
+  background: #E2E8F0;
+  cursor: pointer;
+  margin-top: -8px;
+}
+.grid-slider::-moz-range-track {
+  width: 100%;
+  height: 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid #000;
+  background: linear-gradient(to right, 
+    var(--slider-color-active) var(--slider-fill-percentage), 
+    var(--slider-color-inactive) var(--slider-fill-percentage)
+  );
+}
+.grid-slider::-moz-range-thumb {
+  border: 1px solid #000;
+  height: 30px;
+  width: 20px;
+  border-radius: 4px;
+  background: #E2E8F0;
+  cursor: pointer;
+}
+</style>
+
+=================================== FILE: src/components/CardPicker.vue ===================================
+
+<template>
+  <div class="modal-overlay" @click.self="gameStore.closeCardPicker()">
+    <div class="card-picker-content">
+      <div v-for="suit in deck" :key="suit.name" class="suit-row">
+        <div
+          v-for="card in suit.cards"
+          :key="card.id"
+          class="card"
+          :class="[suit.colorClass, { disabled: gameStore.usedCards.has(card.id) }]"
+          @click="selectCard(card)"
+        >
+          {{ card.rank }}
+          <span class="suit-icon" v-html="suit.icon"></span>
+        </div>
+      </div>
+      <button class="close-btn" @click="gameStore.closeCardPicker()">Cerrar</button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { useGameStore } from '../store/game';
+
+const gameStore = useGameStore();
+
+const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+const suits = [
+  { name: 'Spades', id: 'S', icon: '&spades;', colorClass: 'black' },
+  { name: 'Hearts', id: 'H', icon: '&hearts;', colorClass: 'red' },
+  { name: 'Clubs', id: 'C', icon: '&clubs;', colorClass: 'green' },
+  { name: 'Diamonds', id: 'D', icon: '&diams;', colorClass: 'blue' },
+];
+
+const deck = suits.map(suit => ({
+  ...suit,
+  cards: ranks.map(rank => ({
+    id: rank + suit.id,
+    rank: rank,
+  }))
+}));
+
+function selectCard(card) {
+  if (gameStore.usedCards.has(card.id)) return;
+  gameStore.assignCard(card.id);
+}
+</script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex; justify-content: center; align-items: center; z-index: 2000;
+}
+.card-picker-content {
+  background-color: #1a202c;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.suit-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.card {
+  width: 50px; height: 70px;
+  border: 1px solid #4A5568;
+  border-radius: 6px;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  font-family: 'Arial Black', sans-serif; font-size: 1.8rem; font-weight: bold;
+  cursor: pointer;
+  color: white;
+  user-select: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #f6e05e;
+}
+.suit-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+/* 4-Color Deck */
+.card.black { background-color: #2d3748; }
+.card.red { background-color: #c53030; }
+.card.green { background-color: #2f855a; }
+.card.blue { background-color: #2b6cb0; }
+
+.card.disabled {
+  background-color: #4a5568;
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.card.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+.close-btn {
+  margin-top: 1rem;
+  padding: 10px;
+  font-size: 1rem;
+}
+</style>
+
+=================================== FILE: src/components/ChipStack.vue ===================================
+
+<template>
+  <div class="chip-stack-container">
+    <div v-if="stackDetails.count > 0" class="chip-stack">
+      <div
+        v-for="i in stackDetails.count"
+        :key="i"
+        class="chip"
+        :style="{
+          backgroundColor: stackDetails.color,
+          bottom: (i - 1) * 3 + 'px', // Reducimos el espaciado para un stack más compacto
+          zIndex: stackDetails.count - i,
+          '--chip-color': stackDetails.color, // Pasamos el color como variable CSS
+        }"
+      ></div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+
+const props = defineProps({
+  amount: {
+    type: Number,
+    required: true,
+  },
+  bigBlind: {
+    type: Number,
+    required: true,
+  },
+});
+
+const chipDenominations = [
+  { value: 1000, color: '#D6A2E8' },
+  { value: 500, color: '#82589F' },
+  { value: 100, color: '#1A202C' },
+  { value: 25, color: '#2F855A' },
+  { value: 5, color: '#C53030' },
+  { value: 1, color: '#E2E8F0' },
+];
+
+const stackDetails = computed(() => {
+  if (props.amount <= 0) {
+    return { color: 'transparent', count: 0 };
+  }
+
+  const primaryChip = chipDenominations.find(chip => props.amount >= chip.value) || chipDenominations[chipDenominations.length - 1];
+  const betInBBs = props.amount / props.bigBlind;
+
+  // --- LÓGICA DE CANTIDAD DE FICHAS AJUSTADA ---
+  let count;
+  if (betInBBs <= 1) {       // Apuestas mínimas (ciegas, limps)
+    count = 2;
+  } else if (betInBBs <= 5) { // Apuestas de continuación pequeñas
+    count = 4;
+  } else if (betInBBs <= 15) { // Subidas estándar, 3-bets
+    count = 6;
+  } else if (betInBBs <= 40) { // Apuestas grandes en el turn/river
+    count = 8;
+  } else if (betInBBs <= 100) { // Botes muy grandes
+    count = 10;
+  } else {                   // All-ins enormes
+    count = 12; // Máximo de 12 fichas para mantenerlo visualmente limpio
+  }
+
+  return {
+    color: primaryChip.color,
+    count: count,
+  };
+});
+</script>
+
+<style scoped>
+/* --- ESTILOS 3D COMPLETAMENTE NUEVOS --- */
+.chip-stack-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  height: 60px;
+  width: 45px;
+  /* La perspectiva es clave para el efecto 3D */
+  perspective: 500px;
+}
+
+.chip-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.chip {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  left: 2.5px; /* Centrado en el contenedor de 45px */
+  
+  /* --- EFECTO 3D Y REALISMO --- */
+
+  /* 1. Inclinación para dar perspectiva */
+  transform: rotateX(70deg); 
+  
+  /* 2. Sombra proyectada por la ficha */
+  box-shadow: 0 10px 8px rgba(0, 0, 0, 0.4);
+
+  /* 3. Grosor y color del borde de la ficha */
+  border-bottom: 5px solid color-mix(in srgb, var(--chip-color) 70%, black);
+
+  /* 4. Reflejo de luz en la parte superior para dar volumen */
+  background-image: radial-gradient(
+    circle at 50% 10%, 
+    rgba(255, 255, 255, 0.6), 
+    transparent 70%
+  );
+}
+
+/* Detalle de las franjas en la cara de la ficha */
+.chip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 85%;
+  height: 85%;
+  border-radius: 50%;
+  /* Usamos un borde discontinuo para un look clásico */
+  border: 2px dashed color-mix(in srgb, var(--chip-color) 60%, white);
+  opacity: 0.8;
+}
+</style>
+
+=================================== FILE: src/components/ConfigurationModal.vue ===================================
+
+<template>
+  <div class="modal-overlay">
+    <div class="modal-content">
+      <h3>Selecciona tu Posición (Hero)</h3>
+      <div class="positions-grid">
+        <button
+          v-for="pos in positions"
+          :key="pos"
+          @click="selectedPosition = pos"
+          :class="{ selected: selectedPosition === pos }"
+        >
+          {{ pos }}
+        </button>
+      </div>
+      <button class="confirm-btn" @click="$emit('confirm', selectedPosition)" :disabled="!selectedPosition">
+        Confirmar e Iniciar Mano
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+
+defineProps({
+  positions: Array,
+});
+defineEmits(['confirm']);
+
+const selectedPosition = ref(null);
+</script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background-color: #2d3748;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+}
+h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+.positions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 10px;
+  margin: 2rem 0;
+}
+.positions-grid button {
+  padding: 15px;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: var(--btn-grey, #4A5568);
+  border: 2px solid transparent;
+}
+.positions-grid button.selected {
+  background-color: var(--primary-color);
+  border-color: #f6e05e;
+}
+.confirm-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+</style>
+
+=================================== FILE: src/components/DisplayOptions.vue ===================================
+
+<template>
+  <div class="display-options-wrapper">
+    <select class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
+      <option value="#28563a">Verde</option>
+      <option value="#3a4c8a">Azul</option>
+      <option value="#8a3a3a">Rojo</option>
+      <option value="#553c9a">Morado</option>
+      <option value="#b7791f">Oro</option>
+      <option value="#1A202C">Negro</option>
+      <option value="#4A5568">Gris</option>
+    </select>
+    
+    <button class="option-item" @click="gameStore.toggleDisplayMode()">
+      {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
+    </button>
+  </div>
+</template>
+
+<script setup>
+import { useGameStore } from '../store/game';
+
+// Definimos las propiedades y eventos para comunicarnos con el componente padre
+defineProps({
+  modelValue: String
+});
+defineEmits(['update:modelValue']);
+
+const gameStore = useGameStore();
+</script>
+
+<style scoped>
+.display-options-wrapper {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 15px;
+  background-color: #2d3748;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.option-item {
+  height: 50px;
+  width: 120px;
+  padding: 0 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 1px solid #000;
+  border-radius: 8px;
+  background-color: #718096;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+}
+</style>
+
+=================================== FILE: src/components/EndSessionModal.vue ===================================
+
+<!-- src/components/EndSessionModal.vue -->
+<template>
+  <div class="modal-overlay" @click.self="cancel">
+    <div class="modal-content">
+      <h3>Finalizar Sesión</h3>
+      
+      <div class="summary">
+        <div class="summary-item"><span>Buy-in Inicial:</span> <span>{{ sessionStore.currency }}{{ sessionStore.initialStack }}</span></div>
+        <div class="summary-item"><span>Rebuys/Add-ons:</span> <span>{{ sessionStore.currency }}{{ sessionStore.totalRebuys }}</span></div>
+        <div class="summary-item"><span>Gastos (propinas, etc.):</span> <span>- {{ sessionStore.currency }}{{ sessionStore.totalExpenses }}</span></div>
+        <hr>
+        <div class="summary-item total-investment"><span>Inversión Total:</span> <span>{{ sessionStore.currency }}{{ totalInvestment }}</span></div>
+      </div>
+
+      <div class="final-stack-input">
+        <label for="final-stack">Introduce tu Stack Final:</label>
+        <div class="input-group">
+          <span>{{ sessionStore.currency }}</span>
+          <input id="final-stack" type="number" v-model.number="finalStack" placeholder="Stack al finalizar" ref="inputRef">
+        </div>
+      </div>
+      
+      <div class="result-display" :class="resultClass">
+        <h4>Resultado de la Sesión</h4>
+        <p>{{ sessionResult >= 0 ? '+' : '' }}{{ sessionStore.currency }}{{ sessionResult.toFixed(2) }}</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-cancel" @click="cancel">Cancelar</button>
+        <button class="btn-confirm" @click="confirm" :disabled="finalStack === null || finalStack < 0">Confirmar y Guardar</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue';
+import { useSessionStore } from '../store/useSessionStore';
+
+const emit = defineEmits(['confirm', 'cancel']);
+const sessionStore = useSessionStore();
+
+const finalStack = ref(null);
+const inputRef = ref(null);
+
+const totalInvestment = computed(() => sessionStore.initialStack + sessionStore.totalRebuys);
+const sessionResult = computed(() => {
+  if (finalStack.value === null || finalStack.value < 0) return 0;
+  return finalStack.value - totalInvestment.value - sessionStore.totalExpenses;
+});
+
+const resultClass = computed(() => {
+  if (sessionResult.value > 0) return 'profit';
+  if (sessionResult.value < 0) return 'loss';
+  return 'even';
+});
+
+function confirm() {
+  emit('confirm', finalStack.value);
+}
+
+function cancel() {
+  emit('cancel');
+}
+
+onMounted(() => {
+  inputRef.value?.focus();
+});
+</script>
+
+<style scoped>
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.8);display:flex;justify-content:center;align-items:center;z-index:2000}.modal-content{background-color:#2d3748;padding:2rem;border-radius:12px;border:1px solid var(--border-color);width:90%;max-width:450px;text-align:center}h3{margin-top:0;font-size:1.8rem}.summary{text-align:left;margin:1.5rem 0;font-size:1.1rem}.summary-item{display:flex;justify-content:space-between;padding:.5rem 0}.total-investment{font-weight:700;border-top:1px solid var(--border-color);margin-top:.5rem;padding-top:.5rem}.final-stack-input{margin:1.5rem 0}.final-stack-input label{display:block;margin-bottom:.5rem;font-weight:700}.input-group{display:flex;align-items:center;background-color:#1a202c;border-radius:6px;border:1px solid var(--border-color)}.input-group span{padding:0 15px;font-size:1.2rem;color:#a0aec0}.input-group input{flex-grow:1;background:0 0;border:none;font-size:1.5rem;padding:15px;color:#fff;outline:0}.result-display{margin:1.5rem 0;padding:1rem;border-radius:8px}.result-display h4{margin:0 0 .5rem}.result-display p{margin:0;font-size:2.5rem;font-weight:700}.result-display.profit{background-color:rgba(47,133,90,.3);color:#68d391}.result-display.loss{background-color:rgba(197,48,48,.3);color:#fc8181}.result-display.even{background-color:rgba(74,85,104,.3);color:#a0aec0}.modal-actions{display:flex;gap:1rem;margin-top:2rem}.modal-actions button{flex-grow:1;padding:15px;font-size:1.1rem;font-weight:700}.btn-cancel{background-color:#718096}.btn-confirm{background-color:#48bb78}
+</style>
+
+=================================== FILE: src/components/HelloWorld.vue ===================================
+
+<script setup>
+import { ref } from 'vue'
+
+defineProps({
+  msg: String,
+})
+
+const count = ref(0)
+</script>
+
+<template>
+  <h1>{{ msg }}</h1>
+
+  <div class="card">
+    <button type="button" @click="count++">count is {{ count }}</button>
+    <p>
+      Edit
+      <code>components/HelloWorld.vue</code> to test HMR
+    </p>
+  </div>
+
+  <p>
+    Check out
+    <a href="https://vuejs.org/guide/quick-start.html#local" target="_blank"
+      >create-vue</a
+    >, the official Vue + Vite starter
+  </p>
+  <p>
+    Learn more about IDE Support for Vue in the
+    <a
+      href="https://vuejs.org/guide/scaling-up/tooling.html#ide-support"
+      target="_blank"
+      >Vue Docs Scaling up Guide</a
+    >.
+  </p>
+  <p class="read-the-docs">Click on the Vite and Vue logos to learn more</p>
+</template>
+
+<style scoped>
+.read-the-docs {
+  color: #888;
+}
+</style>
+
+
+=================================== FILE: src/components/Player.vue ===================================
+
+<template>
+  <div class="player-container" :style="seatStyle">
+    
+    <div class="player-seat" :class="{ faded: !player.inHand, active: isActivePlayer }">
+      
+      <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
+
+      <div class="player-info">
+        <div class="player-name">{{ player.name }} ({{ player.position }})</div>
+        <div class="player-stack">
+          <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.stack }}</span>
+          <span v-else>{{ (player.stack / gameStore.bigBlind).toFixed(1) }} BBs</span>
+        </div>
+      </div>
+      <div class="player-cards">
+        <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
+          <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
+          <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="140" rx="8" fill="#4A5568"/>
+            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
+          </svg>
+        </div>
+        <div class="card-placeholder" @click="handleCardClick(player.id, 1)">
+          <PlayingCard v-if="player.cards[1]" :cardId="player.cards[1]" />
+          <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="140" rx="8" fill="#4A5568"/>
+            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="player.betThisRound > 0" class="bet-box" :style="betBoxStyle">
+      <ChipStack :amount="player.betThisRound" :bigBlind="gameStore.bigBlind" />
+      <div class="bet-amount-text">
+        <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
+        <span v-else>{{ (player.betThisRound / gameStore.bigBlind).toFixed(1) }} BBs</span>
+      </div>
+    </div>
+
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue'
+import { useGameStore } from '../store/game'
+import PlayingCard from './PlayingCard.vue';
+import ChipStack from './ChipStack.vue';
+
+const props = defineProps({
+  player: Object,
+  playerCount: Number,
+  index: Number,
+  heroIndex: Number,
+})
+
+const gameStore = useGameStore();
+
+function handleCardClick(playerId, cardIndex) {
+  const target = { type: 'player', id: playerId, cardIndex: cardIndex };
+  if (props.player.cards[cardIndex]) {
+    gameStore.unassignCard(target);
+  } else {
+    gameStore.openCardPicker(target);
+  }
+}
+
+const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.player.id);
+const PREDEFINED_LAYOUTS = {
+  3: [ { x: 0, y: 190 }, { x: -450, y: -100 }, { x: 450, y: -100 }, ],
+  5: [ { x: 0, y: 190 }, { x: -450, y: 80 }, { x: -350, y: -200 }, { x: 350, y: -200 }, { x: 450, y: 80 }, ],
+  6: [ { x: 0, y: 190 }, { x: -450, y: 100 }, { x: -450, y: -120 }, { x: 0, y: -220 }, { x: 450, y: -120 }, { x: 450, y: 100 }, ],
+  7: [ { x: 0, y: 190 }, { x: -350, y: 160 }, { x: -480, y: 0 }, { x: -350, y: -200 }, { x: 350, y: -200 }, { x: 480, y: 0 }, { x: 350, y: 160 }, ],
+  9: [ { x: 0, y: 190 }, { x: -300, y: 170 }, { x: -480, y: 80 }, { x: -480, y: -80 }, { x: -300, y: -220 }, { x: 300, y: -220 }, { x: 480, y: -80 }, { x: 480, y: 80 }, { x: 300, y: 170 }, ]
+};
+const seatCoordinates = computed(() => {
+  const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
+  if (PREDEFINED_LAYOUTS[props.playerCount]) {
+    return PREDEFINED_LAYOUTS[props.playerCount][visualIndex];
+  } else {
+    const angleRad = (Math.PI * 2 / props.playerCount) * visualIndex;
+    const radiusX = 450;
+    const radiusY = 220;
+    return { x: Math.cos(angleRad) * radiusX, y: Math.sin(angleRad) * radiusY };
+  }
+});
+const seatStyle = computed(() => {
+  const { x, y } = seatCoordinates.value;
+  return { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` };
+});
+const dealerButtonStyle = computed(() => {
+  const { x, y } = seatCoordinates.value;
+  const styles = {};
+  if (Math.abs(y) > Math.abs(x)) {
+    styles.left = '50%';
+    styles.transform = 'translateX(-50%)';
+    if (y > 0) {
+      styles.bottom = '90%';
+    } else {
+      styles.top = '90%';
+    }
+  } else {
+    styles.top = '50%';
+    styles.transform = 'translateY(-50%)';
+    if (x > 0) {
+      styles.right = '90%';
+    } else {
+      styles.left = '90%';
+    }
+  }
+  return styles;
+});
+const betBoxStyle = computed(() => {
+  const { x, y } = seatCoordinates.value;
+  const verticalThreshold = 150;
+  const horizontalThreshold = 300;
+  if (y < -verticalThreshold) return { top: '105%', left: '50%', transform: 'translateX(-50%)' };
+  if (y > verticalThreshold) return { bottom: '105%', left: '50%', transform: 'translateX(-50%)' };
+  if (x > horizontalThreshold) return { right: '105%', top: '50%', transform: 'translateY(-50%)' };
+  if (x < -horizontalThreshold) return { left: '105%', top: '50%', transform: 'translateY(-50%)' };
+  if (y > 0) return { bottom: '105%', left: '50%', transform: 'translateX(-50%)' };
+  else return { top: '105%', left: '50%', transform: 'translateX(-50%)' };
+});
+</script>
+
+<style scoped>
+.player-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+}
+.player-seat {
+  width: 160px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  padding: 10px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative; 
+}
+.active {
+  border-color: #f6e05e;
+  box-shadow: 0 0 15px #f6e05e;
+}
+.faded {
+  opacity: 0.4;
+}
+.dealer-button {
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  background-color: white;
+  color: black;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px solid black;
+  z-index: 10;
+}
+.player-info {
+  text-align: center;
+}
+.player-name {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+.player-stack {
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 2px;
+}
+.player-cards {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+.card-placeholder {
+  width: var(--player-card-width);
+  height: var(--player-card-height);
+  background-color: transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.card-placeholder:hover {
+  outline: 2px solid #f6e05e;
+}
+
+.bet-box {
+  position: absolute;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bet-amount-text {
+  background-color: rgba(20, 20, 20, 0.8);
+  border: 1px solid #000;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 1em;
+  font-weight: bold;
+  color: white;
+  white-space: nowrap;
+}
+</style>
+
+=================================== FILE: src/components/PlayingCard.vue ===================================
+
+<template>
+  <div class="playing-card" :class="suitDetails.colorClass">
+    <span class="rank">{{ rank }}</span>
+    <span class="suit-icon" v-html="suitDetails.icon"></span>
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+
+const props = defineProps({
+  cardId: {
+    type: String,
+    required: true,
+  }
+});
+
+const rank = computed(() => props.cardId ? props.cardId.slice(0, -1) : '');
+const suit = computed(() => props.cardId ? props.cardId.slice(-1) : '');
+
+const suitDetails = computed(() => {
+  switch (suit.value) {
+    case 'S': return { icon: '&spades;', colorClass: 'black' };
+    case 'H': return { icon: '&hearts;', colorClass: 'red' };
+    case 'C': return { icon: '&clubs;', colorClass: 'green' };
+    case 'D': return { icon: '&diams;', colorClass: 'blue' };
+    default: return { icon: '', colorClass: 'disabled' };
+  }
+});
+</script>
+
+<style scoped>
+.playing-card {
+  width: 100%;
+  height: 100%;
+  border: 1px solid #4A5568;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Arial Black', sans-serif;
+  font-weight: bold;
+  color: white;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.rank {
+  font-size: 2.5rem;
+  line-height: 1.1;
+}
+
+.suit-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.playing-card.black { background-color: #2d3748; }
+.playing-card.red { background-color: #c53030; }
+.playing-card.green { background-color: #2f855a; }
+.playing-card.blue { background-color: #2b6cb0; }
+.playing-card.disabled { background-color: #4a5568; }
+</style>
+
+=================================== FILE: src/components/PokerTable.vue ===================================
+
+<template>
+  <div class="poker-table-container">
+    <div class="poker-table" :style="{ backgroundColor: tableColor }">
+      
+      <div class="center-content">
+        <div class="pot">
+          Bote: 
+          <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ gameStore.totalPot }}</span>
+          <span v-else>{{ (gameStore.totalPot / gameStore.bigBlind).toFixed(1) }} BBs</span>
+        </div>
+
+        <div class="board">
+          <div 
+            v-for="(card, index) in 5" 
+            :key="`board-${index}`" 
+            class="card-placeholder"
+            :class="{ locked: !isBoardCardClickable(index) }"
+            @click="handleBoardCardClick(index)"
+          >
+            <PlayingCard v-if="gameStore.board[index]" :cardId="gameStore.board[index]" />
+            <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="100" height="140" rx="8" fill="#374151"/>
+              <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <Player
+        v-for="(player, index) in gameStore.players"
+        :key="player.id"
+        :player="player"
+        :player-count="gameStore.players.length"
+        :index="index"
+        :hero-index="heroIndex" 
+      />
+    </div>
+
+    <div class="controls-panel">
+      <ActionPanel v-if="gameStore.gamePhase !== 'replay'" v-model:modelValue="tableColor" />
+      <DisplayOptions v-else v-model:modelValue="tableColor" />
+      <div class="game-controls">
+        <button class="reset-btn" @click="gameStore.resetHand()">Nueva Mano</button>
+        <template v-if="gameStore.gamePhase !== 'replay'">
+          <button @click="gameStore.navigateHistory(-1)" title="Acción anterior">Anterior</button>
+          <button @click="gameStore.navigateHistory(1)" title="Siguiente acción">Siguiente</button>
+          <button class="save-btn" @click="gameStore.saveCurrentHand()">Guardar Mano</button>
+        </template>
+        <template v-if="gameStore.gamePhase === 'replay'">
+          <button v-if="!gameStore.isReplaying" @click="gameStore.playReplay()" class="play-btn">Play</button>
+          <button v-else @click="gameStore.pauseReplay()" class="pause-btn">Pause</button>
+          <button @click="gameStore.restartReplay()">Reiniciar</button>
+          <button @click="gameStore.navigateHistory(-1)" title="Acción anterior">Anterior</button>
+          <button @click="gameStore.navigateHistory(1)" title="Siguiente acción">Siguiente</button>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import { useGameStore } from '../store/game';
+import Player from './Player.vue';
+import ActionPanel from './ActionPanel.vue';
+import DisplayOptions from './DisplayOptions.vue';
+import PlayingCard from './PlayingCard.vue';
+
+const gameStore = useGameStore();
+const tableColor = ref('#28563a');
+
+const clickablePhases = computed(() => ['flop', 'turn', 'river', 'showdown']);
+
+function isBoardCardClickable(index) {
+  if (gameStore.gamePhase === 'replay' || gameStore.gamePhase === 'showdown') {
+    return true;
+  }
+  if (index <= 2) {
+    return clickablePhases.value.includes(gameStore.gamePhase);
+  }
+  if (index === 3) {
+    return gameStore.gamePhase === 'turn' || gameStore.gamePhase === 'river';
+  }
+  if (index === 4) {
+    return gameStore.gamePhase === 'river';
+  }
+  return false;
+}
+
+function handleBoardCardClick(index) {
+  if (!isBoardCardClickable(index)) return;
+  const target = { type: 'board', id: index };
+  if (gameStore.board[index]) {
+    gameStore.unassignCard(target);
+  } else {
+    gameStore.openCardPicker(target);
+  }
+}
+
+const heroIndex = computed(() => {
+  const index = gameStore.players.findIndex(p => p.name === 'Hero');
+  return index !== -1 ? index : 0;
+});
+</script>
+
+<style scoped>
+.poker-table-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 20px;
+  margin-top: 20px;
+}
+.poker-table {
+  position: relative;
+  width: 1000px;
+  height: 480px; 
+  border-radius: 240px;
+  border: 15px solid #5a3a22;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+  transition: background-color 0.3s ease;
+}
+.center-content {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.pot {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 5px 15px;
+  border-radius: 8px;
+}
+.board {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  min-width: 385px;
+  justify-content: center;
+}
+.card-placeholder {
+  width: var(--board-card-width);
+  height: var(--board-card-height);
+  background-color: transparent;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.card-placeholder:hover {
+  outline: 2px solid #f6e05e;
+}
+.controls-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.game-controls {
+  display: flex;
+  gap: 12px;
+}
+.game-controls > button, .game-controls > select {
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  border: 1px solid #000;
+  background-color: #718096;
+}
+.game-controls > button:hover, .game-controls > select:hover {
+  background-color: #4A5568;
+}
+.reset-btn { background-color: #e53e3e !important; }
+.reset-btn:hover { background-color: #c53030 !important; }
+.save-btn { background-color: #48bb78 !important; }
+.save-btn:hover { background-color: #38a169 !important; }
+.play-btn { background-color: #38a169 !important; }
+.play-btn:hover { background-color: #2f855a !important; }
+.pause-btn { background-color: #dd6b20 !important; }
+.pause-btn:hover { background-color: #c05621 !important; }
+
+.card-placeholder.locked {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.card-placeholder.locked:hover {
+  outline: none;
+}
+</style>
+
+=================================== FILE: src/components/SessionChart.vue ===================================
+
+<template>
+  <div>
+    <!-- Renderizado condicional del tipo de gráfico. El :key fuerza el redibujado al cambiar -->
+    <Line v-if="chartsStore.chartType === 'line'" :key="'line-' + chartsStore.timeRange" :data="lineChartData" :options="chartOptions" />
+    <Bar v-else :key="'bar-' + chartsStore.timeRange" :data="barChartData" :options="chartOptions" />
+  </div>
+</template>
+
+<script setup>
+import { computed } from 'vue';
+import { useSessionStore } from '../store/useSessionStore';
+import { useChartsStore } from '../store/useChartsStore';
+import { useI18n } from 'vue-i18n';
+import { Line, Bar } from 'vue-chartjs';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from 'chart.js';
+
+ChartJS.register(
+  CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler
+);
+
+const sessionStore = useSessionStore();
+const chartsStore = useChartsStore();
+const { t } = useI18n();
+
+const filteredSessions = computed(() => {
+  const allSessions = sessionStore.savedSessions;
+  const range = chartsStore.timeRange;
+  
+  if (range === 'all') {
+    return allSessions;
+  }
+
+  const now = new Date();
+  const cutoffDate = new Date();
+
+  switch (range) {
+    case '7d': cutoffDate.setDate(now.getDate() - 7); break;
+    case '1m': cutoffDate.setMonth(now.getMonth() - 1); break;
+    case '3m': cutoffDate.setMonth(now.getMonth() - 3); break;
+    case '6m': cutoffDate.setMonth(now.getMonth() - 6); break;
+    case '1y': cutoffDate.setFullYear(now.getFullYear() - 1); break;
+  }
+
+  return allSessions.filter(session => {
+    const parts = session.date.split('/');
+    const sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    return sessionDate >= cutoffDate;
+  });
+});
+
+// --- DATOS PARA LA GRÁFICA DE LÍNEAS (CON DEGRADADO DE COLOR CORRECTO) ---
+const lineChartData = computed(() => {
+  const sessions = [...filteredSessions.value].reverse();
+  const labels = sessions.map(s => s.date);
+  let cumulativeProfit = 0;
+  const dataPoints = sessions.map(s => {
+    cumulativeProfit += s.result || 0; 
+    return cumulativeProfit;
+  });
+
+  return {
+    labels: ['Inicio', ...labels],
+    datasets: [{
+      label: t('charts.cumulativeProfit'),
+      data: [0, ...dataPoints],
+      borderColor: (context) => {
+        const chart = context.chart;
+        const { ctx, chartArea } = chart;
+        if (!chartArea) return null;
+        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        gradient.addColorStop(0, '#c53030'); // Rojo para pérdidas
+        gradient.addColorStop(0.5, '#718096'); // Gris para el punto cero
+        gradient.addColorStop(1, '#38a169'); // Verde para ganancias
+        return gradient;
+      },
+      backgroundColor: (context) => {
+         const chart = context.chart;
+        const { ctx, chartArea } = chart;
+         if (!chartArea) return null;
+         const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+         gradient.addColorStop(0, 'rgba(197, 48, 48, 0.2)');
+         gradient.addColorStop(0.5, 'rgba(74, 85, 104, 0.2)');
+         gradient.addColorStop(1, 'rgba(56, 161, 105, 0.2)');
+         return gradient;
+      },
+      borderWidth: 3,
+      pointBackgroundColor: '#fff',
+      pointBorderColor: '#fff',
+      tension: 0.1,
+      fill: true,
+    }],
+  };
+});
+
+// --- DATOS PARA LA GRÁFICA DE BARRAS (CON COLORES DINÁMICOS CORRECTOS) ---
+const barChartData = computed(() => {
+  const sessions = [...filteredSessions.value].reverse();
+  const labels = sessions.map(s => s.date);
+  const dataPoints = sessions.map(s => s.result || 0);
+
+  return {
+    labels,
+    datasets: [{
+      label: 'Resultado de la Sesión',
+      data: dataPoints,
+      backgroundColor: dataPoints.map(val => val >= 0 ? 'rgba(56, 161, 105, 0.6)' : 'rgba(197, 48, 48, 0.6)'),
+      borderColor: dataPoints.map(val => val >= 0 ? '#38a169' : '#c53030'),
+      borderWidth: 1,
+    }],
+  };
+});
+
+// Opciones de la gráfica (comunes para ambas)
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: true,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: function (context) {
+          let label = context.dataset.label || '';
+          if (label) label += ': ';
+          if (context.parsed.y !== null) {
+            label += new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+          }
+          return label;
+        },
+      },
+      backgroundColor: 'rgba(26, 32, 44, 0.9)',
+      titleFont: { size: 14, weight: 'bold' },
+      bodyFont: { size: 12 },
+      padding: 10,
+      borderColor: 'rgba(74, 85, 104, 0.8)',
+      borderWidth: 1,
+    },
+  },
+  scales: {
+    y: {
+      ticks: { color: '#a0aec0', callback: (value) => `${sessionStore.currency}${value}` },
+      grid: { color: 'rgba(74, 85, 104, 0.4)' },
+    },
+    x: {
+      ticks: { color: '#a0aec0' },
+      grid: { display: false },
+    },
+  },
+};
+</script>
+
+=================================== FILE: src/main.js ===================================
+
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
+import App from './App.vue'
+import i18n from './i18n' // <-- IMPORTAR
+import './styles.css'
+
+const app = createApp(App)
+const pinia = createPinia()
+
+app.use(pinia)
+app.use(i18n) // <-- USAR
+app.mount('#app')
+
+=================================== FILE: src/store/game.js ===================================
+
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { v4 as uuidv4 } from 'uuid'
+
+const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
+
+// --- LÓGICA DE EVALUACIÓN DE MANOS (PLACEHOLDER) ---
+const evaluateHand = (playerCards, boardCards) => {
+  const allCards = [...playerCards, ...boardCards].filter(c => c);
+  if (allCards.length < 2) return { rank: 0, description: 'Nada' };
+  const ranks = allCards.map(c => c.slice(0, -1));
+  const rankCounts = ranks.reduce((acc, rank) => {
+    acc[rank] = (acc[rank] || 0) + 1;
+    return acc;
+  }, {});
+  const pairs = Object.keys(rankCounts).filter(r => rankCounts[r] === 2);
+  const trips = Object.keys(rankCounts).filter(r => rankCounts[r] === 3);
+  const quads = Object.keys(rankCounts).filter(r => rankCounts[r] === 4);
+  if (quads.length > 0) return { rank: 7, description: `Poker de ${quads[0]}`};
+  if (trips.length > 0 && pairs.length > 0) return { rank: 6, description: `Full House de ${trips[0]} y ${pairs[0]}`};
+  if (trips.length > 0) return { rank: 3, description: `Trío de ${trips[0]}`};
+  if (pairs.length === 2) return { rank: 2, description: `Doble pareja de ${pairs[0]} y ${pairs[1]}`};
+  if (pairs.length === 1) return { rank: 1, description: `Pareja de ${pairs[0]}`};
+  return { rank: 0, description: `Carta alta ${ranks[0]}` };
+};
+
+export const useGameStore = defineStore('game', () => {
+  const players = ref([]);
+  const heroPosition = ref(null);
+  const smallBlind = ref(1);
+  const bigBlind = ref(2);
+  const currency = ref('$');
+  const board = ref(['', '', '', '', '']);
+  const pots = ref([]);
+  const history = ref([]);
+  const currentActionIndex = ref(-1);
+  const savedHands = ref(JSON.parse(localStorage.getItem('pokerReplayerHands')) || []);
+  const displayInBBs = ref(false);
+  const isReplaying = ref(false);
+  let replayIntervalId = null;
+  const gamePhase = ref('setup');
+  const dealerPosition = ref(0);
+  const activePlayerIndex = ref(null);
+  const currentBet = ref(0);
+  const minRaise = ref(0);
+  const lastRaiserIndex = ref(null);
+  const lastRaiseAmount = ref(0);
+  const isCardPickerOpen = ref(false);
+  const cardPickerTarget = ref(null);
+
+  const totalPot = computed(() => pots.value.reduce((sum, pot) => sum + pot.amount, 0));
+
+  const activePlayer = computed(() => {
+    if (activePlayerIndex.value === null) return null;
+    return players.value.find(p => p.id === activePlayerIndex.value);
+  });
+
+  const usedCards = computed(() => {
+    const cards = new Set();
+    players.value.forEach(p => {
+      if (p.cards[0]) cards.add(p.cards[0]);
+      if (p.cards[1]) cards.add(p.cards[1]);
+    });
+    board.value.forEach(c => {
+      if (c) cards.add(c);
+    });
+    return cards;
+  });
+
+  function toggleDisplayMode() { displayInBBs.value = !displayInBBs.value; }
+  
+  function playReplay() {
+    if (isReplaying.value) return;
+    isReplaying.value = true;
+    replayIntervalId = setInterval(() => {
+      if (currentActionIndex.value >= history.value.length - 1) {
+        pauseReplay();
+      } else {
+        navigateHistory(1);
+      }
+    }, 1500);
+  }
+  function pauseReplay() {
+    clearInterval(replayIntervalId);
+    isReplaying.value = false;
+  }
+  function restartReplay() {
+    pauseReplay();
+    currentActionIndex.value = 0;
+    const stateToRestore = history.value[0];
+    players.value = deepCopy(stateToRestore.players);
+    board.value = deepCopy(stateToRestore.board);
+    pots.value = deepCopy(stateToRestore.pots);
+  }
+  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb) {
+    pauseReplay();
+    players.value = [];
+    heroPosition.value = newHeroPosition;
+    currency.value = newCurrency;
+    smallBlind.value = newSb;
+    bigBlind.value = newBb;
+    board.value = ['', '', '', '', ''];
+    pots.value = [{ amount: 0, eligiblePlayers: [] }];
+    history.value = [];
+    currentActionIndex.value = -1;
+    gamePhase.value = 'preflop';
+    lastRaiseAmount.value = 0;
+    displayInBBs.value = false;
+    const positions = getPositions(numPlayers);
+    for (let i = 0; i < numPlayers; i++) {
+      const isHero = positions[i] === newHeroPosition;
+      players.value.push({
+        id: i,
+        name: isHero ? 'Hero' : `Jugador ${i + 1}`,
+        stack: newBb * 100,
+        cards: ['', ''],
+        position: positions[i],
+        inHand: true,
+        isAllIn: false,
+        hasActedThisRound: false,
+        betThisRound: 0,
+        totalBetInHand: 0,
+        isDealer: false,
+        isSB: false,
+        isBB: false,
+      });
+    }
+    dealerPosition.value = players.value.find((p,i) => i === 0).id
+    players.value[0].isDealer = true;
+    let sbIndex, bbIndex;
+    if (numPlayers === 2) {
+      sbIndex = 0;
+      bbIndex = 1;
+      activePlayerIndex.value = players.value[sbIndex].id;
+      lastRaiserIndex.value = players.value[bbIndex].id;
+    } else {
+      sbIndex = 1;
+      bbIndex = 2;
+      activePlayerIndex.value = players.value[(bbIndex + 1) % numPlayers].id;
+      lastRaiserIndex.value = players.value[bbIndex].id;
+    }
+    players.value[sbIndex].isSB = true;
+    postBet(players.value[sbIndex].id, smallBlind.value);
+    players.value[bbIndex].isBB = true;
+    postBet(players.value[bbIndex].id, bigBlind.value);
+    currentBet.value = bigBlind.value;
+    minRaise.value = bigBlind.value * 2;
+    lastRaiseAmount.value = bigBlind.value;
+    recordState("Inicio de mano. Ciegas puestas.");
+  }
+  function performAction(action, amount = 0) {
+    if (activePlayer.value === null) return;
+    const player = activePlayer.value;
+    player.hasActedThisRound = true;
+    let actionDescription = '';
+    switch (action) {
+      case 'fold':
+        player.inHand = false;
+        actionDescription = `${player.name} se retira.`;
+        break;
+      case 'check':
+        if (currentBet.value > player.betThisRound) return;
+        actionDescription = `${player.name} pasa.`;
+        break;
+      case 'call':
+        const callAmount = currentBet.value - player.betThisRound;
+        postBet(player.id, callAmount);
+        actionDescription = `${player.name} iguala.`;
+        break;
+      case 'all-in':
+        const allInAmount = player.stack;
+        const newTotalBet = player.betThisRound + allInAmount;
+        postBet(player.id, allInAmount);
+        actionDescription = `${player.name} va All-In por ${newTotalBet}.`;
+        if (newTotalBet > currentBet.value) {
+            players.value.forEach(p => { if(p.inHand && !p.isAllIn) p.hasActedThisRound = false; });
+            const raiseDifference = newTotalBet - currentBet.value;
+            lastRaiserIndex.value = player.id;
+            minRaise.value = newTotalBet + raiseDifference;
+            lastRaiseAmount.value = currentBet.value;
+            currentBet.value = newTotalBet;
+        }
+        break;
+      case 'bet':
+      case 'raise':
+        if (amount < minRaise.value && amount < player.stack + player.betThisRound) return;
+        players.value.forEach(p => { if(p.inHand) p.hasActedThisRound = false; });
+        const totalBet = amount;
+        const raiseDifference = totalBet - currentBet.value;
+        postBet(player.id, totalBet - player.betThisRound);
+        lastRaiserIndex.value = player.id;
+        minRaise.value = totalBet + raiseDifference;
+        lastRaiseAmount.value = currentBet.value;
+        currentBet.value = totalBet;
+        actionDescription = `${player.name} ${action === 'bet' ? 'apuesta' : 'sube a'} ${totalBet}.`;
+        break;
+    }
+    player.hasActedThisRound = true;
+    recordState(actionDescription);
+    checkHandOrRoundCompletion();
+  }
+  
+  function checkHandOrRoundCompletion() {
+    const playersInHand = players.value.filter(p => p.inHand);
+    if (playersInHand.length === 1) {
+      advanceRound();
+      endHand(playersInHand[0]);
+      return;
+    }
+
+    const playersAbleToAct = playersInHand.filter(p => !p.isAllIn);
+    
+    const roundIsOver = playersAbleToAct.every(p => {
+      return p.hasActedThisRound && p.betThisRound === currentBet.value;
+    });
+
+    if (roundIsOver) {
+      const isPreflopBbCheck = gamePhase.value === 'preflop' &&
+        activePlayer.value.isBB &&
+        currentBet.value === bigBlind.value;
+      
+      if (isPreflopBbCheck || playersAbleToAct.length < 2) {
+        advanceRound();
+      } else {
+        advanceRound();
+      }
+    } else {
+      advanceTurn();
+    }
+  }
+
+  function runItOut() {
+    advanceRound();
+    if(gamePhase.value === 'showdown') return;
+    recordState("--- Apuestas finalizadas, se reparten las cartas restantes ---");
+    if (gamePhase.value === 'preflop') {
+        gamePhase.value = 'flop';
+        recordState("--- FLOP ---");
+    }
+    if (gamePhase.value === 'flop') {
+        gamePhase.value = 'turn';
+        recordState("--- TURN ---");
+    }
+    if (gamePhase.value === 'turn') {
+        gamePhase.value = 'river';
+        recordState("--- RIVER ---");
+    }
+    endHand();
+  }
+  function postBet(playerId, amount) {
+    const player = players.value.find(p => p.id === playerId);
+    const bet = Math.min(amount, player.stack);
+    player.stack -= bet;
+    player.betThisRound += bet;
+    if (player.stack === 0) {
+      player.isAllIn = true;
+    }
+  }
+  function advanceTurn() {
+    const currentIndex = players.value.findIndex(p => p.id === activePlayerIndex.value);
+    let nextIndex = (currentIndex + 1) % players.value.length;
+    while (!players.value[nextIndex].inHand || players.value[nextIndex].isAllIn) {
+      nextIndex = (nextIndex + 1) % players.value.length;
+    }
+    activePlayerIndex.value = players.value[nextIndex].id;
+  }
+  function collectBetsAndCreatePots() {
+      const playersInHand = players.value.filter(p => p.betThisRound > 0 || p.inHand);
+      if (playersInHand.length === 0) return;
+      playersInHand.forEach(p => p.totalBetInHand += p.betThisRound);
+      while (true) {
+          const playersWithMoney = playersInHand.filter(p => p.betThisRound > 0);
+          if (playersWithMoney.length === 0) break;
+          const allInPlayer = playersWithMoney.find(p => p.isAllIn);
+          let currentPotContribution;
+          if (allInPlayer) {
+              const lowestAllInBet = Math.min(...playersWithMoney.filter(p => p.isAllIn).map(p => p.totalBetInHand));
+              const lastTotalBetInPot = pots.value.reduce((sum, pot) => sum + (pot.betAmountPerPlayer || 0), 0);
+              currentPotContribution = lowestAllInBet - lastTotalBetInPot;
+          } else {
+              currentPotContribution = Math.min(...playersWithMoney.map(p => p.betThisRound));
+          }
+          if (currentPotContribution <= 0) break;
+          const newPot = { amount: 0, eligiblePlayers: [] };
+          playersInHand.forEach(p => {
+              if(p.totalBetInHand > 0) {
+                  const contribution = Math.min(p.betThisRound, currentPotContribution);
+                  p.betThisRound -= contribution;
+                  newPot.amount += contribution;
+                  if (!newPot.eligiblePlayers.includes(p.id)) {
+                      newPot.eligiblePlayers.push(p.id);
+                  }
+              }
+          });
+          pots.value.push(newPot);
+      }
+      players.value.forEach(p => p.betThisRound = 0);
+  }
+
+  // --- FUNCIÓN 'advanceRound' CON LA LÓGICA CORREGIDA PARA HEADS-UP ---
+  function advanceRound() {
+    const betsOnTable = players.value.reduce((sum, p) => sum + p.betThisRound, 0);
+    if(betsOnTable > 0) {
+      if(pots.value.length === 1 && pots.value[0].amount === 0){
+          pots.value[0].amount += betsOnTable;
+          pots.value[0].eligiblePlayers = players.value.filter(p => p.inHand).map(p => p.id);
+      } else {
+         collectBetsAndCreatePots();
+      }
+    }
+    players.value.forEach(p => { 
+        p.betThisRound = 0;
+        p.hasActedThisRound = false;
+    });
+    currentBet.value = 0;
+    minRaise.value = bigBlind.value;
+    lastRaiseAmount.value = 0;
+    if (gamePhase.value === 'river') {
+        endHand();
+        return;
+    }
+    const playersAbleToAct = players.value.filter(p => p.inHand && !p.isAllIn);
+    if (playersAbleToAct.length < 2) {
+      runItOut();
+      return;
+    }
+
+    let nextIndex;
+    const dealerIndexInPlayersArray = players.value.findIndex(p => p.id === dealerPosition.value);
+
+    if (players.value.length === 2) {
+      // **LÓGICA CORREGIDA:** Post-flop, en heads-up, actúa primero el que no tiene el botón (la BB).
+      nextIndex = (dealerIndexInPlayersArray + 1) % players.value.length;
+    } else {
+      // Lógica para 3+ jugadores (sin cambios): actúa el primero a la izquierda del botón.
+      nextIndex = (dealerIndexInPlayersArray + 1) % players.value.length;
+    }
+
+    while (!players.value[nextIndex].inHand || players.value[nextIndex].isAllIn) {
+      nextIndex = (nextIndex + 1) % players.value.length;
+    }
+    activePlayerIndex.value = players.value[nextIndex].id;
+    lastRaiserIndex.value = activePlayerIndex.value;
+
+    switch (gamePhase.value) {
+      case 'preflop':
+        gamePhase.value = 'flop';
+        recordState("--- FLOP ---");
+        break;
+      case 'flop':
+        gamePhase.value = 'turn';
+        recordState("--- TURN ---");
+        break;
+      case 'turn':
+        gamePhase.value = 'river';
+        recordState("--- RIVER ---");
+        break;
+    }
+  }
+
+  function endHand(winnerByFold = null) {
+    gamePhase.value = 'showdown';
+    activePlayerIndex.value = null;
+    if(winnerByFold) {
+      const winner = players.value.find(p => p.id === winnerByFold.id);
+      winner.stack += totalPot.value;
+      recordState(`La mano termina. ${winner.name} gana el bote de ${totalPot.value}.`);
+      return;
+    }
+    recordState("--- SHOWDOWN --- Se muestran las cartas.");
+    const playersToShowdown = players.value.filter(p => p.inHand);
+    pots.value.forEach((pot, index) => {
+        if(pot.amount === 0) return;
+        const eligiblePlayers = playersToShowdown.filter(p => pot.eligiblePlayers.includes(p.id));
+        if(eligiblePlayers.length === 1) {
+            const winner = eligiblePlayers[0];
+            winner.stack += pot.amount;
+            recordState(`${winner.name} gana el bote ${index+1} de ${pot.amount}.`);
+        } else if (eligiblePlayers.length > 1) {
+            eligiblePlayers.forEach(p => {
+                p.handResult = evaluateHand(p.cards, board.value);
+            });
+            eligiblePlayers.sort((a, b) => b.handResult.rank - a.handResult.rank);
+            const bestRank = eligiblePlayers[0].handResult.rank;
+            const winners = eligiblePlayers.filter(p => p.handResult.rank === bestRank);
+            const potSplit = Math.floor(pot.amount / winners.length);
+            winners.forEach(winner => {
+                winner.stack += potSplit;
+            });
+            const winnerNames = winners.map(w => w.name).join(', ');
+            recordState(`${winnerNames} gana${winners.length > 1 ? 'n' : ''} el bote ${index+1} de ${pot.amount} con ${winners[0].handResult.description}.`);
+        }
+    });
+  }
+  function resetHand() {
+    pauseReplay();
+    players.value = [];
+    board.value = ['', '', '', '', ''];
+    pots.value = [];
+    history.value = [];
+    currentActionIndex.value = -1;
+    gamePhase.value = 'setup';
+    dealerPosition.value = 0;
+    activePlayerIndex.value = null;
+    currentBet.value = 0;
+    minRaise.value = 0;
+    lastRaiserIndex.value = null;
+    lastRaiseAmount.value = 0;
+  }
+  function recordState(actionDescription) {
+    const currentState = {
+      players: deepCopy(players.value),
+      board: deepCopy(board.value),
+      pots: deepCopy(pots.value),
+      description: actionDescription,
+    };
+    if(currentActionIndex.value < history.value.length - 1) {
+      history.value.splice(currentActionIndex.value + 1);
+    }
+    history.value.push(currentState);
+    currentActionIndex.value++;
+  }
+  function navigateHistory(direction) {
+    const newIndex = currentActionIndex.value + direction;
+    if (newIndex >= 0 && newIndex < history.value.length) {
+      currentActionIndex.value = newIndex;
+      const stateToRestore = history.value[newIndex];
+      players.value = deepCopy(stateToRestore.players);
+      board.value = deepCopy(stateToRestore.board);
+      pots.value = deepCopy(stateToRestore.pots);
+    }
+  }
+  function openCardPicker(target) {
+    cardPickerTarget.value = target;
+    isCardPickerOpen.value = true;
+  }
+  function closeCardPicker() {
+    isCardPickerOpen.value = false;
+    cardPickerTarget.value = null;
+  }
+  function assignCard(cardId) {
+    if (!cardPickerTarget.value) return;
+    const { type, id, cardIndex } = cardPickerTarget.value;
+    if (type === 'player') {
+      const player = players.value.find(p => p.id === id);
+      if (player) player.cards[cardIndex] = cardId;
+    } else if (type === 'board') {
+      board.value[id] = cardId;
+    }
+    closeCardPicker();
+    recordState(`Se asigna la carta ${cardId}.`);
+  }
+  function unassignCard(target) {
+    const { type, id, cardIndex } = target;
+    let cardToUnassign = '';
+    if (type === 'player') {
+      const player = players.value.find(p => p.id === id);
+      if (player) {
+        cardToUnassign = player.cards[cardIndex];
+        player.cards[cardIndex] = '';
+      }
+    } else if (type === 'board') {
+      cardToUnassign = board.value[id];
+      board.value[id] = '';
+    }
+    if (cardToUnassign) {
+      recordState(`Se desasigna la carta ${cardToUnassign}.`);
+    }
+  }
+  function saveCurrentHand() {
+    if (history.value.length === 0) return;
+    const handToSave = {
+      id: uuidv4(),
+      date: new Date().toLocaleString(),
+      heroPosition: heroPosition.value,
+      numPlayers: players.value.length,
+      history: deepCopy(history.value),
+      smallBlind: smallBlind.value,
+      bigBlind: bigBlind.value,
+      currency: currency.value,
+    };
+    savedHands.value.push(handToSave);
+    localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
+  }
+  function loadHand(handData) {
+    pauseReplay();
+    const initialState = handData.history[0];
+    players.value = deepCopy(initialState.players);
+    board.value = deepCopy(initialState.board);
+    pots.value = deepCopy(initialState.pots);
+    heroPosition.value = handData.heroPosition;
+    smallBlind.value = handData.smallBlind;
+    bigBlind.value = handData.bigBlind;
+    currency.value = handData.currency;
+    history.value = deepCopy(handData.history);
+    currentActionIndex.value = 0;
+    gamePhase.value = 'replay';
+  }
+  function deleteHand(handId) {
+    savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
+    localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
+  }
+  function getPositions(numPlayers) {
+    if (numPlayers === 2) { return ['BTN / SB', 'BB']; }
+    if (numPlayers === 3) { return ['BTN', 'SB', 'BB']; }
+    if (numPlayers === 4) { return ['BTN', 'SB', 'BB', 'CO']; }
+    if (numPlayers === 5) { return ['BTN', 'SB', 'BB', 'MP', 'CO']; }
+    if (numPlayers === 6) { return ['BTN', 'SB', 'BB', 'UTG', 'MP', 'CO']; }
+    if (numPlayers === 7) { return ['BTN', 'SB', 'BB', 'UTG', 'MP', 'HJ', 'CO']; }
+    if (numPlayers === 8) { return ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO']; }
+    if (numPlayers === 9) { return ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO']; }
+    const basePositions = ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP1', 'MP2', 'HJ', 'CO'];
+    return basePositions.slice(0, numPlayers);
+  }
+
+  return {
+    players, heroPosition, smallBlind, bigBlind, currency, board, savedHands, pots,
+    gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
+    activePlayer, totalPot,
+    displayInBBs,
+    isReplaying,
+    isCardPickerOpen, usedCards,
+    toggleDisplayMode,
+    playReplay, pauseReplay, restartReplay,
+    setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
+    performAction, resetHand,
+    openCardPicker, closeCardPicker, assignCard,
+    unassignCard,
+  }
+});
+
+=================================== FILE: src/store/useChartsStore.js ===================================
+
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+
+export const useChartsStore = defineStore('charts', () => {
+  // --- STATE ---
+  const timeRange = ref('all');
+  const chartType = ref('line'); // <-- NUEVO ESTADO: 'line' o 'bar'
+
+  // --- ACTIONS ---
+  function setTimeRange(newRange) {
+    timeRange.value = newRange;
+  }
+
+  function toggleChartType() {
+    chartType.value = chartType.value === 'line' ? 'bar' : 'line';
+  }
+
+  return {
+    timeRange,
+    chartType, // <-- Exportar nuevo estado
+    setTimeRange,
+    toggleChartType, // <-- Exportar nueva acción
+  };
+});
+
+=================================== FILE: src/store/useSessionStore.js ===================================
+
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
+
+export const useSessionStore = defineStore('session', () => {
+  // --- STATE ---
+  const isActive = ref(false);
+  const elapsedTime = ref(0);
+  let sessionTimerInterval = null;
+  const isOnBreak = ref(false);
+  const breakElapsedTime = ref(0);
+  let breakTimerInterval = null;
+  const totalBreakTime = ref(0);
+  const totalRebuys = ref(0);
+  const totalExpenses = ref(0);
+  const playerCount = ref(6);
+  const blinds = ref('1/2');
+  const location = ref('');
+  const currency = ref('$');
+  const initialStack = ref(200);
+  const savedSessions = ref(JSON.parse(localStorage.getItem('pokerSavedSessions')) || []);
+
+  // --- COMPUTED PROPERTIES (GETTERS) PARA EL SUMARIO GENERAL ---
+  const totalNetProfit = computed(() => {
+    return savedSessions.value.reduce((total, session) => total + (session.result || 0), 0);
+  });
+
+  const averageBuyIn = computed(() => {
+    if (savedSessions.value.length === 0) return 0;
+    const totalInvestment = savedSessions.value.reduce((total, session) => {
+      return total + (session.initialStack || 0) + (session.totalRebuys || 0);
+    }, 0);
+    return totalInvestment / savedSessions.value.length;
+  });
+  
+  const averageCashOut = computed(() => {
+    if (savedSessions.value.length === 0) return 0;
+    const totalCashOut = savedSessions.value.reduce((total, session) => total + (session.finalStack || 0), 0);
+    return totalCashOut / savedSessions.value.length;
+  });
+
+  // --- COMPUTED PROPERTIES PARA EL PANEL DE SESIONES ---
+  const sessionCount = computed(() => savedSessions.value.length);
+
+  const totalHoursPlayed = computed(() => {
+    const totalSeconds = savedSessions.value.reduce((total, session) => total + (session.duration || 0), 0);
+    return totalSeconds / 3600;
+  });
+  
+  const averageHoursPlayed = computed(() => {
+    if (sessionCount.value === 0) return 0;
+    return totalHoursPlayed.value / sessionCount.value;
+  });
+
+  const averageBreakDuration = computed(() => {
+    if (sessionCount.value === 0) return 0;
+    const totalBreakSeconds = savedSessions.value.reduce((total, session) => total + (session.totalBreakTime || 0), 0);
+    const sessionsWithBreaks = savedSessions.value.filter(s => s.totalBreakTime > 0).length;
+    if (sessionsWithBreaks === 0) return 0;
+    return (totalBreakSeconds / sessionsWithBreaks) / 60; // Devuelve la media en minutos
+  });
+
+  // --- ACTIONS ---
+  
+  function startSession() {
+    elapsedTime.value = 0;
+    totalBreakTime.value = 0;
+    totalRebuys.value = 0;
+    totalExpenses.value = 0;
+    isActive.value = true;
+    isOnBreak.value = false;
+    
+    clearInterval(sessionTimerInterval);
+    sessionTimerInterval = setInterval(() => {
+      if (!isOnBreak.value) {
+        elapsedTime.value++;
+      }
+    }, 1000);
+  }
+
+  function startBreak() {
+    if (!isActive.value) return;
+    isOnBreak.value = true;
+    breakElapsedTime.value = 0;
+
+    clearInterval(breakTimerInterval);
+    breakTimerInterval = setInterval(() => {
+      breakElapsedTime.value++;
+    }, 1000);
+  }
+
+  function endBreak() {
+    isOnBreak.value = false;
+    totalBreakTime.value += breakElapsedTime.value;
+    clearInterval(breakTimerInterval);
+    breakTimerInterval = null;
+  }
+
+  function addRebuy(amount) {
+    if (amount > 0) {
+      totalRebuys.value += amount;
+    }
+  }
+
+  function addExpense(amount) {
+    if (amount > 0) {
+      totalExpenses.value += amount;
+    }
+  }
+  
+  function stopAndSaveSession(finalStack) {
+    if (isOnBreak.value) {
+      totalBreakTime.value += breakElapsedTime.value;
+    }
+
+    const totalInvestment = initialStack.value + totalRebuys.value;
+    const result = finalStack - totalInvestment - totalExpenses.value;
+
+    const sessionSummary = {
+      id: uuidv4(),
+      date: new Date().toLocaleDateString(),
+      duration: elapsedTime.value,
+      totalBreakTime: totalBreakTime.value,
+      playerCount: playerCount.value,
+      blinds: blinds.value,
+      location: location.value,
+      currency: currency.value,
+      initialStack: initialStack.value,
+      totalRebuys: totalRebuys.value,
+      totalExpenses: totalExpenses.value,
+      finalStack: finalStack,
+      result: result,
+    };
+
+    savedSessions.value.unshift(sessionSummary);
+    localStorage.setItem('pokerSavedSessions', JSON.stringify(savedSessions.value));
+
+    isActive.value = false;
+    isOnBreak.value = false;
+    clearInterval(sessionTimerInterval);
+    clearInterval(breakTimerInterval);
+    sessionTimerInterval = null;
+    breakTimerInterval = null;
+    elapsedTime.value = 0;
+    breakElapsedTime.value = 0;
+  }
+  
+  function deleteSession(sessionId) {
+    savedSessions.value = savedSessions.value.filter(session => session.id !== sessionId);
+    localStorage.setItem('pokerSavedSessions', JSON.stringify(savedSessions.value));
+  }
+
+  return {
+    isActive, elapsedTime, isOnBreak, breakElapsedTime, playerCount, blinds, 
+    location, currency, initialStack, savedSessions, totalRebuys, totalExpenses,
+    totalNetProfit,
+    averageBuyIn,
+    averageCashOut,
+    sessionCount,
+    totalHoursPlayed,
+    averageHoursPlayed,
+    averageBreakDuration,
+    startSession, startBreak, endBreak, stopAndSaveSession, deleteSession,
+    addRebuy, addExpense,
+  };
+});
+
+=================================== FILE: src/store/useSettingsStore.js ===================================
+
+import { defineStore } from 'pinia';
+import { ref, watch } from 'vue';
+import i18n from '../i18n'; // Importamos la instancia de i18n
+
+export const useSettingsStore = defineStore('settings', () => {
+  const locale = ref(localStorage.getItem('locale') || 'es');
+
+  function setLocale(newLocale) {
+    locale.value = newLocale;
+  }
+
+  // Observador que actualiza la librería i18n y el localStorage cuando cambia el idioma
+  watch(locale, (newLocale) => {
+    i18n.global.locale.value = newLocale;
+    localStorage.setItem('locale', newLocale);
+  });
+
+  return {
+    locale,
+    setLocale,
+  };
+});
+
+=================================== FILE: src/styles.css ===================================
+
+:root {
+  --table-green: #28563a;
+  --table-blue: #3a4c8a;
+  --table-red: #8a3a3a;
+  --bg-color: #1a202c;
+  --text-color: #e2e8f0;
+  --border-color: #4a5568;
+  --primary-color: #4299e1;
+  --card-bg: #ffffff;
+
+  /* --- TAMAÑOS DE CARTAS --- */
+  /* Cartas comunitarias (Board) */
+  --board-card-width: 65px;
+  --board-card-height: 91px;
+  /* Cartas de los jugadores (AUMENTADAS DE TAMAÑO) */
+  --player-card-width: 60px;
+  --player-card-height: 84px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overscroll-behavior: none;
+}
+
+#app {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #2b6cb0;
+}
+
+button:disabled {
+  background-color: #4a5568;
+  cursor: not-allowed;
+}
+
+input,
+select {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background-color: #2d3748;
+  color: var(--text-color);
+}
+
+=================================== FILE: src/views/ChartsView.vue ===================================
+
+<template>
+  <div class="charts-container">
+    <div class="header">
+      <h2>{{ $t('charts.title') }}</h2>
+      
+      <div class="controls-wrapper">
+        <!-- Selector de rango de tiempo -->
+        <div class="filter-controls">
+          <label for="time-range">Mostrar:</label>
+          <select id="time-range" v-model="chartsStore.timeRange">
+            <option value="all">Todo</option>
+            <option value="7d">Última Semana</option>
+            <option value="1m">Último Mes</option>
+            <option value="3m">Últimos 3 Meses</option>
+            <option value="6m">Últimos 6 Meses</option>
+            <option value="1y">Último Año</option>
+          </select>
+        </div>
+
+        <!-- ===== BOTÓN NUEVO PARA CAMBIAR TIPO DE GRÁFICO ===== -->
+        <button @click="chartsStore.toggleChartType()" class="toggle-chart-btn" :title="`Cambiar a gráfico de ${chartsStore.chartType === 'line' ? 'barras' : 'líneas'}`">
+          <!-- Icono de gráfico de barras (se muestra si el gráfico activo es el de líneas) -->
+          <svg v-if="chartsStore.chartType === 'line'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+          </svg>
+          <!-- Icono de gráfico de líneas (se muestra si el gráfico activo es el de barras) -->
+          <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.75-2.25M21 12l-3.75 2.25" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <div v-if="sessionStore.savedSessions.length < 2" class="no-data-message">
+      {{ $t('charts.noData') }}
+    </div>
+    <div v-else class="chart-wrapper">
+      <SessionChart />
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { useSessionStore } from '../store/useSessionStore';
+import { useChartsStore } from '../store/useChartsStore';
+import SessionChart from '../components/SessionChart.vue';
+
+const sessionStore = useSessionStore();
+const chartsStore = useChartsStore();
+</script>
+
+<style scoped>
+.charts-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+h2 {
+  margin: 0;
+  font-size: 2rem;
+}
+.controls-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.filter-controls label {
+  font-weight: bold;
+  color: #a0aec0;
+}
+.filter-controls select {
+  padding: 8px 12px;
+  font-size: 1rem;
+  background-color: #4A5568;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: white;
+}
+.toggle-chart-btn {
+  background-color: #4A5568;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.toggle-chart-btn:hover {
+  background-color: #2D3748;
+}
+.toggle-chart-btn svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+.no-data-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #a0aec0;
+  background-color: #2d3748;
+  padding: 2rem;
+  border-radius: 12px;
+}
+.chart-wrapper {
+  background-color: #2d3748;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+</style>
+
+=================================== FILE: src/views/CurrentHandView.vue ===================================
+
+<template>
+  <div class="view-container">
+    <div v-if="!handIsActive" class="configuration-panel">
+      <h2>Configuración de la Mano</h2>
+
+      <div class="config-item">
+        <label for="player-count">Número de Jugadores:</label>
+        <select id="player-count" v-model.number="selectedPlayers">
+          <option v-for="n in 8" :key="n" :value="n + 1">
+            {{ n + 1 }} Jugadores
+          </option>
+        </select>
+      </div>
+      
+      <div class="blinds-container">
+        <div class="config-item">
+          <label for="sb-input">Ciega Pequeña:</label>
+          <input id="sb-input" type="number" v-model.number="sbInput" min="1">
+        </div>
+        <div class="config-item">
+          <label for="bb-input">Ciega Grande:</label>
+          <input id="bb-input" type="number" v-model.number="bbInput" min="1">
+        </div>
+      </div>
+      
+      <div class="config-item">
+        <label for="currency-select">Moneda:</label>
+        <select id="currency-select" v-model="selectedCurrency">
+          <option v-for="currency in currencies" :key="currency.symbol" :value="currency.symbol">
+            {{ currency.symbol }} ({{ currency.name }})
+          </option>
+        </select>
+      </div>
+      
+      <button @click="loadHandClicked">Iniciar Mano</button>
+    </div>
+
+    <PokerTable v-else />
+
+    <ConfigurationModal
+      v-if="showPositionModal"
+      :positions="availablePositions"
+      @confirm="handlePositionSelected"
+    />
+
+    <CardPicker v-if="gameStore.isCardPickerOpen" />
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useGameStore } from '../store/game';
+import PokerTable from '../components/PokerTable.vue';
+import ConfigurationModal from '../components/ConfigurationModal.vue';
+import CardPicker from '../components/CardPicker.vue';
+
+const gameStore = useGameStore();
+const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
+
+const selectedPlayers = ref(6);
+const sbInput = ref(1);
+const bbInput = ref(2);
+const selectedCurrency = ref('$');
+const currencies = ref([
+  { symbol: '$', name: 'USD' },
+  { symbol: '€', name: 'EUR' },
+  { symbol: '£', name: 'GBP' },
+  { symbol: '¥', name: 'JPY' },
+  { symbol: 'A$', name: 'AUD' },
+]);
+
+const showPositionModal = ref(false);
+
+const availablePositions = computed(() => {
+  return getPositionsForCount(selectedPlayers.value);
+});
+
+function loadHandClicked() {
+  showPositionModal.value = true;
+}
+
+function handlePositionSelected(heroPosition) {
+  showPositionModal.value = false;
+  gameStore.setupNewHand(
+    selectedPlayers.value,
+    heroPosition,
+    selectedCurrency.value,
+    sbInput.value,
+    bbInput.value
+  );
+}
+
+function getPositionsForCount(numPlayers) {
+  if (numPlayers === 2) { return ['BTN / SB', 'BB']; }
+  if (numPlayers === 3) { return ['BTN', 'SB', 'BB']; }
+  if (numPlayers === 4) { return ['BTN', 'SB', 'BB', 'CO']; }
+  if (numPlayers === 5) { return ['BTN', 'SB', 'BB', 'MP', 'CO']; }
+  if (numPlayers === 6) { return ['BTN', 'SB', 'BB', 'UTG', 'MP', 'CO']; }
+  if (numPlayers === 7) { return ['BTN', 'SB', 'BB', 'UTG', 'MP', 'HJ', 'CO']; }
+  if (numPlayers === 8) { return ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO']; }
+  if (numPlayers === 9) { return ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'LJ', 'HJ', 'CO']; }
+  return [];
+}
+
+function handleKeyDown(event) {
+  if (!handIsActive.value) return;
+  if (document.activeElement.tagName === 'INPUT' && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
+    return;
+  }
+  if (event.key === 'ArrowRight') gameStore.navigateHistory(1);
+  else if (event.key === 'ArrowLeft') gameStore.navigateHistory(-1);
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
+  gameStore.pauseReplay();
+});
+</script>
+
+<style scoped>
+.view-container {
+  width: 100%;
+}
+.configuration-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  padding: 3.5rem;
+  max-width: 500px;
+  margin: 5rem auto;
+  background-color: #2d3748;
+  border-radius: 12px;
+}
+h2 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+.config-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+label {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+select, input[type="number"] {
+  padding: 15px;
+  font-size: 1.2rem;
+  width: 250px;
+  text-align: center;
+  box-sizing: border-box;
+  border-radius: 8px;
+}
+.blinds-container {
+  display: flex;
+  gap: 20px;
+}
+.blinds-container .config-item {
+  width: auto;
+}
+.blinds-container input {
+  width: 150px;
+}
+button {
+  padding: 18px 35px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+</style>
+
+=================================== FILE: src/views/LiveSessionView.vue ===================================
+
+<template>
+  <div class="live-session-container">
+    <div class="session-panel">
+
+      <!-- WIDGET DEL TEMPORIZADOR -->
+      <div class="widget timer-widget" :class="{ 'on-break': sessionStore.isOnBreak }">
+        <div class="widget-header">
+          <span class="status-indicator"></span>
+          <span>{{ sessionStore.isOnBreak ? 'EN DESCANSO' : (sessionStore.isActive ? 'SESIÓN ACTIVA' : 'SESIÓN DETENIDA') }}</span>
+        </div>
+        <div class="timer-display">
+          {{ formattedTime }}
+        </div>
+      </div>
+
+      <!-- WIDGET DE ACCIONES RÁPIDAS (solo visible durante la sesión) -->
+      <div v-if="sessionStore.isActive && !sessionStore.isOnBreak" class="widget actions-widget">
+        <div class="widget-header">
+          <span>ACCIONES RÁPIDAS</span>
+        </div>
+        <div class="live-actions">
+          <div class="action-group">
+            <input type="number" v-model.number="rebuyAmount" placeholder="Monto Recarga">
+            <button @click="handleAddRebuy">Añadir Recarga</button>
+          </div>
+          <div class="action-group">
+            <input type="number" v-model.number="tipAmount" placeholder="Propina">
+            <button @click="handleAddTip">Tip Dealer</button>
+          </div>
+          <div class="action-group">
+            <input type="number" v-model.number="expenseAmount" placeholder="Gasto">
+            <button @click="handleAddExpense">Consumición</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WIDGET DE CONFIGURACIÓN -->
+      <div class="widget config-widget">
+         <div class="widget-header">
+          <span>CONFIGURACIÓN DE LA PARTIDA</span>
+        </div>
+        <fieldset class="config-fieldset" :disabled="sessionStore.isActive">
+          <div class="config-grid">
+            <div class="config-item">
+              <label for="player-count">Jugadores</label>
+              <select id="player-count" v-model.number="sessionStore.playerCount">
+                <option v-for="n in 8" :key="n" :value="n + 1">{{ n + 1 }} jugadores</option>
+              </select>
+            </div>
+            <div class="config-item">
+              <label for="blinds">Ciegas</label>
+              <input type="text" id="blinds" v-model="sessionStore.blinds" placeholder="Ej: 1/2">
+            </div>
+            <div class="config-item">
+              <label for="location">Lugar</label>
+              <input type="text" id="location" v-model="sessionStore.location" placeholder="Ej: Casino Gran Vía">
+            </div>
+            <div class="config-item">
+              <label for="currency">Moneda</label>
+              <select id="currency" v-model="sessionStore.currency">
+                <option>$</option><option>€</option><option>£</option>
+              </select>
+            </div>
+            <div class="config-item">
+              <label for="initial-stack">Buy-in</label>
+              <input type="number" id="initial-stack" v-model.number="sessionStore.initialStack" placeholder="Ej: 200">
+            </div>
+          </div>
+        </fieldset>
+      </div>
+      
+      <!-- CONTROLES PRINCIPALES -->
+      <div class="main-controls">
+        <button v-if="!sessionStore.isActive" @click="sessionStore.startSession()" class="btn-play">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+          <span>INICIAR SESIÓN</span>
+        </button>
+        <template v-if="sessionStore.isActive">
+          <button v-if="!sessionStore.isOnBreak" @click="sessionStore.startBreak()" class="btn-pause">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>DESCANSO</span>
+          </button>
+          <button v-else @click="sessionStore.endBreak()" class="btn-play">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
+            <span>FIN DEL DESCANSO</span>
+          </button>
+          <button @click="showEndSessionModal = true" class="btn-stop">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 019 14.437V9.564z" /></svg>
+            <span>FINALIZAR SESIÓN</span>
+          </button>
+        </template>
+      </div>
+    </div>
+    <EndSessionModal v-if="showEndSessionModal" @confirm="handleConfirmEndSession" @cancel="showEndSessionModal = false" />
+  </div>
+</template>
+
+<script setup>
+import { computed, ref } from 'vue';
+import { useSessionStore } from '../store/useSessionStore';
+import EndSessionModal from '../components/EndSessionModal.vue';
+
+const sessionStore = useSessionStore();
+const showEndSessionModal = ref(false);
+
+const rebuyAmount = ref(null);
+const tipAmount = ref(null);
+const expenseAmount = ref(null);
+
+function handleAddRebuy() {
+  if (rebuyAmount.value > 0) {
+    sessionStore.addRebuy(rebuyAmount.value);
+    rebuyAmount.value = null;
+  }
+}
+function handleAddTip() {
+  if (tipAmount.value > 0) {
+    sessionStore.addExpense(tipAmount.value);
+    tipAmount.value = null;
+  }
+}
+function handleAddExpense() {
+  if (expenseAmount.value > 0) {
+    sessionStore.addExpense(expenseAmount.value);
+    expenseAmount.value = null;
+  }
+}
+function handleConfirmEndSession(finalStack) {
+  sessionStore.stopAndSaveSession(finalStack);
+  showEndSessionModal.value = false;
+}
+
+const formattedTime = computed(() => {
+  const totalSeconds = sessionStore.isOnBreak ? sessionStore.breakElapsedTime : sessionStore.elapsedTime;
+  const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+  const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+});
+</script>
+
+<style scoped>
+.live-session-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+.session-panel {
+  width: 100%;
+  max-width: 800px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-areas:
+    "timer timer"
+    "actions config"
+    "controls controls";
+  gap: 1.5rem;
+}
+
+/* --- Widgets --- */
+.widget {
+  background-color: #2d3748;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 1.5rem;
+}
+.widget-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #a0aec0;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
+}
+.timer-widget { grid-area: timer; }
+.actions-widget { grid-area: actions; }
+.config-widget { grid-area: config; }
+
+/* --- Timer Widget --- */
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #718096; /* Gris por defecto */
+  transition: background-color 0.3s ease;
+}
+.timer-widget:not(.on-break) .status-indicator {
+  background-color: #68d391; /* Verde cuando está activa */
+  animation: pulse 2s infinite;
+}
+.timer-widget.on-break .status-indicator {
+  background-color: #63b3ed; /* Azul en descanso */
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(104, 211, 145, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(104, 211, 145, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(104, 211, 145, 0); }
+}
+.timer-display {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: clamp(2.5rem, 10vw, 4.5rem);
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+}
+.timer-widget.on-break .timer-display {
+  color: #63b3ed;
+}
+
+/* --- Actions Widget --- */
+.live-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.action-group {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+.action-group input {
+  padding: 10px; font-size: 1rem; text-align: center;
+}
+.action-group button {
+  padding: 10px; font-size: 0.9rem; background-color: #4A5568;
+}
+
+/* --- Config Widget --- */
+.config-fieldset {
+  border: none; padding: 0; margin: 0;
+  transition: opacity 0.3s ease;
+}
+.config-fieldset:disabled { opacity: 0.6; }
+.config-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+.config-item { display: flex; flex-direction: column; gap: 8px; }
+.config-item label { font-weight: bold; font-size: 0.9rem; color: #a0aec0; }
+.config-item input, .config-item select { font-size: 1rem; padding: 10px; }
+
+/* --- Main Controls --- */
+.main-controls {
+  grid-area: controls;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+.main-controls button {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-size: 1.1rem; font-weight: bold; padding: 12px 24px;
+  border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+  flex-grow: 1; max-width: 250px;
+}
+.main-controls button svg { width: 24px; height: 24px; }
+.btn-play { background-color: #38a169; color: white; }
+.btn-play:hover { background-color: #2f855a; }
+.btn-pause { background-color: #dd6b20; color: white; }
+.btn-pause:hover { background-color: #c05621; }
+.btn-stop { background-color: #c53030; color: white; }
+.btn-stop:hover { background-color: #9b2c2c; }
+
+/* --- Media Queries for Responsiveness --- */
+@media (max-width: 768px) {
+  .session-panel {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "timer"
+      "actions"
+      "config"
+      "controls";
+  }
+}
+</style>
+
+=================================== FILE: src/views/SavedHandsView.vue ===================================
+
+<template>
+  <div class="saved-hands-container">
+    <h2>Manos Guardadas</h2>
+    <div v-if="gameStore.savedHands.length === 0" class="no-hands">
+      No tienes manos guardadas todavía.
+    </div>
+    <ul v-else class="hands-list">
+      <li v-for="hand in gameStore.savedHands" :key="hand.id">
+        <div class="hand-info">
+          <span><strong>Fecha:</strong> {{ hand.date }}</span>
+          <span><strong>Hero:</strong> {{ hand.heroPosition }}</span>
+          <span><strong>Jugadores:</strong> {{ hand.numPlayers }}</span>
+        </div>
+        <div class="hand-actions">
+          <button @click="loadHandForReplay(hand)">Cargar Replay</button>
+          <button class="delete-btn" @click="gameStore.deleteHand(hand.id)">Eliminar</button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script setup>
+import { useGameStore } from '../store/game'
+
+const gameStore = useGameStore()
+
+// --- LÓGICA PARA COMUNICARSE CON EL COMPONENTE PADRE (App.vue) ---
+// 1. Definimos el evento que este componente puede "emitir" o "lanzar"
+const emit = defineEmits(['switch-view']);
+
+// 2. Modificamos la función para que, después de cargar, emita el evento
+function loadHandForReplay(hand) {
+  // Primero, carga los datos de la mano en el store (como antes)
+  gameStore.loadHand(hand);
+  
+  // Segundo, lanza el evento para que App.vue lo escuche y cambie la vista
+  emit('switch-view');
+}
+</script>
+
+<style scoped>
+.saved-hands-container {
+  padding: 2rem;
+}
+.no-hands {
+  margin-top: 1rem;
+  color: #a0aec0;
+}
+.hands-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.hands-list li {
+  background-color: #2d3748;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.hand-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.hand-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.delete-btn {
+    background-color: #c53030;
+}
+.delete-btn:hover {
+    background-color: #9b2c2c;
+}
+</style>
+
+=================================== FILE: src/views/SavedSessionsView.vue ===================================
+
+<template>
+  <div class="saved-sessions-container">
+    <h2>Sesiones Guardadas</h2>
+    <div v-if="sessionStore.savedSessions.length === 0" class="no-sessions">
+      No tienes sesiones guardadas todavía.
+    </div>
+    <ul v-else class="sessions-list">
+      <li v-for="session in sessionStore.savedSessions" :key="session.id">
+        <div class="session-details">
+          <div class="session-header">
+            <span class="location">{{ session.location || 'Partida Privada' }}</span>
+            <span class="date">{{ session.date }}</span>
+          </div>
+          <div class="session-stats">
+            <div class="stat-item"><strong>Duración:</strong> {{ formatDuration(session.duration) }}</div>
+            <div class="stat-item"><strong>Descansos:</strong> {{ formatDuration(session.totalBreakTime) }}</div>
+            <div class="stat-item"><strong>Buy-in:</strong> {{ session.currency }}{{ session.initialStack }}</div>
+            <div class="stat-item"><strong>Recargas:</strong> {{ session.currency }}{{ session.totalRebuys || 0 }}</div>
+            <div class="stat-item"><strong>Gastos:</strong> -{{ session.currency }}{{ session.totalExpenses || 0 }}</div>
+            <div class="stat-item"><strong>Stack Final:</strong> {{ session.currency }}{{ session.finalStack !== undefined ? session.finalStack : 'N/A' }}</div>
+            <div class="stat-item"><strong>Ciegas:</strong> {{ session.blinds }}</div>
+            <div class="stat-item"><strong>Jugadores:</strong> {{ session.playerCount }}</div>
+          </div>
+        </div>
+        <!-- ===== SECCIÓN DEL RESULTADO CORREGIDA Y A PRUEBA DE ERRORES ===== -->
+        <div class="session-result" :class="getResultClass(session.result)">
+          <span>Resultado</span>
+          <span class="result-amount">
+            {{ formatResult(session.result, session.currency) }}
+          </span>
+        </div>
+        <div class="session-actions">
+          <button class="delete-btn" @click="sessionStore.deleteSession(session.id)">Eliminar</button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script setup>
+import { useSessionStore } from '../store/useSessionStore';
+
+const sessionStore = useSessionStore();
+
+function formatDuration(totalSeconds) {
+  if (!totalSeconds) return '0m';
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  let result = '';
+  if (hours > 0) result += `${hours}h `;
+  if (minutes > 0) result += `${minutes}m`;
+  return result.trim();
+}
+
+// --- NUEVAS FUNCIONES A PRUEBA DE ERRORES ---
+function getResultClass(result) {
+  if (typeof result !== 'number') return 'even'; // Clase por defecto si no hay resultado
+  if (result > 0) return 'profit';
+  if (result < 0) return 'loss';
+  return 'even';
+}
+
+function formatResult(result, currency) {
+  if (typeof result !== 'number') {
+    return 'N/A'; // Muestra N/A para sesiones antiguas sin resultado
+  }
+  const prefix = result >= 0 ? '+' : '';
+  return `${prefix}${currency}${result.toFixed(2)}`;
+}
+// ---------------------------------------------
+</script>
+
+<style scoped>
+.saved-sessions-container{padding:2rem;max-width:900px;margin:0 auto}.no-sessions{margin-top:1rem;color:#a0aec0;font-size:1.2rem}.sessions-list{list-style:none;padding:0;margin-top:1rem;display:flex;flex-direction:column;gap:1.5rem}.sessions-list li{background-color:#2d3748;padding:1.5rem;border-radius:12px;border:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap}.session-details{flex-grow:1;min-width:300px}.session-header{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #4a5568;padding-bottom:.75rem;margin-bottom:1rem}.location{font-size:1.4rem;font-weight:700}.date{font-size:.9rem;color:#a0aec0}.session-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem}.stat-item{font-size:1.1rem}.session-result{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;border-radius:8px;min-width:150px;text-align:center;flex-shrink:0}.session-result span:first-child{font-size:.9rem;opacity:.8;margin-bottom:.25rem}.result-amount{font-size:1.8rem;font-weight:700}.profit{background-color:rgba(47,133,90,.3);color:#68d391}.loss{background-color:rgba(197,48,48,.3);color:#fc8181}.even{background-color:rgba(74,85,104,.3);color:#a0aec0}.delete-btn{background-color:#c53030;padding:10px 15px}.delete-btn:hover{background-color:#9b2c2c}
+</style>
+
+=================================== FILE: src/views/SettingsView.vue ===================================
+
+<template>
+  <div class="settings-container">
+    <div class="settings-panel">
+      <h2>{{ $t('settings.title') }}</h2>
+      <div class="setting-item">
+        <label for="language-select">{{ $t('settings.language') }}</label>
+        <select id="language-select" v-model="settingsStore.locale">
+          <option value="es">Español</option>
+          <option value="en">English</option>
+          <!-- Aquí puedes añadir más idiomas cuando crees sus archivos .json -->
+          <!-- 
+          <option value="zh">中文 (Chino)</option>
+          <option value="hi">हिन्दी (Hindi)</option>
+          <option value="fr">Français</option>
+          <option value="ar">العربية (Árabe)</option>
+          <option value="bn">বাংলা (Bengalí)</option>
+          <option value="ru">Русский (Ruso)</option>
+          <option value="pt">Português</option>
+          <option value="de">Deutsch (Alemán)</option>
+          -->
+        </select>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { useSettingsStore } from '../store/useSettingsStore';
+const settingsStore = useSettingsStore();
+</script>
+
+<style scoped>
+.settings-container {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+.settings-panel {
+  width: 100%;
+  max-width: 500px;
+  background-color: #2d3748;
+  border-radius: 12px;
+  padding: 2rem;
+}
+h2 {
+  margin-top: 0;
+  text-align: center;
+}
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.setting-item label {
+  font-weight: bold;
+}
+.setting-item select {
+  padding: 12px;
+  font-size: 1.1rem;
+}
+</style>
+
+=================================== FILE: src/views/SummaryView.vue ===================================
+
+<template>
+  <div class="summary-container">
+    <h2>{{ $t('summary.title') }}</h2>
+    <div v-if="sessionStore.savedSessions.length === 0" class="no-data-message">
+      No hay sesiones guardadas para generar un sumario.
+    </div>
+    <template v-else>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-title">{{ $t('summary.avgBuyIn') }}</span>
+          <span class="stat-value">{{ formatCurrency(sessionStore.averageBuyIn, false) }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">{{ $t('summary.avgCashOut') }}</span>
+          <span class="stat-value">{{ formatCurrency(sessionStore.averageCashOut, false) }}</span>
+        </div>
+        <div class="stat-card" :class="getResultClass(sessionStore.totalNetProfit)">
+          <span class="stat-title">{{ $t('summary.totalProfit') }}</span>
+          <span class="stat-value">{{ formatCurrency(sessionStore.totalNetProfit) }}</span>
+        </div>
+      </div>
+      
+      <div class="detailed-summary-panel">
+        <h3>{{ $t('summary.sessionsTitle') }}</h3>
+        <div class="detailed-stats-grid">
+          <div class="detail-item">
+            <span>{{ $t('summary.sessionCount') }}</span>
+            <span>{{ sessionStore.sessionCount }}</span>
+          </div>
+          <div class="detail-item">
+            <span>{{ $t('summary.totalHours') }}</span>
+            <span>{{ sessionStore.totalHoursPlayed.toFixed(2) }}h</span>
+          </div>
+          <div class="detail-item">
+            <span>{{ $t('summary.avgHours') }}</span>
+            <span>{{ sessionStore.averageHoursPlayed.toFixed(2) }}h</span>
+          </div>
+          <div class="detail-item">
+            <span>{{ $t('summary.avgBreak') }}</span>
+            <span>{{ sessionStore.averageBreakDuration.toFixed(0) }}min</span>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>
+
+<script setup>
+import { useSessionStore } from '../store/useSessionStore';
+const sessionStore = useSessionStore();
+function formatCurrency(value, showSign = true) {
+  if (typeof value !== 'number') return `${sessionStore.currency}0.00`;
+  const prefix = value >= 0 ? '+' : '';
+  if (showSign) {
+     return `${prefix}${sessionStore.currency}${value.toFixed(2)}`;
+  }
+  return `${sessionStore.currency}${value.toFixed(2)}`;
+}
+function getResultClass(result) {
+  if (typeof result !== 'number') return 'even';
+  if (result > 0) return 'profit';
+  if (result < 0) return 'loss';
+  return 'even';
+}
+</script>
+
+<style scoped>
+.summary-container {
+  padding: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+.no-data-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #a0aec0;
+  background-color: #2d3748;
+  padding: 2rem;
+  border-radius: 12px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.stat-card {
+  background-color: #2d3748;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.stat-title {
+  font-size: 1.1rem;
+  color: #a0aec0;
+  font-weight: bold;
+}
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+.stat-card.profit .stat-value { color: #68d391; }
+.stat-card.loss .stat-value { color: #fc8181; }
+.stat-card.even .stat-value { color: #e2e8f0; }
+
+.detailed-summary-panel {
+  background-color: #2d3748;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-top: 2rem;
+}
+.detailed-summary-panel h3 {
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1rem;
+}
+.detailed-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.1rem;
+  padding: 0.5rem 0;
+}
+.detail-item span:first-child {
+  color: #a0aec0;
+}
+.detail-item span:last-child {
+  font-weight: bold;
+}
+</style>
+
+=================================== FILE: vite.config.js ===================================
+
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import { VitePWA } from 'vite-plugin-pwa'
+import path from 'path' // <-- PASO 1: AÑADIR ESTA LÍNEA
+
+export default defineConfig({
+  // --- PASO 2: AÑADIR ESTA SECCIÓN 'resolve' COMPLETA ---
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  // ----------------------------------------------------------
+  plugins: [
+    vue(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      manifest: {
+        name: 'Poker Replayer Interactivo',
+        short_name: 'Poker Replayer',
+        description: 'Una herramienta para configurar, registrar y reproducir manos de poker para su estudio.',
+        theme_color: '#1a202c',
+        background_color: '#1a202c',
+        start_url: '.',
+        display: 'standalone',
+        icons: [
+          {
+            src: 'icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+    }),
+  ],
+})
+

@@ -1,0 +1,105 @@
+{
+  "nav": {
+    "currentHand": "Mano Actual",
+    "savedHands": "Manos Guardadas",
+    "liveSession": "Sesión en Vivo",
+    "savedSessions": "Sesiones Guardadas",
+    "charts": "Gráficas",
+    "settings": "Configuración",
+    "summary": "Sumario"
+  },
+  "currentHand": {
+    "handConfiguration": "Configuración de la Mano",
+    "playerCount": "Número de Jugadores",
+    "players": "Jugadores",
+    "smallBlind": "Ciega Pequeña",
+    "bigBlind": "Ciega Grande",
+    "currency": "Moneda",
+    "configurePlayers": "Configurar Jugadores",
+    "playerName": "Nombre",
+    "stack": "Stack",
+    "startHand": "Iniciar Mano",
+    "selectPosition": "Selecciona tu Posición (Hero)",
+    "confirmAndStart": "Confirmar e Iniciar Mano"
+  },
+  "actionPanel": {
+    "turnOf": "Turno de:",
+    "fold": "FOLD",
+    "check": "CHECK",
+    "call": "CALL",
+    "bet": "BET",
+    "raise": "RAISE",
+    "pot": "POT",
+    "allIn": "ALL-IN"
+  },
+  "pokerTable": {
+    "pot": "Bote"
+  },
+  "liveSession": {
+    "title": "Sesión en Vivo",
+    "titleOnBreak": "En Descanso",
+    "configTitle": "Configuración de la Partida",
+    "playerCount": "Jugadores en la mesa",
+    "blindsLevel": "Nivel de Ciegas",
+    "location": "Lugar / Casino",
+    "currency": "Moneda",
+    "initialStack": "Stack Inicial (Buy-in)",
+    "startSession": "Iniciar Sesión",
+    "break": "Descanso",
+    "endBreak": "Fin del Descanso",
+    "endSession": "Finalizar Sesión",
+    "liveActionsTitle": "ACCIONES RÁPIDAS",
+    "rebuyAmount": "Monto Recarga",
+    "addRebuy": "Añadir Recarga",
+    "tipAmount": "Propina",
+    "addTip": "Tip Dealer",
+    "expenseAmount": "Gasto",
+    "addExpense": "Consumición"
+  },
+  "endSessionModal": {
+    "title": "Finalizar Sesión",
+    "initialBuyIn": "Buy-in Inicial:",
+    "rebuysAddOns": "Rebuys/Add-ons:",
+    "expenses": "Gastos (propinas, etc.):",
+    "totalInvestment": "Inversión Total:",
+    "finalStackLabel": "Introduce tu Stack Final:",
+    "finalStackPlaceholder": "Stack al finalizar",
+    "sessionResult": "Resultado de la Sesión",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar y Guardar"
+  },
+  "savedSessions": {
+    "title": "Sesiones Guardadas",
+    "noSessions": "No tienes sesiones guardadas todavía.",
+    "duration": "Duración:",
+    "breaks": "Descansos:",
+    "buyIn": "Buy-in:",
+    "rebuys": "Recargas:",
+    "expenses": "Gastos:",
+    "finalStack": "Stack Final:",
+    "blinds": "Ciegas:",
+    "players": "Jugadores:",
+    "result": "Resultado",
+    "delete": "Eliminar"
+  },
+  "charts": {
+    "title": "Gráfica de Resultados de Sesiones",
+    "noData": "Necesitas al menos dos sesiones guardadas para generar una gráfica.",
+    "cumulativeProfit": "Beneficio Acumulado"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma de la Aplicación"
+  },
+  "summary": {
+    "title": "Sumario General",
+    "totalProfit": "Total Profit",
+    "avgBuyIn": "Avg Buy-in",
+    "avgCashOut": "Avg Cash Out",
+    "sessionsTitle": "Sesiones",
+    "sessionCount": "Sesiones Jugadas",
+    "totalHours": "Horas de Juego",
+    "avgHours": "Media de Horas/Sesión",
+    "avgBreak": "Duración media de descanso"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "nav": {
+    "currentHand": "Current Hand",
+    "savedHands": "Saved Hands",
+    "liveSession": "Live Session",
+    "savedSessions": "Saved Sessions",
+    "charts": "Charts",
+    "settings": "Settings",
+    "summary": "Summary"
+  },
+  "currentHand": {
+    "handConfiguration": "Hand Configuration",
+    "playerCount": "Number of Players",
+    "players": "Players",
+    "smallBlind": "Small Blind",
+    "bigBlind": "Big Blind",
+    "currency": "Currency",
+    "configurePlayers": "Configure Players",
+    "playerName": "Name",
+    "stack": "Stack",
+    "startHand": "Start Hand",
+    "selectPosition": "Select Your Position (Hero)",
+    "confirmAndStart": "Confirm and Start Hand"
+  },
+  "actionPanel": {
+    "turnOf": "Turn:",
+    "fold": "FOLD",
+    "check": "CHECK",
+    "call": "CALL",
+    "bet": "BET",
+    "raise": "RAISE",
+    "pot": "POT",
+    "allIn": "ALL-IN"
+  },
+  "pokerTable": {
+    "pot": "Pot"
+  },
+  "liveSession": {
+    "title": "Live Session",
+    "titleOnBreak": "On Break",
+    "configTitle": "Game Configuration",
+    "playerCount": "Players at table",
+    "blindsLevel": "Blinds Level",
+    "location": "Location / Casino",
+    "currency": "Currency",
+    "initialStack": "Initial Stack (Buy-in)",
+    "startSession": "Start Session",
+    "break": "Break",
+    "endBreak": "End Break",
+    "endSession": "End Session",
+    "liveActionsTitle": "QUICK ACTIONS",
+    "rebuyAmount": "Rebuy Amount",
+    "addRebuy": "Add Rebuy",
+    "tipAmount": "Tip",
+    "addTip": "Tip Dealer",
+    "expenseAmount": "Expense",
+    "addExpense": "Add Expense"
+  },
+  "endSessionModal": {
+    "title": "End Session",
+    "initialBuyIn": "Initial Buy-in:",
+    "rebuysAddOns": "Rebuys/Add-ons:",
+    "expenses": "Expenses (tips, etc.):",
+    "totalInvestment": "Total Investment:",
+    "finalStackLabel": "Enter Your Final Stack:",
+    "finalStackPlaceholder": "Stack at the end",
+    "sessionResult": "Session Result",
+    "cancel": "Cancel",
+    "confirm": "Confirm & Save"
+  },
+  "savedSessions": {
+    "title": "Saved Sessions",
+    "noSessions": "You have no saved sessions yet.",
+    "duration": "Duration:",
+    "breaks": "Breaks:",
+    "buyIn": "Buy-in:",
+    "rebuys": "Rebuys:",
+    "expenses": "Expenses:",
+    "finalStack": "Final Stack:",
+    "blinds": "Blinds:",
+    "players": "Players:",
+    "result": "Result",
+    "delete": "Delete"
+  },
+  "charts": {
+    "title": "Session Results Chart",
+    "noData": "You need at least two saved sessions to generate a chart.",
+    "cumulativeProfit": "Cumulative Profit"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Application Language"
+  },
+  "summary": {
+    "title": "Overall Summary",
+    "totalProfit": "Total Profit",
+    "avgBuyIn": "Avg Buy-in",
+    "avgCashOut": "Avg Cash Out",
+    "sessionsTitle": "Sessions",
+    "sessionCount": "Sessions Played",
+    "totalHours": "Hours Played"
+  }
+}

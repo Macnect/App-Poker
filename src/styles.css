@@ -1,0 +1,62 @@
+:root {
+  --table-green: #28563a;
+  --table-blue: #3a4c8a;
+  --table-red: #8a3a3a;
+  --bg-color: #1a202c;
+  --text-color: #e2e8f0;
+  --border-color: #4a5568;
+  --primary-color: #4299e1;
+  --card-bg: #ffffff;
+
+  /* --- TAMAÑOS DE CARTAS --- */
+  /* Cartas comunitarias (Board) */
+  --board-card-width: 65px;
+  --board-card-height: 91px;
+  /* Cartas de los jugadores (AUMENTADAS DE TAMAÑO) */
+  --player-card-width: 60px;
+  --player-card-height: 84px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica,
+    Arial, sans-serif;
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  overscroll-behavior: none;
+}
+
+#app {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+}
+
+button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+button:hover {
+  background-color: #2b6cb0;
+}
+
+button:disabled {
+  background-color: #4a5568;
+  cursor: not-allowed;
+}
+
+input,
+select {
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+  background-color: #2d3748;
+  color: var(--text-color);
+}
