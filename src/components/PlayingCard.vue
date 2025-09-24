@@ -29,6 +29,8 @@ const suitDetails = computed(() => {
 });
 </script>
 
+
+
 <style scoped>
 .playing-card {
   width: 100%;
