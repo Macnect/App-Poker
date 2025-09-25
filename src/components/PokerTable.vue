@@ -44,7 +44,7 @@
         <template v-if="gameStore.gamePhase !== 'replay'">
           <button @click="gameStore.navigateHistory(-1)" title="Acción anterior">Anterior</button>
           <button @click="gameStore.navigateHistory(1)" title="Siguiente acción">Siguiente</button>
-          <button class="save-btn" @click="gameStore.saveCurrentHand()">Guardar Mano</button>
+          <button class="save-btn" @click="handleSaveHand()">Guardar Mano</button>
         </template>
         <template v-if="gameStore.gamePhase === 'replay'">
           <button v-if="!gameStore.isReplaying" @click="gameStore.playReplay()" class="play-btn">Play</button>
@@ -71,6 +71,12 @@
         </template>
       </div>
     </div>
+
+    <!-- Success Toast -->
+    <div v-if="showToast" class="toast success-toast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">¡Mano guardada con éxito!</div>
+    </div>
   </div>
 </template>
 
@@ -84,6 +90,7 @@ import PlayingCard from './PlayingCard.vue';
 
 const gameStore = useGameStore();
 const tableColor = ref('#28563a');
+const showToast = ref(false);
 
 const clickablePhases = computed(() => ['flop', 'turn', 'river', 'showdown']);
 
@@ -117,6 +124,14 @@ const heroIndex = computed(() => {
   const index = gameStore.players.findIndex(p => p.name === 'Hero');
   return index !== -1 ? index : 0;
 });
+
+function handleSaveHand() {
+  gameStore.saveCurrentHand();
+  showToast.value = true;
+  setTimeout(() => {
+    showToast.value = false;
+  }, 3000);
+}
 </script>
 
 <style scoped>
@@ -215,5 +230,46 @@ const heroIndex = computed(() => {
 }
 .card-placeholder.locked:hover {
   outline: none;
+}
+
+/* Toast Styles */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.success-toast {
+  background-color: #38a169;
+  color: white;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.toast-message {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 </style>
