@@ -40,11 +40,11 @@
       <ActionPanel v-if="gameStore.gamePhase !== 'replay'" v-model:modelValue="tableColor" />
       <DisplayOptions v-else v-model:modelValue="tableColor" />
       <div class="game-controls">
-        <button class="reset-btn" @click="gameStore.resetHand()">Nueva Mano</button>
         <template v-if="gameStore.gamePhase !== 'replay'">
           <button @click="gameStore.navigateHistory(-1)" title="Acción anterior">Anterior</button>
           <button @click="gameStore.navigateHistory(1)" title="Siguiente acción">Siguiente</button>
           <button class="save-btn" @click="handleSaveHand()">Guardar Mano</button>
+          <button class="reset-btn" @click="confirmNewHand()">Nueva Mano</button>
         </template>
         <template v-if="gameStore.gamePhase === 'replay'">
           <button v-if="!gameStore.isReplaying" @click="gameStore.playReplay()" class="play-btn">Play</button>
@@ -72,6 +72,18 @@
       </div>
     </div>
 
+    <!-- Confirmation Modal for New Hand -->
+    <div v-if="showNewHandModal" class="modal-overlay" @click="closeNewHandModal">
+      <div class="modal-content" @click.stop>
+        <h3>Confirmar Nueva Mano</h3>
+        <p>¿Desea guardar los cambios de esta mano?</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" @click="justNewHand">No</button>
+          <button class="confirm-btn" @click="saveAndNewHand">Sí</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
       <div class="toast-icon">✓</div>
@@ -91,6 +103,7 @@ import PlayingCard from './PlayingCard.vue';
 const gameStore = useGameStore();
 const tableColor = ref('#28563a');
 const showToast = ref(false);
+const showNewHandModal = ref(false);
 
 const clickablePhases = computed(() => ['flop', 'turn', 'river', 'showdown']);
 
@@ -131,6 +144,29 @@ function handleSaveHand() {
   setTimeout(() => {
     showToast.value = false;
   }, 3000);
+}
+
+function confirmNewHand() {
+  showNewHandModal.value = true;
+}
+
+function closeNewHandModal() {
+  showNewHandModal.value = false;
+}
+
+function saveAndNewHand() {
+  gameStore.saveCurrentHand();
+  showToast.value = true;
+  setTimeout(() => {
+    showToast.value = false;
+  }, 3000);
+  gameStore.resetHand();
+  closeNewHandModal();
+}
+
+function justNewHand() {
+  gameStore.resetHand();
+  closeNewHandModal();
 }
 </script>
 
@@ -271,5 +307,74 @@ function handleSaveHand() {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #2d3748;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.modal-content p {
+  margin: 0 0 2rem 0;
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-btn, .confirm-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: #4A5568;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #2D3748;
+}
+
+.confirm-btn {
+  background-color: #38a169;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #2f855a;
 }
 </style>
