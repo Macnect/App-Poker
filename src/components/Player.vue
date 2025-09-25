@@ -145,8 +145,8 @@ const betBoxStyle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  position: relative; 
+  gap: 0px;
+  position: relative;
 }
 .active {
   border-color: #f6e05e;
@@ -186,7 +186,8 @@ const betBoxStyle = computed(() => {
   display: flex;
   justify-content: center;
   gap: 5px;
-  margin-bottom: 8px; /* Space between cards and panel */
+  margin-bottom: 0px; /* Space between cards and panel */
+  margin-top: -12px; /* Position cards outside the border */
 }
 .player-panel {
   background-color: rgba(0, 0, 0, 0.7);
@@ -254,6 +255,9 @@ const betBoxStyle = computed(() => {
     width: 140px;
     padding: 8px;
   }
+  .player-cards {
+    margin-top: -10px; /* Adjust for reduced padding */
+  }
   .player-panel {
     min-width: 100px;
     padding: 4px;
@@ -270,6 +274,9 @@ const betBoxStyle = computed(() => {
   .player-seat {
     width: 120px;
     padding: 6px;
+  }
+  .player-cards {
+    margin-top: -8px; /* Adjust for reduced padding */
   }
   .player-panel {
     min-width: 80px;
