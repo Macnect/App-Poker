@@ -1,18 +1,12 @@
 <template>
   <div class="player-container" :style="seatStyle">
-    
+
     <!-- Se añade la clase condicional 'is-hero' -->
     <div class="player-seat" :class="{ faded: !player.inHand, active: isActivePlayer, 'is-hero': player.name === 'Hero' }">
-      
+
       <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
 
-      <div class="player-info">
-        <div class="player-name">{{ player.name }} ({{ player.position }})</div>
-        <div class="player-stack">
-          <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.stack }}</span>
-          <span v-else>{{ (player.stack / gameStore.bigBlind).toFixed(1) }} BBs</span>
-        </div>
-      </div>
+      <!-- Player cards positioned above the panel -->
       <div class="player-cards">
         <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
           <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
@@ -27,6 +21,17 @@
             <rect width="100" height="140" rx="8" fill="#4A5568"/>
             <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
           </svg>
+        </div>
+      </div>
+
+      <!-- Player panel below the cards -->
+      <div class="player-panel">
+        <div class="player-info">
+          <div class="player-name">{{ player.name }} ({{ player.position }})</div>
+          <div class="player-stack">
+            <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.stack }}</span>
+            <span v-else>{{ (player.stack / gameStore.bigBlind).toFixed(1) }} BBs</span>
+          </div>
         </div>
       </div>
     </div>
@@ -181,6 +186,14 @@ const betBoxStyle = computed(() => {
   display: flex;
   justify-content: center;
   gap: 5px;
+  margin-bottom: 8px; /* Space between cards and panel */
+}
+.player-panel {
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  padding: 6px;
+  min-width: 120px;
+  text-align: center;
 }
 .card-placeholder {
   width: var(--player-card-width);
@@ -189,9 +202,11 @@ const betBoxStyle = computed(() => {
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
+  transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth animations */
 }
 .card-placeholder:hover {
   outline: 2px solid #f6e05e;
+  transform: scale(1.05); /* Slight scale on hover for animation */
 }
 
 .bet-box {
@@ -230,6 +245,45 @@ const betBoxStyle = computed(() => {
   }
   50% {
     box-shadow: 0 0 20px #68d391, 0 0 15px #68d391 inset;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .player-seat {
+    width: 140px;
+    padding: 8px;
+  }
+  .player-panel {
+    min-width: 100px;
+    padding: 4px;
+  }
+  .player-name {
+    font-size: 1em;
+  }
+  .player-stack {
+    font-size: 1em;
+  }
+}
+
+@media (max-width: 768px) {
+  .player-seat {
+    width: 120px;
+    padding: 6px;
+  }
+  .player-panel {
+    min-width: 80px;
+    padding: 3px;
+  }
+  .player-name {
+    font-size: 0.9em;
+  }
+  .player-stack {
+    font-size: 0.9em;
+  }
+  .card-placeholder {
+    width: calc(var(--player-card-width) * 0.8);
+    height: calc(var(--player-card-height) * 0.8);
   }
 }
 </style>
