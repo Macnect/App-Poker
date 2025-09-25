@@ -49,10 +49,28 @@
         </div>
 
         <div class="session-actions">
-          <button class="delete-btn" @click="sessionStore.deleteSession(session.id)">Eliminar Sesión</button>
+          <button class="delete-btn" @click="confirmDelete(session.id)">Eliminar Sesión</button>
         </div>
       </li>
     </ul>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <h3>Confirmar Eliminación</h3>
+        <p>¿Estás seguro de que deseas eliminar esta sesión?</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" @click="closeModal">No</button>
+          <button class="confirm-btn" @click="deleteSession">Sí</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div v-if="showToast" class="toast success-toast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Sesión eliminada con éxito</div>
+    </div>
   </div>
 </template>
 
@@ -64,6 +82,11 @@ const sessionStore = useSessionStore();
 
 // --- NUEVO ESTADO LOCAL PARA EL FILTRO ---
 const selectedFilter = ref('all');
+
+// --- ESTADO PARA EL MODAL Y TOAST ---
+const showModal = ref(false);
+const showToast = ref(false);
+const selectedSessionId = ref(null);
 
 // --- NUEVA PROPIEDAD COMPUTADA PARA FILTRAR LAS SESIONES ---
 const filteredSessions = computed(() => {
@@ -132,6 +155,27 @@ function formatResult(result, currency) {
   const prefix = result >= 0 ? '+' : '';
   return `${prefix}${currency}${result.toFixed(2)}`;
 }
+
+function confirmDelete(sessionId) {
+  selectedSessionId.value = sessionId;
+  showModal.value = true;
+}
+
+function closeModal() {
+  showModal.value = false;
+  selectedSessionId.value = null;
+}
+
+function deleteSession() {
+  if (selectedSessionId.value) {
+    sessionStore.deleteSession(selectedSessionId.value);
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
+    closeModal();
+  }
+}
 </script>
 
 <style scoped>
@@ -199,4 +243,114 @@ function formatResult(result, currency) {
 .session-actions { display: flex; justify-content: center; margin-top: 1rem; }
 .delete-btn { background-color: #c53030; padding: 12px 25px; font-size: 1.1rem; width: 100%; max-width: 300px; }
 .delete-btn:hover { background-color: #9b2c2c; }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #2d3748;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.modal-content p {
+  margin: 0 0 2rem 0;
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-btn, .confirm-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: #4A5568;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #2D3748;
+}
+
+.confirm-btn {
+  background-color: #c53030;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #9b2c2c;
+}
+
+/* Toast Styles */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.success-toast {
+  background-color: #38a169;
+  color: white;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.toast-message {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 </style>
