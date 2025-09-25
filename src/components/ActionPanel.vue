@@ -53,10 +53,10 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n'; // <-- 1. IMPORTAR useI18n
+import { useI18n } from 'vue-i18n';
 import { useGameStore } from '../store/game';
 
-const { t } = useI18n(); // <-- 2. INICIALIZAR LA FUNCIÓN DE TRADUCCIÓN
+const { t } = useI18n();
 
 const props = defineProps({ modelValue: String });
 const emit = defineEmits(['update:modelValue']);
@@ -68,12 +68,12 @@ const amountToCall = computed(() => {
 });
 
 const checkOrCallLabel = computed(() => {
-  if (amountToCall.value <= 0) return t('actionPanel.check'); // <-- 3. USAR t()
+  if (amountToCall.value <= 0) return t('actionPanel.check');
   if (gameStore.displayInBBs) {
     const bbValue = (amountToCall.value / gameStore.bigBlind).toFixed(1);
-    return `${t('actionPanel.call')} ${bbValue} BB`; // <-- 3. USAR t()
+    return `${t('actionPanel.call')} ${bbValue} BB`;
   }
-  return `${t('actionPanel.call')} ${amountToCall.value}`; // <-- 3. USAR t()
+  return `${t('actionPanel.call')} ${amountToCall.value}`;
 });
 
 const maxSliderValue = computed(() => {
@@ -109,7 +109,7 @@ const displayRaiseAmount = computed({
     if (gameStore.displayInBBs) {
       raiseAmount.value = Math.round(parseFloat(newValue) * gameStore.bigBlind);
     } else {
-      raiseAmount.value = parseInt(newValue) || 0; // Añadido '|| 0' por seguridad
+      raiseAmount.value = parseInt(newValue) || 0;
     }
   }
 });
@@ -128,7 +128,7 @@ const sliderStyle = computed(() => {
   };
 });
 
-const betOrRaiseLabel = computed(() => (gameStore.currentBet > 0 ? t('actionPanel.raise') : t('actionPanel.bet'))); // <-- 3. USAR t()
+const betOrRaiseLabel = computed(() => (gameStore.currentBet > 0 ? t('actionPanel.raise') : t('actionPanel.bet')));
 const isCallDisabled = computed(() => !gameStore.activePlayer || amountToCall.value > gameStore.activePlayer.stack);
 const isRaiseDisabled = computed(() => !gameStore.activePlayer || raiseAmount.value < minRaiseValue.value || raiseAmount.value > maxSliderValue.value);
 
@@ -140,12 +140,21 @@ function handleBetRaise() {
   const action = gameStore.currentBet > 0 ? 'raise' : 'bet';
   gameStore.performAction(action, raiseAmount.value);
 }
+
+// --- FUNCIÓN CORREGIDA ---
 function setRaiseAmountByPot(multiplier) {
   if (!gameStore.activePlayer) return;
-  const potSize = gameStore.pot + gameStore.currentBet;
-  let betValue = Math.round(potSize * multiplier) + gameStore.currentBet;
+
+  // 1. CORRECCIÓN: Usar 'gameStore.totalPot' en lugar de 'gameStore.pot'.
+  let betValue = Math.round(gameStore.totalPot * multiplier);
+  
+  // 2. Asegura que el valor calculado no sea menor que la subida mínima permitida.
   betValue = Math.max(minRaiseValue.value, betValue);
+
+  // 3. Asegura que el valor no exceda el stack total del jugador.
   betValue = Math.min(maxSliderValue.value, betValue);
+
+  // 4. Actualiza el `raiseAmount` con el valor final y validado.
   raiseAmount.value = betValue;
 }
 

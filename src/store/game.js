@@ -202,7 +202,8 @@ export const useGameStore = defineStore('game', () => {
         break;
       case 'bet':
       case 'raise':
-        if (amount < minRaise.value && amount < player.stack + player.betThisRound) return;
+        if (isNaN(amount)) return;
+        if (isNaN(amount) || amount <= 0 || (amount < minRaise.value && amount < player.stack + player.betThisRound)) return;
         players.value.forEach(p => { if(p.inHand) p.hasActedThisRound = false; });
         const totalBet = amount;
         const raiseDifference = totalBet - currentBet.value;
