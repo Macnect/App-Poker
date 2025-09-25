@@ -31,6 +31,8 @@
         <button @click="setRaiseAmountByPot(0.50)">50%</button>
         <button @click="setRaiseAmountByPot(0.75)">75%</button>
         <button @click="setRaiseAmountByPot(1)">{{ $t('actionPanel.pot') }}</button>
+        <!-- BOTÓN 150% AÑADIDO -->
+        <button @click="setRaiseAmountByPot(1.5)">150%</button>
         <button @click="gameStore.performAction('all-in')" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
       </div>
 
