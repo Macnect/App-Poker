@@ -38,9 +38,14 @@
 
     <div v-if="player.betThisRound > 0" class="bet-box" :style="betBoxStyle">
       <ChipStack :amount="player.betThisRound" :bigBlind="gameStore.bigBlind" />
-      <div class="bet-amount-text">
-        <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
-        <span v-else>{{ (player.betThisRound / gameStore.bigBlind).toFixed(1) }} BBs</span>
+      <div class="bet-info">
+        <div class="bet-amount-container">
+          <div class="bet-amount-text">
+            <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
+            <span v-else>{{ (player.betThisRound / gameStore.bigBlind).toFixed(1) }} BBs</span>
+          </div>
+        </div>
+        <img v-if="player.isAllIn" src="/icons/all-in-icon.svg" alt="All-in" class="all-in-icon" />
       </div>
     </div>
 
@@ -182,6 +187,10 @@ const betBoxStyle = computed(() => {
   font-weight: bold;
   margin-top: 2px;
 }
+.all-in-icon {
+  width: 60px;
+  height: 60px;
+}
 .player-cards {
   display: flex;
   justify-content: center;
@@ -219,6 +228,18 @@ const betBoxStyle = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: 4px;
+}
+
+.bet-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bet-amount-container {
+  width: 45px;
+  display: flex;
+  justify-content: center;
 }
 
 .bet-amount-text {
@@ -268,6 +289,10 @@ const betBoxStyle = computed(() => {
   .player-stack {
     font-size: 1em;
   }
+  .all-in-icon {
+    width: 50px;
+    height: 50px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -287,6 +312,10 @@ const betBoxStyle = computed(() => {
   }
   .player-stack {
     font-size: 0.9em;
+  }
+  .all-in-icon {
+    width: 40px;
+    height: 40px;
   }
   .card-placeholder {
     width: calc(var(--player-card-width) * 0.8);
