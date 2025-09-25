@@ -51,7 +51,6 @@ export const useGameStore = defineStore('game', () => {
   const isCardPickerOpen = ref(false);
   const cardPickerTarget = ref(null);
 
-  // --- NUEVO ESTADO PARA CONTROLAR LA EDICIÓN ---
   const isPreActionPhase = ref(true);
 
   const totalPot = computed(() => pots.value.reduce((sum, pot) => sum + pot.amount, 0));
@@ -124,7 +123,7 @@ export const useGameStore = defineStore('game', () => {
     gamePhase.value = 'preflop';
     lastRaiseAmount.value = 0;
     displayInBBs.value = false;
-    isPreActionPhase.value = true; // <-- HABILITAR EDICIÓN
+    isPreActionPhase.value = true;
     const positions = getPositions(numPlayers);
     for (let i = 0; i < numPlayers; i++) {
       const isHero = positions[i] === newHeroPosition;
@@ -142,6 +141,9 @@ export const useGameStore = defineStore('game', () => {
         isDealer: false,
         isSB: false,
         isBB: false,
+        // --- PROPIEDADES NUEVAS AÑADIDAS ---
+        notes: '',
+        tag: null,
       });
     }
     dealerPosition.value = players.value.find((p,i) => i === 0).id
@@ -159,16 +161,15 @@ export const useGameStore = defineStore('game', () => {
       lastRaiserIndex.value = players.value[bbIndex].id;
     }
     players.value[sbIndex].isSB = true;
-    postBet(players.value[sbIndex].id, smallBlind.value, true); // Post blind without recording
+    postBet(players.value[sbIndex].id, smallBlind.value, true);
     players.value[bbIndex].isBB = true;
-    postBet(players.value[bbIndex].id, bigBlind.value, true); // Post blind without recording
+    postBet(players.value[bbIndex].id, bigBlind.value, true);
     currentBet.value = bigBlind.value;
     minRaise.value = bigBlind.value * 2;
     lastRaiseAmount.value = bigBlind.value;
     recordState("Inicio de mano. Ciegas puestas.");
   }
   function performAction(action, amount = 0) {
-    // --- DESHABILITAR EDICIÓN AL REALIZAR LA PRIMERA ACCIÓN ---
     if (isPreActionPhase.value) {
       isPreActionPhase.value = false;
     }
@@ -409,7 +410,7 @@ export const useGameStore = defineStore('game', () => {
     history.value = [];
     currentActionIndex.value = -1;
     gamePhase.value = 'setup';
-    isPreActionPhase.value = false; // <-- DESHABILITAR EDICIÓN
+    isPreActionPhase.value = false;
     dealerPosition.value = 0;
     activePlayerIndex.value = null;
     currentBet.value = 0;
@@ -505,7 +506,7 @@ export const useGameStore = defineStore('game', () => {
     history.value = deepCopy(handData.history);
     currentActionIndex.value = 0;
     gamePhase.value = 'replay';
-    isPreActionPhase.value = false; // <-- DESHABILITAR EDICIÓN EN REPLAYS
+    isPreActionPhase.value = false;
   }
   function deleteHand(handId) {
     savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
@@ -524,14 +525,12 @@ export const useGameStore = defineStore('game', () => {
     return basePositions.slice(0, numPlayers);
   }
 
-  // --- ACCIONES MODIFICADAS PARA ACTUALIZAR EL HISTORIAL ---
   function updatePlayerName(playerId, newName) {
     if (!newName.trim()) return;
     const player = players.value.find(p => p.id === playerId);
     if (player) {
       player.name = newName;
     }
-    // Si estamos en la fase de pre-acción, actualiza el estado inicial en el historial
     if (isPreActionPhase.value && history.value.length > 0) {
       history.value[0].players = deepCopy(players.value);
     }
@@ -544,11 +543,33 @@ export const useGameStore = defineStore('game', () => {
     if (player) {
       player.stack = stack;
     }
-    // Si estamos en la fase de pre-acción, actualiza el estado inicial en el historial
     if (isPreActionPhase.value && history.value.length > 0) {
       history.value[0].players = deepCopy(players.value);
     }
   }
+
+  // --- NUEVAS ACCIONES PARA NOTAS Y TAGS ---
+  function updatePlayerNotes(playerId, newNotes) {
+    const player = players.value.find(p => p.id === playerId);
+    if (player) {
+      player.notes = newNotes;
+    }
+    if (isPreActionPhase.value && history.value.length > 0) {
+      history.value[0].players = deepCopy(players.value);
+    }
+  }
+
+  function updatePlayerTag(playerId, newTag) {
+    const player = players.value.find(p => p.id === playerId);
+    if (player) {
+      // Si se hace clic en el mismo tag, se deselecciona
+      player.tag = player.tag === newTag ? null : newTag;
+    }
+    if (isPreActionPhase.value && history.value.length > 0) {
+      history.value[0].players = deepCopy(players.value);
+    }
+  }
+
 
   return {
     players, heroPosition, smallBlind, bigBlind, currency, board, savedHands, pots,
@@ -562,5 +583,6 @@ export const useGameStore = defineStore('game', () => {
     performAction, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
+    updatePlayerNotes, updatePlayerTag, // <-- EXPORTAR NUEVAS ACCIONES
   }
 });

@@ -1,12 +1,10 @@
 <template>
   <div class="player-container" :style="seatStyle">
 
-    <!-- Se añade la clase condicional 'is-hero' -->
     <div class="player-seat" :class="{ faded: !player.inHand, active: isActivePlayer, 'is-hero': player.name === 'Hero' }">
 
       <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
 
-      <!-- Player cards positioned above the panel -->
       <div class="player-cards">
         <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
           <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
@@ -24,11 +22,11 @@
         </div>
       </div>
 
-      <!-- Player panel below the cards -->
       <div class="player-panel">
         <div class="player-info">
-          <!-- ZONA DE EDICIÓN CONDICIONAL MODIFICADA -->
           <div class="player-name">
+             <!-- INDICADOR DE TAG AÑADIDO -->
+            <span v-if="player.tag" class="player-tag" :style="{ backgroundColor: player.tag }"></span>
             <div v-if="gameStore.isPreActionPhase" class="editable-name-wrapper">
               <input
                 type="text"
@@ -55,8 +53,32 @@
               <span v-else>{{ (player.stack / gameStore.bigBlind).toFixed(1) }} BBs</span>
             </span>
           </div>
-          <!-- FIN DE LA ZONA DE EDICIÓN -->
         </div>
+      </div>
+      <!-- BOTÓN DE LÁPIZ AÑADIDO -->
+      <button v-if="gameStore.isPreActionPhase" @click="isNotesPanelOpen = !isNotesPanelOpen" class="edit-notes-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- PANEL DE NOTAS AÑADIDO -->
+    <div v-if="isNotesPanelOpen" class="notes-panel">
+      <textarea
+        :value="player.notes"
+        @input="gameStore.updatePlayerNotes(player.id, $event.target.value)"
+        placeholder="Notas sobre el jugador..."
+      ></textarea>
+      <div class="tags-container">
+        <div
+          v-for="color in tagColors"
+          :key="color"
+          class="tag-selector"
+          :class="{ selected: player.tag === color }"
+          :style="{ backgroundColor: color }"
+          @click="gameStore.updatePlayerTag(player.id, color)"
+        ></div>
       </div>
     </div>
 
@@ -77,10 +99,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useGameStore } from '../store/game'
 import PlayingCard from './PlayingCard.vue';
 import ChipStack from './ChipStack.vue';
+
+const isNotesPanelOpen = ref(false);
+
+const tagColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
 
 const props = defineProps({
   player: Object,
@@ -205,6 +231,11 @@ const betBoxStyle = computed(() => {
 .player-name {
   font-weight: bold;
   font-size: 1.1em;
+  /* Alineación para el tag */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
 }
 .player-stack {
   font-size: 1.1em;
@@ -219,8 +250,8 @@ const betBoxStyle = computed(() => {
   display: flex;
   justify-content: center;
   gap: 5px;
-  margin-bottom: 0px; /* Space between cards and panel */
-  margin-top: -12px; /* Position cards outside the border */
+  margin-bottom: 0px;
+  margin-top: -12px;
 }
 .player-panel {
   background-color: rgba(0, 0, 0, 0.7);
@@ -236,13 +267,12 @@ const betBoxStyle = computed(() => {
   border-radius: 4px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth animations */
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 .card-placeholder:hover {
   outline: 2px solid #f6e05e;
-  transform: scale(1.05); /* Slight scale on hover for animation */
+  transform: scale(1.05);
 }
-
 .bet-box {
   position: absolute;
   background-color: transparent;
@@ -253,19 +283,16 @@ const betBoxStyle = computed(() => {
   align-items: center;
   gap: 4px;
 }
-
 .bet-info {
   display: flex;
   align-items: center;
   gap: 5px;
 }
-
 .bet-amount-container {
   width: 45px;
   display: flex;
   justify-content: center;
 }
-
 .bet-amount-text {
   background-color: rgba(20, 20, 20, 0.8);
   border: 1px solid #000;
@@ -276,15 +303,10 @@ const betBoxStyle = computed(() => {
   color: white;
   white-space: nowrap;
 }
-
-/* --- ESTILOS ADITIVOS PARA EL HALO DEL HERO --- */
 .is-hero {
-  /* Usamos un color verde consistente con la app */
   border-color: #68d391; 
-  /* La animación 'hero-glow' se encargará del brillo pulsante */
   animation: hero-glow 2s infinite ease-in-out;
 }
-
 @keyframes hero-glow {
   0%, 100% {
     box-shadow: 0 0 8px #68d391, 0 0 10px #68d391 inset;
@@ -293,8 +315,6 @@ const betBoxStyle = computed(() => {
     box-shadow: 0 0 20px #68d391, 0 0 15px #68d391 inset;
   }
 }
-
-/* --- ESTILOS ADITIVOS PARA LOS INPUTS --- */
 .player-input {
   background-color: rgba(26, 32, 44, 0.8);
   border: 1px solid var(--border-color);
@@ -307,14 +327,13 @@ const betBoxStyle = computed(() => {
 .player-name-input {
   font-size: 1em;
   font-weight: bold;
-  /* Ancho ajustado para dejar espacio a la posición */
   width: 90px;
 }
 .player-stack-input {
   font-size: 1em;
   font-weight: bold;
   width: 80px;
-  -moz-appearance: textfield; /* Para Firefox */
+  -moz-appearance: textfield;
 }
 .player-stack-input::-webkit-outer-spin-button,
 .player-stack-input::-webkit-inner-spin-button {
@@ -327,8 +346,6 @@ const betBoxStyle = computed(() => {
   justify-content: center;
   gap: 4px;
 }
-
-/* NUEVOS ESTILOS PARA LA EDICIÓN DEL NOMBRE Y POSICIÓN */
 .editable-name-wrapper {
   display: flex;
   justify-content: center;
@@ -337,18 +354,87 @@ const betBoxStyle = computed(() => {
 }
 .player-position-static {
   font-size: 0.9em;
-  color: #a0aec0; /* Un color más suave para la posición */
+  color: #a0aec0;
+}
+
+/* --- NUEVOS ESTILOS PARA NOTAS Y TAGS --- */
+.edit-notes-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  cursor: pointer;
+  color: #cbd5e0;
+}
+.edit-notes-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+.notes-panel {
+  position: absolute;
+  left: 105%;
+  top: 0;
+  width: 220px;
+  background-color: #2d3748;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.notes-panel textarea {
+  width: 100%;
+  height: 100px;
+  resize: vertical;
+  background-color: #1a202c;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 5px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag-selector {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.1s;
+}
+.tag-selector:hover {
+  transform: scale(1.1);
+}
+.tag-selector.selected {
+  border-color: white;
+}
+.player-tag {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 
-/* Responsive design */
 @media (max-width: 1200px) {
   .player-seat {
     width: 140px;
     padding: 8px;
   }
   .player-cards {
-    margin-top: -10px; /* Adjust for reduced padding */
+    margin-top: -10px;
   }
   .player-panel {
     min-width: 100px;
@@ -372,7 +458,7 @@ const betBoxStyle = computed(() => {
     padding: 6px;
   }
   .player-cards {
-    margin-top: -8px; /* Adjust for reduced padding */
+    margin-top: -8px;
   }
   .player-panel {
     min-width: 80px;
