@@ -53,7 +53,7 @@
         <h2>Seguimiento del Viaje</h2>
         <div class="trip-info"><span><strong>Destino:</strong> {{ tripStore.city || 'N/A' }}, {{ tripStore.casino || 'N/A' }}</span></div>
         <div class="trip-actions-header">
-          <button @click="tripStore.saveCurrentTrip()" class="save-trip-btn">Guardar Viaje</button>
+          <button @click="handleSaveTrip()" class="save-trip-btn">Guardar Viaje</button>
           <button @click="tripStore.resetCurrentTrip()" class="new-trip-btn">Nuevo Viaje</button>
         </div>
         <div class="add-day-form">
@@ -102,6 +102,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Success Toast -->
+    <div v-if="showToast" class="toast success-toast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Viaje guardado con éxito</div>
+    </div>
   </div>
 </template>
 
@@ -110,6 +116,7 @@ import { onMounted, ref, computed } from 'vue';
 import { useTripStore } from '../store/useTripStore';
 
 const tripStore = useTripStore();
+const showToast = ref(false);
 
 // --- LISTA AMPLIADA DE LAS 30 MONEDAS MÁS USADAS ---
 const currencies = ref([
@@ -163,6 +170,14 @@ function calculateWinRate(playerData) {
 
 function confirmAddDay() {
   if (newDayDateString.value) { tripStore.addTripDay(newDayDateString.value); }
+}
+
+function handleSaveTrip() {
+  tripStore.saveCurrentTrip();
+  showToast.value = true;
+  setTimeout(() => {
+    showToast.value = false;
+  }, 3000);
 }
 
 onMounted(() => {
@@ -228,4 +243,45 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
 .profit { color: #68d391; }
 .loss { color: #fc8181; }
 .even { color: #e2e8f0; }
+
+/* Toast Styles */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.success-toast {
+  background-color: #38a169;
+  color: white;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.toast-message {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 </style>

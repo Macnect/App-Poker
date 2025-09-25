@@ -13,7 +13,7 @@
           </div>
           <div class="trip-actions">
             <button @click="loadTripForEditing(trip.id)">Cargar y Editar</button>
-            <button class="delete-btn" @click="tripStore.deleteTrip(trip.id)">Eliminar</button>
+            <button class="delete-btn" @click="confirmDelete(trip.id)">Eliminar</button>
           </div>
         </div>
 
@@ -41,15 +41,39 @@
         </div>
       </li>
     </ul>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <h3>Confirmar Eliminación</h3>
+        <p>¿Está seguro de que desea eliminar este viaje?</p>
+        <div class="modal-actions">
+          <button class="cancel-btn" @click="closeModal">No</button>
+          <button class="confirm-btn" @click="deleteTrip">Sí</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Success Toast -->
+    <div v-if="showToast" class="toast success-toast">
+      <div class="toast-icon">✓</div>
+      <div class="toast-message">Viaje eliminado con éxito</div>
+    </div>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useTripStore } from '../store/useTripStore';
 
 const tripStore = useTripStore();
+
 const emit = defineEmits(['switch-view']);
 
+// --- ESTADO PARA EL MODAL Y TOAST ---
+const showModal = ref(false);
+const showToast = ref(false);
+const selectedTripId = ref(null);
 function loadTripForEditing(tripId) {
   tripStore.loadTrip(tripId);
   emit('switch-view', 'CommunityView');
@@ -84,6 +108,27 @@ function getResultClass(result) {
   if (result > 0) return 'profit';
   if (result < 0) return 'loss';
   return 'even';
+}
+
+function confirmDelete(tripId) {
+  selectedTripId.value = tripId;
+  showModal.value = true;
+}
+
+function closeModal() {
+  showModal.value = false;
+  selectedTripId.value = null;
+}
+
+function deleteTrip() {
+  if (selectedTripId.value) {
+    tripStore.deleteTrip(selectedTripId.value);
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
+    closeModal();
+  }
 }
 </script>
 
@@ -182,4 +227,114 @@ h2 {
 .profit { color: #68d391; }
 .loss { color: #fc8181; }
 .even { color: #e2e8f0; }
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #2d3748;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.modal-content h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+  color: white;
+}
+
+.modal-content p {
+  margin: 0 0 2rem 0;
+  color: #a0aec0;
+  font-size: 1.1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-btn, .confirm-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: #4A5568;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #2D3748;
+}
+
+.confirm-btn {
+  background-color: #c53030;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #9b2c2c;
+}
+
+/* Toast Styles */
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out;
+}
+
+.success-toast {
+  background-color: #38a169;
+  color: white;
+}
+
+.toast-icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.toast-message {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
 </style>
