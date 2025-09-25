@@ -84,7 +84,7 @@ const seatCoordinates = computed(() => {
   if (PREDEFINED_LAYOUTS[props.playerCount]) {
     return PREDEFINED_LAYOUTS[props.playerCount][visualIndex];
   } else {
-    const angleRad = (Math.PI * 2 / props.playerCount) * visualIndex;
+    const angleRad = (Math.PI * 2 / props.playerCount) * visualIndex + Math.PI / 2;
     const radiusX = 450;
     const radiusY = 220;
     return { x: Math.cos(angleRad) * radiusX, y: Math.sin(angleRad) * radiusY };
