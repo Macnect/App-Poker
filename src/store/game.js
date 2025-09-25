@@ -37,8 +37,7 @@ export const useGameStore = defineStore('game', () => {
   const savedHands = ref(JSON.parse(localStorage.getItem('pokerReplayerHands')) || []);
   const displayInBBs = ref(false);
   
-  // --- NUEVO ESTADO PARA LA VELOCIDAD DE REPRODUCCIÓN ---
-  const replaySpeed = ref(1); // 1 = x1, 2 = x2, etc.
+  const replaySpeed = ref(1);
   const isReplaying = ref(false);
   let replayIntervalId = null;
 
@@ -51,6 +50,9 @@ export const useGameStore = defineStore('game', () => {
   const lastRaiseAmount = ref(0);
   const isCardPickerOpen = ref(false);
   const cardPickerTarget = ref(null);
+
+  // --- NUEVO ESTADO PARA CONTROLAR LA EDICIÓN ---
+  const isPreActionPhase = ref(true);
 
   const totalPot = computed(() => pots.value.reduce((sum, pot) => sum + pot.amount, 0));
 
@@ -73,10 +75,8 @@ export const useGameStore = defineStore('game', () => {
 
   function toggleDisplayMode() { displayInBBs.value = !displayInBBs.value; }
   
-  // --- NUEVA ACCIÓN PARA CAMBIAR LA VELOCIDAD ---
   function setReplaySpeed(newSpeed) {
     replaySpeed.value = parseFloat(newSpeed) || 1;
-    // Si el replay está en curso, lo reinicia con la nueva velocidad
     if (isReplaying.value) {
       pauseReplay();
       playReplay();
@@ -87,8 +87,7 @@ export const useGameStore = defineStore('game', () => {
     if (isReplaying.value) return;
     isReplaying.value = true;
     
-    // --- LÓGICA DE INTERVALO MODIFICADA ---
-    const baseInterval = 1500; // 1.5 segundos para la velocidad x1
+    const baseInterval = 1500;
     const intervalDuration = baseInterval / replaySpeed.value;
 
     replayIntervalId = setInterval(() => {
@@ -125,6 +124,7 @@ export const useGameStore = defineStore('game', () => {
     gamePhase.value = 'preflop';
     lastRaiseAmount.value = 0;
     displayInBBs.value = false;
+    isPreActionPhase.value = true; // <-- HABILITAR EDICIÓN
     const positions = getPositions(numPlayers);
     for (let i = 0; i < numPlayers; i++) {
       const isHero = positions[i] === newHeroPosition;
@@ -159,15 +159,20 @@ export const useGameStore = defineStore('game', () => {
       lastRaiserIndex.value = players.value[bbIndex].id;
     }
     players.value[sbIndex].isSB = true;
-    postBet(players.value[sbIndex].id, smallBlind.value);
+    postBet(players.value[sbIndex].id, smallBlind.value, true); // Post blind without recording
     players.value[bbIndex].isBB = true;
-    postBet(players.value[bbIndex].id, bigBlind.value);
+    postBet(players.value[bbIndex].id, bigBlind.value, true); // Post blind without recording
     currentBet.value = bigBlind.value;
     minRaise.value = bigBlind.value * 2;
     lastRaiseAmount.value = bigBlind.value;
     recordState("Inicio de mano. Ciegas puestas.");
   }
   function performAction(action, amount = 0) {
+    // --- DESHABILITAR EDICIÓN AL REALIZAR LA PRIMERA ACCIÓN ---
+    if (isPreActionPhase.value) {
+      isPreActionPhase.value = false;
+    }
+
     if (activePlayer.value === null) return;
     const player = activePlayer.value;
     player.hasActedThisRound = true;
@@ -202,8 +207,7 @@ export const useGameStore = defineStore('game', () => {
         break;
       case 'bet':
       case 'raise':
-        if (isNaN(amount)) return;
-        if (isNaN(amount) || amount <= 0 || (amount < minRaise.value && amount < player.stack + player.betThisRound)) return;
+        if (amount < minRaise.value && amount < player.stack + player.betThisRound) return;
         players.value.forEach(p => { if(p.inHand) p.hasActedThisRound = false; });
         const totalBet = amount;
         const raiseDifference = totalBet - currentBet.value;
@@ -267,12 +271,14 @@ export const useGameStore = defineStore('game', () => {
     }
     endHand();
   }
-  function postBet(playerId, amount) {
+  function postBet(playerId, amount, isBlind = false) {
     const player = players.value.find(p => p.id === playerId);
     const bet = Math.min(amount, player.stack);
     player.stack -= bet;
     player.betThisRound += bet;
-    if (player.stack === 0) {
+
+    // Solo para las ciegas iniciales, no queremos que se consideren "all-in" aún.
+    if (player.stack === 0 && !isBlind) {
       player.isAllIn = true;
     }
   }
@@ -404,6 +410,7 @@ export const useGameStore = defineStore('game', () => {
     history.value = [];
     currentActionIndex.value = -1;
     gamePhase.value = 'setup';
+    isPreActionPhase.value = false; // <-- DESHABILITAR EDICIÓN
     dealerPosition.value = 0;
     activePlayerIndex.value = null;
     currentBet.value = 0;
@@ -499,6 +506,7 @@ export const useGameStore = defineStore('game', () => {
     history.value = deepCopy(handData.history);
     currentActionIndex.value = 0;
     gamePhase.value = 'replay';
+    isPreActionPhase.value = false; // <-- DESHABILITAR EDICIÓN EN REPLAYS
   }
   function deleteHand(handId) {
     savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
@@ -517,16 +525,35 @@ export const useGameStore = defineStore('game', () => {
     return basePositions.slice(0, numPlayers);
   }
 
+  // --- NUEVAS ACCIONES PARA ACTUALIZAR JUGADORES ---
+  function updatePlayerName(playerId, newName) {
+    if (!newName.trim()) return; // No permitir nombres vacíos
+    const player = players.value.find(p => p.id === playerId);
+    if (player) {
+      player.name = newName;
+    }
+  }
+
+  function updatePlayerStack(playerId, newStack) {
+    const stack = parseInt(newStack, 10);
+    if (isNaN(stack) || stack < 0) return; // Validar que sea un número positivo
+    const player = players.value.find(p => p.id === playerId);
+    if (player) {
+      player.stack = stack;
+    }
+  }
+
   return {
     players, heroPosition, smallBlind, bigBlind, currency, board, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,
-    replaySpeed, // <-- EXPORTAR NUEVO ESTADO
+    replaySpeed, isPreActionPhase, // <-- EXPORTAR NUEVO ESTADO
     toggleDisplayMode,
-    playReplay, pauseReplay, restartReplay, setReplaySpeed, // <-- EXPORTAR NUEVA ACCIÓN
+    playReplay, pauseReplay, restartReplay, setReplaySpeed,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
     performAction, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,
+    updatePlayerName, updatePlayerStack, // <-- EXPORTAR NUEVAS ACCIONES
   }
 });

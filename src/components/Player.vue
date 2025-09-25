@@ -27,11 +27,35 @@
       <!-- Player panel below the cards -->
       <div class="player-panel">
         <div class="player-info">
-          <div class="player-name">{{ player.name }} ({{ player.position }})</div>
-          <div class="player-stack">
-            <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.stack }}</span>
-            <span v-else>{{ (player.stack / gameStore.bigBlind).toFixed(1) }} BBs</span>
+          <!-- ZONA DE EDICIÓN CONDICIONAL MODIFICADA -->
+          <div class="player-name">
+            <div v-if="gameStore.isPreActionPhase" class="editable-name-wrapper">
+              <input
+                type="text"
+                :value="player.name"
+                @change="gameStore.updatePlayerName(player.id, $event.target.value)"
+                class="player-input player-name-input"
+              />
+              <span class="player-position-static">({{ player.position }})</span>
+            </div>
+            <span v-else>{{ player.name }} ({{ player.position }})</span>
           </div>
+          <div class="player-stack">
+            <div v-if="gameStore.isPreActionPhase" class="stack-input-wrapper">
+              <span>{{ gameStore.currency }}</span>
+              <input
+                type="number"
+                :value="player.stack"
+                @change="gameStore.updatePlayerStack(player.id, $event.target.value)"
+                class="player-input player-stack-input"
+              />
+            </div>
+            <span v-else>
+              <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.stack }}</span>
+              <span v-else>{{ (player.stack / gameStore.bigBlind).toFixed(1) }} BBs</span>
+            </span>
+          </div>
+          <!-- FIN DE LA ZONA DE EDICIÓN -->
         </div>
       </div>
     </div>
@@ -269,6 +293,53 @@ const betBoxStyle = computed(() => {
     box-shadow: 0 0 20px #68d391, 0 0 15px #68d391 inset;
   }
 }
+
+/* --- ESTILOS ADITIVOS PARA LOS INPUTS --- */
+.player-input {
+  background-color: rgba(26, 32, 44, 0.8);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  border-radius: 4px;
+  text-align: center;
+  padding: 2px 4px;
+  max-width: 100%;
+}
+.player-name-input {
+  font-size: 1em;
+  font-weight: bold;
+  /* Ancho ajustado para dejar espacio a la posición */
+  width: 90px;
+}
+.player-stack-input {
+  font-size: 1em;
+  font-weight: bold;
+  width: 80px;
+  -moz-appearance: textfield; /* Para Firefox */
+}
+.player-stack-input::-webkit-outer-spin-button,
+.player-stack-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.stack-input-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* NUEVOS ESTILOS PARA LA EDICIÓN DEL NOMBRE Y POSICIÓN */
+.editable-name-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+.player-position-static {
+  font-size: 0.9em;
+  color: #a0aec0; /* Un color más suave para la posición */
+}
+
 
 /* Responsive design */
 @media (max-width: 1200px) {
