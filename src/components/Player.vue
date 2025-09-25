@@ -1,10 +1,12 @@
 <template>
   <div class="player-container" :style="seatStyle">
 
+    <!-- Se añade la clase condicional 'is-hero' -->
     <div class="player-seat" :class="{ faded: !player.inHand, active: isActivePlayer, 'is-hero': player.name === 'Hero' }">
 
       <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
 
+      <!-- Player cards positioned above the panel -->
       <div class="player-cards">
         <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
           <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
@@ -22,10 +24,10 @@
         </div>
       </div>
 
+      <!-- Player panel below the cards -->
       <div class="player-panel">
         <div class="player-info">
           <div class="player-name">
-             <!-- INDICADOR DE TAG AÑADIDO -->
             <span v-if="player.tag" class="player-tag" :style="{ backgroundColor: player.tag }"></span>
             <div v-if="gameStore.isPreActionPhase" class="editable-name-wrapper">
               <input
@@ -55,15 +57,22 @@
           </div>
         </div>
       </div>
-      <!-- BOTÓN DE LÁPIZ AÑADIDO -->
+      
       <button v-if="gameStore.isPreActionPhase" @click="isNotesPanelOpen = !isNotesPanelOpen" class="edit-notes-btn">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
         </svg>
       </button>
+
+      <!-- ICONO PARA MOSTRAR NOTAS (SOLO EN MODO REPLAY) -->
+      <div v-if="!gameStore.isPreActionPhase && player.notes" class="notes-display-wrapper">
+        <svg class="notes-display-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25a2.25 2.25 0 0 0-2.25 2.25v10.5a2.25 2.25 0 0 0 2.25 2.25H9.375c.39 0 .744-.18.972-.472l1.94-2.131c.228-.25.58-.399.972-.399h1.499c.39 0 .744.18.972.472l1.94 2.131c.228.25.58.399.972.399Z" />
+        </svg>
+        <div class="notes-tooltip">{{ player.notes }}</div>
+      </div>
     </div>
 
-    <!-- PANEL DE NOTAS AÑADIDO -->
     <div v-if="isNotesPanelOpen" class="notes-panel">
       <textarea
         :value="player.notes"
@@ -231,7 +240,6 @@ const betBoxStyle = computed(() => {
 .player-name {
   font-weight: bold;
   font-size: 1.1em;
-  /* Alineación para el tag */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,7 +365,7 @@ const betBoxStyle = computed(() => {
   color: #a0aec0;
 }
 
-/* --- NUEVOS ESTILOS PARA NOTAS Y TAGS --- */
+/* --- ESTILOS NUEVOS Y MODIFICADOS PARA NOTAS Y TAGS --- */
 .edit-notes-btn {
   position: absolute;
   top: 4px;
@@ -426,54 +434,58 @@ const betBoxStyle = computed(() => {
   border-radius: 50%;
   flex-shrink: 0;
 }
-
-
-@media (max-width: 1200px) {
-  .player-seat {
-    width: 140px;
-    padding: 8px;
-  }
-  .player-cards {
-    margin-top: -10px;
-  }
-  .player-panel {
-    min-width: 100px;
-    padding: 4px;
-  }
-  .player-name {
-    font-size: 1em;
-  }
-  .player-stack {
-    font-size: 1em;
-  }
-  .all-in-icon {
-    width: 50px;
-    height: 50px;
-  }
+.notes-display-wrapper {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 20;
+}
+.notes-display-icon {
+  width: 24px;
+  height: 24px;
+  color: #a0aec0;
+  cursor: pointer;
+}
+.notes-display-wrapper .notes-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  width: 200px;
+  background-color: #1a202c;
+  color: #fff;
+  text-align: left;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  transition: opacity 0.3s;
+  font-size: 0.9rem;
+  font-weight: normal;
+  white-space: pre-wrap;
+  border: 1px solid var(--border-color);
+}
+.notes-display-wrapper:hover .notes-tooltip {
+  visibility: visible;
+  opacity: 1;
 }
 
+@media (max-width: 1200px) {
+  .player-seat { width: 140px; padding: 8px; }
+  .player-cards { margin-top: -10px; }
+  .player-panel { min-width: 100px; padding: 4px; }
+  .player-name { font-size: 1em; }
+  .player-stack { font-size: 1em; }
+  .all-in-icon { width: 50px; height: 50px; }
+}
 @media (max-width: 768px) {
-  .player-seat {
-    width: 120px;
-    padding: 6px;
-  }
-  .player-cards {
-    margin-top: -8px;
-  }
-  .player-panel {
-    min-width: 80px;
-    padding: 3px;
-  }
-  .player-name {
-    font-size: 0.9em;
-  }
-  .player-stack {
-    font-size: 0.9em;
-  }
-  .all-in-icon {
-    width: 40px;
-    height: 40px;
-  }
+  .player-seat { width: 120px; padding: 6px; }
+  .player-cards { margin-top: -8px; }
+  .player-panel { min-width: 80px; padding: 3px; }
+  .player-name { font-size: 0.9em; }
+  .player-stack { font-size: 0.9em; }
+  .all-in-icon { width: 40px; height: 40px; }
   .card-placeholder {
     width: calc(var(--player-card-width) * 0.8);
     height: calc(var(--player-card-height) * 0.8);
