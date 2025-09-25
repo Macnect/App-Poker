@@ -277,7 +277,6 @@ export const useGameStore = defineStore('game', () => {
     player.stack -= bet;
     player.betThisRound += bet;
 
-    // Solo para las ciegas iniciales, no queremos que se consideren "all-in" aún.
     if (player.stack === 0 && !isBlind) {
       player.isAllIn = true;
     }
@@ -525,21 +524,29 @@ export const useGameStore = defineStore('game', () => {
     return basePositions.slice(0, numPlayers);
   }
 
-  // --- NUEVAS ACCIONES PARA ACTUALIZAR JUGADORES ---
+  // --- ACCIONES MODIFICADAS PARA ACTUALIZAR EL HISTORIAL ---
   function updatePlayerName(playerId, newName) {
-    if (!newName.trim()) return; // No permitir nombres vacíos
+    if (!newName.trim()) return;
     const player = players.value.find(p => p.id === playerId);
     if (player) {
       player.name = newName;
+    }
+    // Si estamos en la fase de pre-acción, actualiza el estado inicial en el historial
+    if (isPreActionPhase.value && history.value.length > 0) {
+      history.value[0].players = deepCopy(players.value);
     }
   }
 
   function updatePlayerStack(playerId, newStack) {
     const stack = parseInt(newStack, 10);
-    if (isNaN(stack) || stack < 0) return; // Validar que sea un número positivo
+    if (isNaN(stack) || stack < 0) return;
     const player = players.value.find(p => p.id === playerId);
     if (player) {
       player.stack = stack;
+    }
+    // Si estamos en la fase de pre-acción, actualiza el estado inicial en el historial
+    if (isPreActionPhase.value && history.value.length > 0) {
+      history.value[0].players = deepCopy(players.value);
     }
   }
 
@@ -548,12 +555,12 @@ export const useGameStore = defineStore('game', () => {
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,
-    replaySpeed, isPreActionPhase, // <-- EXPORTAR NUEVO ESTADO
+    replaySpeed, isPreActionPhase,
     toggleDisplayMode,
     playReplay, pauseReplay, restartReplay, setReplaySpeed,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
     performAction, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,
-    updatePlayerName, updatePlayerStack, // <-- EXPORTAR NUEVAS ACCIONES
+    updatePlayerName, updatePlayerStack,
   }
 });
