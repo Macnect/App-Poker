@@ -1,11 +1,28 @@
 <template>
   <div class="summary-container">
     <h2>{{ $t('summary.title') }}</h2>
-    <div v-if="sessionStore.savedSessions.length === 0" class="no-data-message">
-      No hay sesiones guardadas para generar un sumario.
+
+    <!-- FILTRO DE FECHA AÑADIDO -->
+    <div class="filters-container">
+      <label for="summary-date-filter">Mostrar datos de:</label>
+      <select 
+        id="summary-date-filter"
+        :value="sessionStore.summaryDateFilter" 
+        @change="sessionStore.setSummaryDateFilter($event.target.value)"
+      >
+        <option value="all">Todo</option>
+        <option value="last7days">Última semana</option>
+        <option value="last1month">Último mes</option>
+        <option value="last3months">Últimos 3 meses</option>
+        <option value="last6months">Últimos 6 meses</option>
+        <option value="last1year">Último año</option>
+      </select>
+    </div>
+
+    <div v-if="sessionStore.sessionCount === 0" class="no-data-message">
+      No hay sesiones guardadas para el período seleccionado.
     </div>
     <template v-else>
-      <!-- CAMBIADO A FLEX-COLUMN PARA APILAR LAS TARJETAS -->
       <div class="stats-grid">
         <div class="stat-card">
           <span class="stat-title">{{ $t('summary.totalProfit') }}</span>
@@ -27,7 +44,6 @@
       
       <div class="detailed-summary-panel">
         <h3>{{ $t('summary.sessionsTitle') }}</h3>
-        <!-- CAMBIADO A FLEX-COLUMN PARA APILAR LOS DETALLES -->
         <div class="detailed-stats-grid">
           <div class="detail-item">
             <span>{{ $t('summary.sessionCount') }}</span>
@@ -107,7 +123,6 @@ const bbPer100 = computed(() => {
   
   const totalProfit = sessionStore.totalNetProfit;
 
-  // Calcula el tamaño medio de la Ciega Grande a partir de todas las manos guardadas
   const totalBigBlindValue = gameStore.savedHands.reduce((sum, hand) => sum + (hand.bigBlind || 0), 0);
   const averageBigBlind = totalBigBlindValue / totalHands;
 
@@ -141,15 +156,41 @@ function getResultClass(result) {
 
 <style scoped>
 .summary-container {
-  padding: 2rem;
-  max-width: 700px; /* Ancho reducido para una mejor visualización en columna */
+  padding: 1rem;
+  max-width: 1200px;
   margin: 0 auto;
 }
 h2 {
   text-align: center;
   margin-bottom: 2rem;
-  font-size: 2.5rem; /* Título más grande */
+  font-size: 2rem;
 }
+
+/* --- ESTILOS PARA EL FILTRO --- */
+.filters-container {
+  background-color: #2d3748;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.filters-container label {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #a0aec0;
+}
+.filters-container select {
+  padding: 10px 15px;
+  font-size: 1.1rem;
+  background-color: #4A5568;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: white;
+}
+
 .no-data-message {
   text-align: center;
   font-size: 1.2rem;
@@ -159,80 +200,82 @@ h2 {
   border-radius: 12px;
 }
 
-/* --- ESTADÍSTICAS PRINCIPALES --- */
 .stats-grid {
-  display: flex; /* Cambiado a flex */
-  flex-direction: column; /* Apilado vertical */
-  gap: 1.5rem; /* Espacio entre tarjetas */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 .stat-card {
   background-color: #2d3748;
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 2rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem; /* Espacio entre título y valor */
+  gap: 0.5rem;
 }
 .stat-title {
-  font-size: 1.3rem; /* Texto más grande */
+  font-size: 1.1rem;
   color: #a0aec0;
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 1px;
 }
 .stat-value {
-  font-size: 3.2rem; /* Valor mucho más grande */
+  font-size: 2.5rem;
   font-weight: bold;
 }
-
-/* --- PANEL DE DETALLES --- */
 .detailed-summary-panel {
   background-color: #2d3748;
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 1.5rem 2rem;
-  margin-top: 2.5rem; /* Más espacio arriba */
+  padding: 1.5rem;
+  margin-top: 2rem;
 }
 .detailed-summary-panel h3 {
   margin: 0 0 1.5rem 0;
-  font-size: 1.8rem; /* Título de sección más grande */
+  font-size: 1.5rem;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 1rem;
 }
 .detailed-stats-grid {
-  display: flex; /* Cambiado a flex */
-  flex-direction: column; /* Apilado vertical */
-  gap: 1rem; /* Espacio entre cada detalle */
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 .detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.4rem; /* Texto de detalles más grande */
-  padding: 0.75rem 0.25rem;
+  font-size: 1.1rem;
+  padding: 0.75rem 0;
   border-bottom: 1px solid #3c485e;
 }
-.detail-item:last-child {
-  border-bottom: none;
-}
-.detail-item span:first-child {
-  color: #a0aec0;
-}
-.detail-item span:last-child {
-  font-weight: bold;
-}
+.detail-item:last-child { border-bottom: none; }
+.detail-item span:first-child { color: #a0aec0; }
+.detail-item span:last-child { font-weight: bold; }
+.profit-text { color: #68d391; }
+.loss-text { color: #fc8181; }
+.even-text { color: #e2e8f0; }
 
-/* --- CLASES DE COLOR PARA RESULTADOS --- */
-.profit-text {
-  color: #68d391;
+@media (min-width: 768px) {
+  .summary-container { padding: 2rem; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .detailed-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem 2rem;
+  }
+  .detail-item { font-size: 1.2rem; }
 }
-.loss-text {
-  color: #fc8181;
-}
-.even-text {
-  color: #e2e8f0; /* Color de texto por defecto */
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 </style>
