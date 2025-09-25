@@ -11,7 +11,7 @@
       </div>
       <div class="filter-group">
         <button @click="toggleHandStrengthSort" class="sort-btn">
-          {{ sortKey === 'strength' ? 'Ordenar por Fecha' : 'Ordenar por Mano de Hero' }}
+          {{ sortKey === 'strength' ? 'Ordenar por Fecha' : 'Ordenar por Mano de Héroe' }}
         </button>
       </div>
     </div>
@@ -111,16 +111,13 @@ function getHandRank(cards) {
   return HAND_STRENGTH_MAP[handKey] || 999;
 }
 
-// --- PROPIEDAD COMPUTADA PARA MOSTRAR LA LISTA CORREGIDA ---
 const filteredAndSortedHands = computed(() => {
   let hands = [...gameStore.savedHands];
 
-  // 1. Aplicar filtro de fecha (con la lógica corregida)
   if (selectedDate.value) {
     hands = hands.filter(hand => {
-      // Parsea la fecha DD/MM/YYYY manualmente para evitar errores
-      const dateString = hand.date.split(',')[0]; // "22/9/2025"
-      const parts = dateString.split('/'); // ["22", "9", "2025"]
+      const dateString = hand.date.split(',')[0];
+      const parts = dateString.split('/');
       const year = parts[2];
       const month = parts[1].padStart(2, '0');
       const day = parts[0].padStart(2, '0');
@@ -130,7 +127,6 @@ const filteredAndSortedHands = computed(() => {
     });
   }
 
-  // 2. Aplicar ordenación
   if (sortKey.value === 'strength') {
     hands.sort((a, b) => {
       const heroA = getHeroFromHand(a);
@@ -140,8 +136,14 @@ const filteredAndSortedHands = computed(() => {
       return rankA - rankB;
     });
   } else {
-    // Orden por defecto: las más nuevas primero
-    hands.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // --- ÚNICO CAMBIO REALIZADO AQUÍ ---
+    // Orden por defecto: las más nuevas primero.
+    // Se asegura de parsear correctamente el formato DD/MM/YYYY para la comparación.
+    hands.sort((a, b) => {
+        const dateA = new Date(a.date.replace(/(\d+)\/(\d+)\/(\d+)/, '$2/$1/$3'));
+        const dateB = new Date(b.date.replace(/(\d+)\/(\d+)\/(\d+)/, '$2/$1/$3'));
+        return dateB - dateA;
+    });
   }
 
   return hands;

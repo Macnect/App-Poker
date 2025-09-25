@@ -76,7 +76,7 @@
     <div v-if="showNewHandModal" class="modal-overlay" @click="closeNewHandModal">
       <div class="modal-content" @click.stop>
         <h3>Confirmar Nueva Mano</h3>
-        <p>¿Desea guardar los cambios de esta mano?</p>
+        <p>¿Desea guardar los cambios?</p>
         <div class="modal-actions">
           <button class="cancel-btn" @click="justNewHand">No</button>
           <button class="confirm-btn" @click="saveAndNewHand">Sí</button>
