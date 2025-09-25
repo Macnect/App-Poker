@@ -31,9 +31,9 @@
         <button @click="setRaiseAmountByPot(0.50)">50%</button>
         <button @click="setRaiseAmountByPot(0.75)">75%</button>
         <button @click="setRaiseAmountByPot(1)">{{ $t('actionPanel.pot') }}</button>
-        <!-- BOTÓN 150% AÑADIDO -->
         <button @click="setRaiseAmountByPot(1.5)">150%</button>
-        <button @click="gameStore.performAction('all-in')" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
+        <!-- BOTÓN ALL-IN MODIFICADO -->
+        <button @click="setRaiseAmountToAllIn" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
       </div>
 
       <!-- Controles de la mesa -->
@@ -143,22 +143,23 @@ function handleBetRaise() {
   gameStore.performAction(action, raiseAmount.value);
 }
 
-// --- FUNCIÓN CORREGIDA ---
 function setRaiseAmountByPot(multiplier) {
   if (!gameStore.activePlayer) return;
-
-  // 1. CORRECCIÓN: Usar 'gameStore.totalPot' en lugar de 'gameStore.pot'.
-  let betValue = Math.round(gameStore.totalPot * multiplier);
   
-  // 2. Asegura que el valor calculado no sea menor que la subida mínima permitida.
+  let betValue = Math.round(gameStore.totalPot * multiplier);
   betValue = Math.max(minRaiseValue.value, betValue);
-
-  // 3. Asegura que el valor no exceda el stack total del jugador.
   betValue = Math.min(maxSliderValue.value, betValue);
 
-  // 4. Actualiza el `raiseAmount` con el valor final y validado.
   raiseAmount.value = betValue;
 }
+
+// --- NUEVA FUNCIÓN PARA EL BOTÓN ALL-IN ---
+function setRaiseAmountToAllIn() {
+  if (!gameStore.activePlayer) return;
+  // Simplemente establece el raiseAmount al valor máximo posible (el stack del jugador)
+  raiseAmount.value = maxSliderValue.value;
+}
+
 
 function handleWheelScroll(event) {
   event.preventDefault();
