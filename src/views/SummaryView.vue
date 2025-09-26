@@ -2,7 +2,6 @@
   <div class="summary-container">
     <h2>{{ $t('summary.title') }}</h2>
 
-    <!-- FILTRO DE FECHA AÑADIDO -->
     <div class="filters-container">
       <label for="summary-date-filter">Mostrar datos de:</label>
       <select 
@@ -18,8 +17,11 @@
         <option value="last1year">Último año</option>
       </select>
     </div>
-
-    <div v-if="sessionStore.sessionCount === 0" class="no-data-message">
+    
+    <div v-if="isLoading" class="loading-message">
+        Cargando datos del sumario...
+    </div>
+    <div v-else-if="sessionStore.sessionCount === 0" class="no-data-message">
       No hay sesiones guardadas para el período seleccionado.
     </div>
     <template v-else>
@@ -108,12 +110,22 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue'; // Añadir ref y onMounted
 import { useSessionStore } from '../store/useSessionStore';
 import { useGameStore } from '../store/game';
 
 const sessionStore = useSessionStore();
 const gameStore = useGameStore();
+const isLoading = ref(true); // Estado de carga
+
+// Cargar los datos necesarios al montar la vista
+onMounted(async () => {
+    isLoading.value = true;
+    // Cargamos tanto sesiones como manos para tener todos los datos
+    await sessionStore.fetchSessions();
+    await gameStore.fetchHands();
+    isLoading.value = false;
+});
 
 const bbPer100 = computed(() => {
   const totalHands = gameStore.savedHands.length;
@@ -123,8 +135,12 @@ const bbPer100 = computed(() => {
   
   const totalProfit = sessionStore.totalNetProfit;
 
-  const totalBigBlindValue = gameStore.savedHands.reduce((sum, hand) => sum + (hand.bigBlind || 0), 0);
-  const averageBigBlind = totalBigBlindValue / totalHands;
+  // Usamos solo las manos guardadas que tienen un valor de bigBlind
+  const handsWithBlinds = gameStore.savedHands.filter(hand => hand.ciega_grande > 0);
+  if (handsWithBlinds.length === 0) return 0;
+  
+  const totalBigBlindValue = handsWithBlinds.reduce((sum, hand) => sum + hand.ciega_grande, 0);
+  const averageBigBlind = totalBigBlindValue / handsWithBlinds.length;
 
   if (averageBigBlind === 0) {
     return 0;
@@ -166,7 +182,6 @@ h2 {
   font-size: 2rem;
 }
 
-/* --- ESTILOS PARA EL FILTRO --- */
 .filters-container {
   background-color: #2d3748;
   padding: 1rem 1.5rem;
@@ -191,7 +206,7 @@ h2 {
   color: white;
 }
 
-.no-data-message {
+.loading-message, .no-data-message {
   text-align: center;
   font-size: 1.2rem;
   color: #a0aec0;
