@@ -1,15 +1,19 @@
 <template>
   <div class="saved-trips-container">
     <h2>Viajes Guardados</h2>
-    <div v-if="tripStore.savedTrips.length === 0" class="no-trips">
+
+    <div v-if="isLoading" class="loading-message">
+      Cargando viajes...
+    </div>
+    <div v-else-if="tripStore.savedTrips.length === 0" class="no-trips">
       No tienes viajes guardados todavía.
     </div>
     <ul v-else class="trips-list">
       <li v-for="trip in tripStore.savedTrips" :key="trip.id">
         <div class="trip-header">
           <div class="trip-info">
-            <span class="trip-destination">{{ trip.city || 'Viaje sin ciudad' }}, {{ trip.casino || 'Sin casino' }}</span>
-            <span class="trip-date">Guardado el: {{ trip.date }}</span>
+            <span class="trip-destination">{{ trip.ciudad || 'Viaje sin ciudad' }}, {{ trip.casino || 'Sin casino' }}</span>
+            <span class="trip-date">Guardado el: {{ new Date(trip.fecha_creacion).toLocaleDateString() }}</span>
           </div>
           <div class="trip-actions">
             <button @click="loadTripForEditing(trip.id)">Cargar y Editar</button>
@@ -29,11 +33,11 @@
           <div class="stat-item">
             <label>Beneficio Total</label>
             <span class="value" :class="getResultClass(calculateTripProfit(trip))">
-              {{ calculateTripProfit(trip).toFixed(2) }} {{ trip.currency }}
+              {{ calculateTripProfit(trip).toFixed(2) }} {{ trip.moneda }}
             </span>
           </div>
           <div class="stat-item">
-            <label>Media {{ trip.currency }}/h</label>
+            <label>Media {{ trip.moneda }}/h</label>
             <span class="value" :class="getResultClass(calculateTripWinRate(trip))">
               {{ calculateTripWinRate(trip).toFixed(2) }}
             </span>
@@ -49,7 +53,7 @@
         <p>¿Está seguro de que desea eliminar este viaje?</p>
         <div class="modal-actions">
           <button class="cancel-btn" @click="closeModal">No</button>
-          <button class="confirm-btn" @click="deleteTrip">Sí</button>
+          <button class="confirm-btn" @click="deleteAndClose">Sí</button>
         </div>
       </div>
     </div>
@@ -63,17 +67,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useTripStore } from '../store/useTripStore';
 
 const tripStore = useTripStore();
-
 const emit = defineEmits(['switch-view']);
 
-// --- ESTADO PARA EL MODAL Y TOAST ---
+const isLoading = ref(true);
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedTripId = ref(null);
+
+onMounted(async () => {
+  isLoading.value = true;
+  await tripStore.fetchTrips();
+  isLoading.value = false;
+});
+
 function loadTripForEditing(tripId) {
   tripStore.loadTrip(tripId);
   emit('switch-view', 'CommunityView');
@@ -82,7 +92,7 @@ function loadTripForEditing(tripId) {
 function calculateTripProfit(trip) {
   if (!trip.dailyResults) return 0;
   return Object.values(trip.dailyResults).reduce((total, dayResults) => {
-    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (playerData.result || 0), 0);
+    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (parseFloat(playerData.result) || 0), 0);
     return total + dayTotal;
   }, 0);
 }
@@ -90,7 +100,7 @@ function calculateTripProfit(trip) {
 function calculateTripHours(trip) {
   if (!trip.dailyResults) return 0;
   return Object.values(trip.dailyResults).reduce((total, dayResults) => {
-    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (playerData.hours || 0), 0);
+    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (parseFloat(playerData.hours) || 0), 0);
     return total + dayTotal;
   }, 0);
 }
@@ -98,10 +108,7 @@ function calculateTripHours(trip) {
 function calculateTripWinRate(trip) {
   const totalProfit = calculateTripProfit(trip);
   const totalHours = calculateTripHours(trip);
-  if (totalHours === 0) {
-    return 0;
-  }
-  return totalProfit / totalHours;
+  return totalHours === 0 ? 0 : totalProfit / totalHours;
 }
 
 function getResultClass(result) {
@@ -120,13 +127,11 @@ function closeModal() {
   selectedTripId.value = null;
 }
 
-function deleteTrip() {
+async function deleteAndClose() {
   if (selectedTripId.value) {
-    tripStore.deleteTrip(selectedTripId.value);
+    await tripStore.deleteTrip(selectedTripId.value);
     showToast.value = true;
-    setTimeout(() => {
-      showToast.value = false;
-    }, 3000);
+    setTimeout(() => { showToast.value = false; }, 3000);
     closeModal();
   }
 }
@@ -142,7 +147,7 @@ h2 {
   text-align: center;
   margin-bottom: 2rem;
 }
-.no-trips {
+.loading-message, .no-trips {
   margin-top: 1rem;
   color: #a0aec0;
   text-align: center;

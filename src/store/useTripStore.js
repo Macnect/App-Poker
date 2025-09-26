@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
+import { apiFetchTrips, apiAddOrUpdateTrip, apiDeleteTrip } from '@/api';
 
 export const useTripStore = defineStore('trip', () => {
   // --- STATE ---
-  const savedTrips = ref(JSON.parse(localStorage.getItem('pokerSavedTrips')) || []);
-  const currentTripId = ref(null); // Para saber si estamos editando un viaje existente
+  const savedTrips = ref([]);
+  const currentTripId = ref(null); 
 
   // --- STATE DE PLANIFICACIÓN ---
   const playerCount = ref(4);
@@ -103,10 +104,20 @@ export const useTripStore = defineStore('trip', () => {
     return tripTotalHours.value > 0 ? tripTotalProfit.value / tripTotalHours.value : 0;
   });
 
-  // --- ACTIONS ---
+  // --- ACTIONS (Refactorizadas para usar API) ---
   
-  function saveCurrentTrip() {
+  async function fetchTrips() {
+    try {
+        savedTrips.value = await apiFetchTrips();
+    } catch (error) {
+        console.error("Error al cargar los viajes:", error);
+        savedTrips.value = [];
+    }
+  }
+
+  async function saveCurrentTrip() {
     const tripData = {
+      id: currentTripId.value,
       city: city.value,
       casino: casino.value,
       players: players.value,
@@ -117,39 +128,45 @@ export const useTripStore = defineStore('trip', () => {
       dailyResults: dailyResults.value,
     };
 
-    if (currentTripId.value) { // Actualizar un viaje existente
-      const index = savedTrips.value.findIndex(t => t.id === currentTripId.value);
-      if (index !== -1) {
-        savedTrips.value[index] = { ...savedTrips.value[index], ...tripData };
+    try {
+      const savedTripId = await apiAddOrUpdateTrip(tripData);
+      if (!currentTripId.value) {
+        currentTripId.value = savedTripId;
       }
-    } else { // Guardar un viaje nuevo
-      const newTrip = { id: uuidv4(), date: new Date().toLocaleDateString(), ...tripData };
-      currentTripId.value = newTrip.id;
-      savedTrips.value.unshift(newTrip);
+      await fetchTrips(); // Recargamos la lista completa para reflejar los cambios
+      alert('¡Viaje guardado con éxito!');
+    } catch (error) {
+      alert(`Error al guardar el viaje: ${error.message}`);
     }
-    localStorage.setItem('pokerSavedTrips', JSON.stringify(savedTrips.value));
-    alert('¡Viaje guardado con éxito!'); // Feedback para el usuario
   }
   
   function loadTrip(tripId) {
     const tripToLoad = savedTrips.value.find(t => t.id === tripId);
-    if (!tripToLoad) return;
+    if (!tripToLoad) {
+        console.error("No se encontró el viaje para cargar con ID:", tripId);
+        return;
+    }
     
+    // Mapeo de nombres de columna de la DB a estado local
     currentTripId.value = tripToLoad.id;
-    playerCount.value = tripToLoad.players.length;
-    city.value = tripToLoad.city;
+    playerCount.value = tripToLoad.players ? tripToLoad.players.length : 0;
+    city.value = tripToLoad.ciudad;
     casino.value = tripToLoad.casino;
     players.value = tripToLoad.players;
-    currency.value = tripToLoad.currency;
-    repartoType.value = tripToLoad.repartoType;
-    isTripActive.value = tripToLoad.isTripActive;
+    currency.value = tripToLoad.moneda;
+    repartoType.value = tripToLoad.tipo_reparto;
+    isTripActive.value = tripToLoad.activo;
     tripDays.value = tripToLoad.tripDays;
     dailyResults.value = tripToLoad.dailyResults;
   }
 
-  function deleteTrip(tripId) {
-    savedTrips.value = savedTrips.value.filter(t => t.id !== tripId);
-    localStorage.setItem('pokerSavedTrips', JSON.stringify(savedTrips.value));
+  async function deleteTrip(tripId) {
+    try {
+        await apiDeleteTrip(tripId);
+        savedTrips.value = savedTrips.value.filter(t => t.id !== tripId);
+    } catch(error) {
+        alert(`Error al borrar el viaje: ${error.message}`);
+    }
   }
   
   function resetCurrentTrip() {
@@ -235,7 +252,7 @@ export const useTripStore = defineStore('trip', () => {
     isTripActive, tripDays, dailyResults,
     collectiveBankroll, tripTotalProfit, totalParticipation, playerFinalShares,
     playerTotalHours, tripTotalHours, playerAverageWinRates, tripAverageWinRate, playerTotals,
-    saveCurrentTrip, loadTrip, deleteTrip, resetCurrentTrip,
+    fetchTrips, saveCurrentTrip, loadTrip, deleteTrip, resetCurrentTrip,
     setPlayerCount, startTrip, addTripDay, updatePlayerDailyData, updatePlayerBankroll,
   };
 });
