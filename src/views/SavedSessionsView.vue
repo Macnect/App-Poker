@@ -2,7 +2,6 @@
   <div class="saved-sessions-container">
     <h2>Sesiones Guardadas</h2>
 
-    <!-- SECCIÓN DE FILTROS AÑADIDA -->
     <div class="filters-container">
       <label for="date-range-filter">Mostrar Sesiones de:</label>
       <select id="date-range-filter" v-model="selectedFilter">
@@ -16,35 +15,41 @@
       </select>
     </div>
 
+    <!-- ESTADO DE CARGA -->
+    <div v-if="isLoading" class="loading-message">
+      Cargando sesiones...
+    </div>
+    
     <!-- MENSAJE Y LISTA AHORA USAN LA PROPIEDAD COMPUTADA 'filteredSessions' -->
-    <div v-if="filteredSessions.length === 0" class="no-sessions">
+    <div v-else-if="filteredSessions.length === 0" class="no-sessions">
       No tienes sesiones guardadas que coincidan con el filtro seleccionado.
     </div>
     <ul v-else class="sessions-list">
       <li v-for="session in filteredSessions" :key="session.id">
         
         <div class="session-header">
-          <span class="location">{{ session.location || 'Partida Privada' }}</span>
-          <span class="date">{{ session.date }}</span>
+          <span class="location">{{ session.ubicacion || 'Partida Privada' }}</span>
+          <!-- Formateamos la fecha que viene de la base de datos -->
+          <span class="date">{{ new Date(session.fecha + 'T12:00:00').toLocaleDateString() }}</span>
         </div>
         
-        <div class="session-result" :class="getResultClass(session.result)">
+        <div class="session-result" :class="getResultClass(session.resultado)">
           <span>Resultado</span>
           <span class="result-amount">
-            {{ formatResult(session.result, session.currency) }}
+            {{ formatResult(session.resultado, session.moneda) }}
           </span>
         </div>
 
         <div class="session-details">
           <div class="session-stats">
-            <div class="stat-item"><strong>Duración:</strong> <span>{{ formatDuration(session.duration) }}</span></div>
-            <div class="stat-item"><strong>Descansos:</strong> <span>{{ formatDuration(session.totalBreakTime) }}</span></div>
-            <div class="stat-item"><strong>Ciegas:</strong> <span>{{ session.blinds }}</span></div>
-            <div class="stat-item"><strong>Jugadores:</strong> <span>{{ session.playerCount }}</span></div>
-            <div class="stat-item"><strong>Buy-in:</strong> <span>{{ session.currency }}{{ session.initialStack }}</span></div>
-            <div class="stat-item"><strong>Recargas:</strong> <span>{{ session.currency }}{{ session.totalRebuys || 0 }}</span></div>
-            <div class="stat-item"><strong>Gastos:</strong> <span>-{{ session.currency }}{{ session.totalExpenses || 0 }}</span></div>
-            <div class="stat-item"><strong>Stack Final:</strong> <span>{{ session.currency }}{{ session.finalStack !== undefined ? session.finalStack : 'N/A' }}</span></div>
+            <div class="stat-item"><strong>Duración:</strong> <span>{{ formatDuration(session.duracion_segundos) }}</span></div>
+            <div class="stat-item"><strong>Descansos:</strong> <span>{{ formatDuration(session.tiempo_descanso_segundos) }}</span></div>
+            <div class="stat-item"><strong>Ciegas:</strong> <span>{{ session.ciegas }}</span></div>
+            <div class="stat-item"><strong>Jugadores:</strong> <span>{{ session.cantidad_jugadores }}</span></div>
+            <div class="stat-item"><strong>Buy-in:</strong> <span>{{ session.moneda }}{{ session.stack_inicial }}</span></div>
+            <div class="stat-item"><strong>Recargas:</strong> <span>{{ session.moneda }}{{ session.total_recompras || 0 }}</span></div>
+            <div class="stat-item"><strong>Gastos:</strong> <span>-{{ session.moneda }}{{ session.total_gastos || 0 }}</span></div>
+            <div class="stat-item"><strong>Stack Final:</strong> <span>{{ session.moneda }}{{ session.stack_final !== undefined ? session.stack_final : 'N/A' }}</span></div>
           </div>
         </div>
 
@@ -66,7 +71,7 @@
          <p>¿Estás seguro de que deseas eliminar esta sesión?</p>
          <div class="modal-actions">
            <button class="cancel-btn" @click="closeModal">No</button>
-           <button class="confirm-btn" @click="deleteSession">Sí</button>
+           <button class="confirm-btn" @click="deleteAndClose">Sí</button>
          </div>
        </div>
      </div>
@@ -92,25 +97,27 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'; // <-- IMPORTAR ref Y computed
+import { ref, computed, onMounted } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
 
 const sessionStore = useSessionStore();
-
-// --- NUEVO ESTADO LOCAL PARA EL FILTRO ---
+const isLoading = ref(true);
 const selectedFilter = ref('all');
-
-// --- ESTADO PARA EL MODAL Y TOAST ---
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedSessionId = ref(null);
 
-// --- ESTADO PARA EL MODAL DE NOTAS ---
 const showNotesModal = ref(false);
 const sessionNotes = ref('');
 const notesSessionId = ref(null);
 
-// --- NUEVA PROPIEDAD COMPUTADA PARA FILTRAR LAS SESIONES ---
+// Cargar sesiones al montar el componente
+onMounted(async () => {
+  isLoading.value = true;
+  await sessionStore.fetchSessions();
+  isLoading.value = false;
+});
+
 const filteredSessions = computed(() => {
   const filter = selectedFilter.value;
   const allSessions = sessionStore.savedSessions;
@@ -122,7 +129,6 @@ const filteredSessions = computed(() => {
   const now = new Date();
   const cutoffDate = new Date();
 
-  // Establecer la fecha de corte según el filtro seleccionado
   switch (filter) {
     case 'today':
       cutoffDate.setHours(0, 0, 0, 0);
@@ -145,9 +151,8 @@ const filteredSessions = computed(() => {
   }
 
   return allSessions.filter(session => {
-    // Parsea la fecha en formato DD/MM/YYYY para que sea comparable
-    const parts = session.date.split('/');
-    const sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    // La fecha de la DB (YYYY-MM-DD) se convierte a objeto Date para comparar
+    const sessionDate = new Date(session.fecha);
     return sessionDate >= cutoffDate;
   });
 });
@@ -164,18 +169,20 @@ function formatDuration(totalSeconds) {
 }
 
 function getResultClass(result) {
-  if (typeof result !== 'number') return 'even';
-  if (result > 0) return 'profit';
-  if (result < 0) return 'loss';
+  const numResult = parseFloat(result);
+  if (isNaN(numResult)) return 'even';
+  if (numResult > 0) return 'profit';
+  if (numResult < 0) return 'loss';
   return 'even';
 }
 
 function formatResult(result, currency) {
-  if (typeof result !== 'number') {
+  const numResult = parseFloat(result);
+  if (isNaN(numResult)) {
     return 'N/A';
   }
-  const prefix = result >= 0 ? '+' : '';
-  return `${prefix}${currency}${result.toFixed(2)}`;
+  const prefix = numResult >= 0 ? '+' : '';
+  return `${prefix}${currency}${numResult.toFixed(2)}`;
 }
 
 function confirmDelete(sessionId) {
@@ -188,9 +195,9 @@ function closeModal() {
   selectedSessionId.value = null;
 }
 
-function deleteSession() {
+async function deleteAndClose() {
   if (selectedSessionId.value) {
-    sessionStore.deleteSession(selectedSessionId.value);
+    await sessionStore.deleteSession(selectedSessionId.value);
     showToast.value = true;
     setTimeout(() => {
       showToast.value = false;
@@ -201,6 +208,8 @@ function deleteSession() {
 
 function openNotesModal(sessionId) {
   notesSessionId.value = sessionId;
+  // La funcionalidad de notas se mantiene con localStorage por ahora para simplificar.
+  // En un futuro, esto debería leer/escribir en una columna 'notas' de la tabla 'sesiones_juego'.
   sessionNotes.value = localStorage.getItem(`sessionNotes_${sessionId}`) || '';
   showNotesModal.value = true;
 }
@@ -225,7 +234,7 @@ function saveNotes() {
   max-width: 700px;
   margin: 0 auto;
 }
-.no-sessions {
+.loading-message, .no-sessions {
   margin-top: 1rem;
   color: #a0aec0;
   font-size: 1.2rem;
@@ -239,8 +248,6 @@ function saveNotes() {
   flex-direction: column;
   gap: 2rem;
 }
-
-/* --- NUEVOS ESTILOS PARA LA BARRA DE FILTROS --- */
 .filters-container {
   background-color: #2d3748;
   padding: 1rem 1.5rem;
@@ -264,8 +271,6 @@ function saveNotes() {
   border-radius: 6px;
   color: white;
 }
-
-/* --- (Estilos existentes sin cambios) --- */
 .sessions-list li { background-color: #2d3748; padding: 1.5rem 2rem; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1.5rem; }
 .session-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #4a5568; padding-bottom: 1rem; }
 .location { font-size: 1.8rem; font-weight: 700; }
@@ -281,11 +286,11 @@ function saveNotes() {
 .stat-item:last-child { border-bottom: none; }
 .stat-item strong { color: #a0aec0; margin-right: 1rem; }
 .stat-item span { font-weight: bold; }
-.session-actions { display: flex; justify-content: space-between; margin-top: 1rem; }
+.session-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
 .notes-btn { background-color: #48bb78; padding: 12px; font-size: 1.1rem; border: none; border-radius: 6px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .notes-btn:hover { background-color: #38a169; }
 .notes-btn svg { width: 20px; height: 20px; }
-.delete-btn { background-color: #c53030; padding: 12px 25px; font-size: 1.1rem; width: 100%; max-width: 300px; }
+.delete-btn { background-color: #c53030; padding: 12px 25px; font-size: 1.1rem; }
 .delete-btn:hover { background-color: #9b2c2c; }
 
 /* Modal Styles */
@@ -301,7 +306,6 @@ function saveNotes() {
   align-items: center;
   z-index: 1000;
 }
-
 .modal-content {
   background-color: #2d3748;
   border-radius: 12px;
@@ -311,25 +315,21 @@ function saveNotes() {
   text-align: center;
   border: 1px solid var(--border-color);
 }
-
 .modal-content h3 {
   margin: 0 0 1rem 0;
   font-size: 1.5rem;
   color: white;
 }
-
 .modal-content p {
   margin: 0 0 2rem 0;
   color: #a0aec0;
   font-size: 1.1rem;
 }
-
 .modal-actions {
   display: flex;
   gap: 1rem;
   justify-content: center;
 }
-
 .cancel-btn, .confirm-btn {
   padding: 10px 20px;
   border: none;
@@ -338,25 +338,20 @@ function saveNotes() {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
 .cancel-btn {
   background-color: #4A5568;
   color: white;
 }
-
 .cancel-btn:hover {
   background-color: #2D3748;
 }
-
 .confirm-btn {
   background-color: #c53030;
   color: white;
 }
-
 .confirm-btn:hover {
   background-color: #9b2c2c;
 }
-
 .notes-modal textarea {
   width: 100%;
   padding: 10px;
@@ -369,11 +364,9 @@ function saveNotes() {
   resize: vertical;
   margin-bottom: 1rem;
 }
-
 .notes-modal .confirm-btn {
   background-color: #48bb78;
 }
-
 .notes-modal .confirm-btn:hover {
   background-color: #38a169;
 }
@@ -392,22 +385,18 @@ function saveNotes() {
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
 }
-
 .success-toast {
   background-color: #38a169;
   color: white;
 }
-
 .toast-icon {
   font-size: 1.5rem;
   font-weight: bold;
 }
-
 .toast-message {
   font-size: 1rem;
   font-weight: bold;
 }
-
 @keyframes slideIn {
   from {
     transform: translateX(100%);

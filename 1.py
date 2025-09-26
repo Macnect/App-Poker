@@ -1,110 +1,98 @@
 import os
 
 # --- CONFIGURACIÓN ---
+# Edita estas listas para personalizar qué se incluye y qué se excluye.
 
-# 1. Nombre del archivo de salida que se creará.
-output_filename = "project_code.txt"
-
-# 2. Nombre de la carpeta raíz de tu proyecto.
-project_root = "poker-replayer"
-
-# 3. Lista de todos los archivos de tu proyecto que quieres incluir.
-# IMPORTANTE: Si añades o eliminas archivos en tu proyecto, ¡debes actualizar esta lista!
-file_paths = [
-    "index.html",
-    "package.json",
-    "package-lock.json",
-    "vite.config.js",
-    "src/App.vue",
-    "src/main.js",
-    "src/i18n.js",
-    "src/styles.css",
-    "src/locales/en.json",
-    "src/locales/es.json",
-    "src/store/game.js",
-    "src/store/useChartsStore.js",
-    "src/store/useSessionStore.js",
-    "src/store/useSettingsStore.js",
-    "src/store/useTripStore.js",
-    "src/components/ActionPanel.vue",
-    "src/components/CardPicker.vue",
-    "src/components/ChipStack.vue",
-    "src/components/ConfigurationModal.vue",
-    "src/components/DisplayOptions.vue",
-    "src/components/EndSessionModal.vue",
-    "src/components/HelloWorld.vue",
-    "src/components/Player.vue",
-    "src/components/PlayingCard.vue",
-    "src/components/PokerTable.vue",
-    "src/components/SessionChart.vue",
-    "src/views/ChartsView.vue",
-    "src/views/CommunityView.vue",
-    "src/views/CurrentHandView.vue",
-    "src/views/LiveSessionView.vue",
-    "src/views/SavedHandsView.vue",
-    "src/views/SavedSessionsView.vue",
-    "src/views/SavedTripsView.vue",
-    "src/views/SettingsView.vue",
-    "src/views/SummaryView.vue",
+# 1. Rutas que quieres incluir en el análisis.
+#    Puede ser una mezcla de archivos individuales y carpetas completas.
+PATHS_TO_INCLUDE = [
+    'public',
+    'src',
+    'index.html',
+    'package.json',
+    'vite.config.js',
+    'README.md'
 ]
 
-# --- LÓGICA DEL SCRIPT ---
+# 2. Patrones a excluir. El script ignorará cualquier archivo o carpeta que coincida.
+PATTERNS_TO_EXCLUDE = [
+    'node_modules',   # Excluye la carpeta de dependencias
+    'dist',           # Excluye la carpeta de compilación
+    '.git',           # Excluye la carpeta de control de versiones
+    '__pycache__',    # Excluye la caché de Python
+    '.DS_Store',      # Excluye archivos de sistema de macOS
+    'package-lock.json', # Es muy largo y redundante con package.json
+    '.log'            # Excluye cualquier archivo que termine en .log
+]
 
-def generate_code_txt():
-    """
-    Lee todos los archivos de la lista y los une en un solo archivo de texto.
-    """
-    all_content = []
-    # Obtiene el directorio donde se está ejecutando el script
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_dir = os.path.join(script_dir, project_root)
+# 3. Nombre del archivo de salida.
+OUTPUT_FILENAME = 'project_code.txt'
 
-    print(f"Iniciando la recopilación de archivos del proyecto '{project_root}'...")
+# --- FIN DE LA CONFIGURACIÓN ---
 
+
+def should_exclude(path, exclude_patterns):
+    """Verifica si una ruta de archivo o carpeta debe ser excluida."""
+    path_parts = path.replace('\\', '/').split('/')
+    for pattern in exclude_patterns:
+        # Excluir si alguna parte de la ruta coincide exactamente con un patrón (ej: 'node_modules')
+        if pattern in path_parts:
+            return True
+        # Excluir si la ruta termina con un patrón (ej: '.log')
+        if path.endswith(pattern):
+            return True
+    return False
+
+def get_all_filepaths(include_paths, exclude_patterns):
+    """Recopila todas las rutas de archivos válidas, respetando las exclusiones."""
+    all_files = set() # Usamos un set para evitar duplicados
+    for path in include_paths:
+        if should_exclude(path, exclude_patterns):
+            continue
+        
+        if os.path.isfile(path):
+            all_files.add(path)
+        elif os.path.isdir(path):
+            for root, dirs, files in os.walk(path):
+                # Excluir carpetas de la búsqueda para ser más eficiente
+                dirs[:] = [d for d in dirs if not should_exclude(os.path.join(root, d), exclude_patterns)]
+                
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    if not should_exclude(file_path, exclude_patterns):
+                        all_files.add(file_path)
+    return sorted(list(all_files))
+
+def centralize_code(filepaths, output_file):
+    """Escribe el contenido de todos los archivos encontrados en un único fichero de texto."""
     try:
-        # Primero, procesamos los archivos que están en la raíz del proyecto
-        root_files = [f for f in file_paths if "/" not in f and "\\" not in f]
-        for file_name in root_files:
-            full_path = os.path.join(project_dir, file_name)
-            
-            print(f"Leyendo archivo raíz: {full_path}")
-            
-            header = f"\n=================================== FILE: ./{project_root}/{file_name} ===================================\n\n"
-            all_content.append(header)
-            
-            with open(full_path, 'r', encoding='utf-8') as infile:
-                content = infile.read()
-                all_content.append(content)
-
-        # Luego, procesamos los archivos en subdirectorios
-        sub_files = [f for f in file_paths if "/" in f or "\\" in f]
-        for file_path in sub_files:
-            # Normalizamos los separadores para que funcione en cualquier SO
-            normalized_path = file_path.replace("/", os.sep).replace("\\", os.sep)
-            full_path = os.path.join(project_dir, normalized_path)
-            
-            print(f"Leyendo archivo: {full_path}")
-            
-            header = f"\n=================================== FILE: ./{project_root}/{file_path} ===================================\n\n"
-            all_content.append(header)
-            
-            with open(full_path, 'r', encoding='utf-8') as infile:
-                content = infile.read()
-                all_content.append(content)
-
-        # Escribimos todo al archivo de salida
-        output_path = os.path.join(script_dir, output_filename)
-        with open(output_path, 'w', encoding='utf-8') as outfile:
-            outfile.write("".join(all_content))
-            
-        print("\n¡Proceso completado con éxito!")
-        print(f"Se ha generado el archivo '{output_filename}' con todo el código.")
-
-    except FileNotFoundError as e:
-        print(f"\nERROR: No se pudo encontrar el archivo: {e.filename}")
-        print("Por favor, asegúrate de que el script '1.py' esté en la carpeta correcta y que la lista 'file_paths' esté actualizada y sea correcta.")
+        with open(output_file, 'w', encoding='utf-8', errors='ignore') as outfile:
+            outfile.write("=" * 35 + " RESUMEN DEL PROYECTO " + "=" * 35 + "\n\n")
+            for filepath in filepaths:
+                normalized_path = filepath.replace('\\', '/')
+                header = f"--- INICIO DEL ARCHIVO: {normalized_path} ---"
+                outfile.write(header + '\n\n')
+                try:
+                    with open(filepath, 'r', encoding='utf-8', errors='ignore') as infile:
+                        outfile.write(infile.read())
+                    outfile.write('\n\n' + "-" * len(header) + '\n\n')
+                except Exception as e:
+                    outfile.write(f"*** ERROR al leer el archivo: {e} ***\n\n")
+        print(f"¡Éxito! El código del proyecto se ha centralizado en '{output_file}'")
     except Exception as e:
-        print(f"\nHa ocurrido un error inesperado: {e}")
+        print(f"*** ERROR al crear el archivo de salida '{output_file}': {e} ***")
 
 if __name__ == "__main__":
-    generate_code_txt()
+    print("Iniciando la recopilación de archivos del proyecto...")
+    
+    # Asegurarse de que el script se ejecuta desde el directorio correcto
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(project_dir)
+    
+    all_project_files = get_all_filepaths(PATHS_TO_INCLUDE, PATTERNS_TO_EXCLUDE)
+    
+    if not all_project_files:
+        print("No se encontraron archivos válidos. Revisa la configuración de 'PATHS_TO_INCLUDE' en el script.")
+    else:
+        print(f"Se encontraron {len(all_project_files)} archivos. Escribiendo en '{OUTPUT_FILENAME}'...")
+        centralize_code(all_project_files, OUTPUT_FILENAME)

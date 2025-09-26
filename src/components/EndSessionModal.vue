@@ -26,8 +26,10 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn-cancel" @click="cancel">Cancelar</button>
-        <button class="btn-confirm" @click="confirm" :disabled="finalStack === null || finalStack < 0">Confirmar y Guardar</button>
+        <button class="btn-cancel" @click="cancel" :disabled="isSaving">Cancelar</button>
+        <button class="btn-confirm" @click="confirm" :disabled="finalStack === null || finalStack < 0 || isSaving">
+          {{ isSaving ? 'Guardando...' : 'Confirmar y Guardar' }}
+        </button>
       </div>
     </div>
   </div>
@@ -36,6 +38,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
+
+// AÑADIDO: Prop para recibir el estado de guardado
+const props = defineProps({
+  isSaving: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const emit = defineEmits(['confirm', 'cancel']);
 const sessionStore = useSessionStore();
@@ -60,6 +70,8 @@ function confirm() {
 }
 
 function cancel() {
+  // No se puede cancelar si se está guardando
+  if (props.isSaving) return;
   emit('cancel');
 }
 

@@ -91,17 +91,25 @@
         </template>
       </div>
     </div>
-    <EndSessionModal v-if="showEndSessionModal" @confirm="handleConfirmEndSession" @cancel="showEndSessionModal = false" />
+    <EndSessionModal 
+      v-if="showEndSessionModal" 
+      @confirm="handleConfirmEndSession" 
+      @cancel="showEndSessionModal = false"
+      :is-saving="isSaving" 
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
+import { useAuthStore } from '../store/useAuthStore'; // <-- IMPORTAR AUTH STORE
 import EndSessionModal from '../components/EndSessionModal.vue';
 
 const sessionStore = useSessionStore();
+const authStore = useAuthStore(); // <-- INICIALIZAR AUTH STORE
 const showEndSessionModal = ref(false);
+const isSaving = ref(false);
 
 const rebuyAmount = ref(null);
 const tipAmount = ref(null);
@@ -125,9 +133,19 @@ function handleAddExpense() {
     expenseAmount.value = null;
   }
 }
-function handleConfirmEndSession(finalStack) {
-  sessionStore.stopAndSaveSession(finalStack);
-  showEndSessionModal.value = false;
+
+// *** FUNCIÓN MODIFICADA PARA PASAR EL USUARIO ***
+async function handleConfirmEndSession(finalStack) {
+  isSaving.value = true;
+  try {
+    // Pasamos el objeto 'user' del authStore a la función de guardado
+    await sessionStore.stopAndSaveSession(finalStack, authStore.user);
+    showEndSessionModal.value = false;
+  } catch (error) {
+    alert(`Error al guardar la sesión: ${error.message}`);
+  } finally {
+    isSaving.value = false;
+  }
 }
 
 const formattedTime = computed(() => {

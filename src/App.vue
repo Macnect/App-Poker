@@ -1,5 +1,5 @@
 <template>
-  <div id="main-container">
+  <div v-if="authStore.user" id="main-container">
     <nav>
       <button @click="currentView = 'CurrentHandView'" :class="{ active: currentView === 'CurrentHandView' }">
         {{ $t('nav.currentHand') }}
@@ -19,28 +19,31 @@
       <button @click="currentView = 'SummaryView'" :class="{ active: currentView === 'SummaryView' }">
         {{ $t('nav.summary') }}
       </button>
-      <!-- BOTÓN COMUNIDAD MODIFICADO PARA RESETEAR -->
       <button @click="switchToView('CommunityView')" :class="{ active: currentView === 'CommunityView' }">
         Viajes
       </button>
-      <!-- BOTÓN NUEVO PARA VIAJES GUARDADOS -->
       <button @click="currentView = 'SavedTripsView'" :class="{ active: currentView === 'SavedTripsView' }">
         Viajes Guardados
       </button>
       <button @click="currentView = 'SettingsView'" :class="{ active: currentView === 'SettingsView' }">
         {{ $t('nav.settings') }}
       </button>
+      <!-- Botón para cerrar sesión -->
+      <button @click="authStore.signOut()" class="logout-btn">
+        Salir
+      </button>
     </nav>
     <main>
-      <!-- EMISOR DE EVENTOS MODIFICADO -->
       <component :is="views[currentView]" @switch-view="switchToView" />
     </main>
   </div>
+  <AuthView v-else />
 </template>
 
 <script setup>
 import { ref, shallowRef } from 'vue';
-import { useTripStore } from './store/useTripStore'; // <-- 1. IMPORTAR EL TRIP STORE
+import { useTripStore } from './store/useTripStore';
+import { useAuthStore } from './store/useAuthStore'; // <-- IMPORTAR AUTH STORE
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
 import LiveSessionView from './views/LiveSessionView.vue';
@@ -49,10 +52,12 @@ import ChartsView from './views/ChartsView.vue';
 import SettingsView from './views/SettingsView.vue';
 import SummaryView from './views/SummaryView.vue';
 import CommunityView from './views/CommunityView.vue';
-import SavedTripsView from './views/SavedTripsView.vue'; // <-- 2. IMPORTAR LA NUEVA VISTA
+import SavedTripsView from './views/SavedTripsView.vue';
+import AuthView from './views/AuthView.vue'; // <-- IMPORTAR AUTH VIEW
 
+const authStore = useAuthStore(); // <-- INICIALIZAR AUTH STORE
 const currentView = ref('CurrentHandView');
-const tripStore = useTripStore(); // <-- 3. INICIALIZAR EL TRIP STORE
+const tripStore = useTripStore();
 
 const views = shallowRef({
   CurrentHandView,
@@ -63,19 +68,15 @@ const views = shallowRef({
   SettingsView,
   SummaryView,
   CommunityView,
-  SavedTripsView, // <-- 4. REGISTRAR LA NUEVA VISTA
+  SavedTripsView,
 });
 
-// --- 5. LÓGICA DE NAVEGACIÓN ACTUALIZADA ---
 function switchToView(viewName) {
-  // Caso especial para el replay de manos guardadas
   if (viewName === undefined || viewName === 'CurrentHandView') {
     currentView.value = 'CurrentHandView';
     return;
   }
   
-  // Si hacemos clic en "Comunidad" desde cualquier otra vista que no sea "Viajes Guardados",
-  // reseteamos el estado para empezar un viaje nuevo.
   if (viewName === 'CommunityView' && currentView.value !== 'SavedTripsView') {
       tripStore.resetCurrentTrip();
   }
@@ -83,7 +84,6 @@ function switchToView(viewName) {
   currentView.value = viewName;
 }
 
-// Mantenemos la función original por si algún componente la sigue usando sin argumentos
 function switchToCurrentHandView() {
   currentView.value = 'CurrentHandView';
 }
@@ -97,14 +97,25 @@ nav {
   padding: 10px;
   background-color: #2d3748;
   border-bottom: 2px solid var(--border-color);
+  display: flex; /* Añadido para mejor alineación */
+  flex-wrap: wrap; /* Para que los botones se ajusten en pantallas pequeñas */
+  justify-content: center; /* Centrar botones */
 }
 nav button {
-  margin: 0 10px;
+  margin: 5px 10px; /* Ajuste de margen para wrapping */
   background-color: transparent;
   border: 1px solid var(--primary-color);
 }
 nav button.active {
   background-color: var(--primary-color);
+}
+nav .logout-btn {
+  border-color: #e53e3e;
+  color: #e53e3e;
+}
+nav .logout-btn:hover {
+  background-color: #e53e3e;
+  color: white;
 }
 main {
   width: 100%;

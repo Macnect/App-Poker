@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/supabase';
+import { useAuthStore } from './useAuthStore';
 
 export const useSessionStore = defineStore('session', () => {
   // --- STATE ---
@@ -18,17 +20,14 @@ export const useSessionStore = defineStore('session', () => {
   const location = ref('');
   const currency = ref('$');
   const initialStack = ref(200);
-  const savedSessions = ref(JSON.parse(localStorage.getItem('pokerSavedSessions')) || []);
+  const savedSessions = ref([]);
   
-  // --- NUEVO ESTADO PARA EL FILTRO DEL SUMARIO ---
   const summaryDateFilter = ref('all');
 
-  // --- NUEVA ACCIÓN PARA CAMBIAR EL FILTRO ---
   function setSummaryDateFilter(newFilter) {
     summaryDateFilter.value = newFilter;
   }
 
-  // --- NUEVA COMPUTADA PARA FILTRAR SESIONES SEGÚN EL FILTRO SELECCIONADO ---
   const filteredSessionsForSummary = computed(() => {
     const filter = summaryDateFilter.value;
     if (filter === 'all') {
@@ -38,7 +37,6 @@ export const useSessionStore = defineStore('session', () => {
     const now = new Date();
     const cutoffDate = new Date();
     
-    // El día de hoy a las 00:00 para que 'today' y 'last7days' funcionen correctamente
     cutoffDate.setHours(0, 0, 0, 0); 
 
     switch (filter) {
@@ -50,21 +48,18 @@ export const useSessionStore = defineStore('session', () => {
     }
 
     return savedSessions.value.filter(session => {
-      // Usamos la misma lógica de parseo de fechas que en otras vistas
-      const dateParts = session.date.split('/');
-      const sessionDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+      const sessionDate = new Date(session.fecha);
       return sessionDate >= cutoffDate;
     });
   });
 
-  // --- TODAS LAS COMPUTADAS SIGUIENTES AHORA USAN 'filteredSessionsForSummary' ---
   const totalNetProfit = computed(() => {
-    return filteredSessionsForSummary.value.reduce((total, session) => total + (session.result || 0), 0);
+    return filteredSessionsForSummary.value.reduce((total, session) => total + (parseFloat(session.resultado) || 0), 0);
   });
 
   const totalInvestment = computed(() => {
     return filteredSessionsForSummary.value.reduce((total, session) => {
-      return total + (session.initialStack || 0) + (session.totalRebuys || 0);
+      return total + (parseFloat(session.stack_inicial) || 0) + (parseFloat(session.total_recompras) || 0);
     }, 0);
   });
   
@@ -74,32 +69,32 @@ export const useSessionStore = defineStore('session', () => {
   });
 
   const winningDays = computed(() => {
-    return filteredSessionsForSummary.value.filter(session => session.result > 0).length;
+    return filteredSessionsForSummary.value.filter(session => session.resultado > 0).length;
   });
 
   const losingDays = computed(() => {
-    return filteredSessionsForSummary.value.filter(session => session.result < 0).length;
+    return filteredSessionsForSummary.value.filter(session => session.resultado < 0).length;
   });
 
   const bestDay = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const results = filteredSessionsForSummary.value.map(session => session.result || 0);
+    const results = filteredSessionsForSummary.value.map(session => parseFloat(session.resultado) || 0);
     return Math.max(...results);
   });
 
   const worstDay = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const results = filteredSessionsForSummary.value.map(session => session.result || 0);
+    const results = filteredSessionsForSummary.value.map(session => parseFloat(session.resultado) || 0);
     return Math.min(...results);
   });
 
   const winningStreak = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const chronologicalSessions = [...filteredSessionsForSummary.value].reverse();
+    const chronologicalSessions = [...filteredSessionsForSummary.value].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
     let maxStreak = 0;
     let currentStreak = 0;
     for (const session of chronologicalSessions) {
-      if (session.result > 0) {
+      if (session.resultado > 0) {
         currentStreak++;
       } else {
         maxStreak = Math.max(maxStreak, currentStreak);
@@ -112,20 +107,20 @@ export const useSessionStore = defineStore('session', () => {
 
   const averageBuyIn = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const totalInvest = filteredSessionsForSummary.value.reduce((total, session) => total + (session.initialStack || 0) + (session.totalRebuys || 0), 0);
+    const totalInvest = filteredSessionsForSummary.value.reduce((total, session) => total + (parseFloat(session.stack_inicial) || 0) + (parseFloat(session.total_recompras) || 0), 0);
     return totalInvest / filteredSessionsForSummary.value.length;
   });
   
   const averageCashOut = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const totalCashOut = filteredSessionsForSummary.value.reduce((total, session) => total + (session.finalStack || 0), 0);
+    const totalCashOut = filteredSessionsForSummary.value.reduce((total, session) => total + (parseFloat(session.stack_final) || 0), 0);
     return totalCashOut / filteredSessionsForSummary.value.length;
   });
 
   const sessionCount = computed(() => filteredSessionsForSummary.value.length);
 
   const totalHoursPlayed = computed(() => {
-    const totalSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.duration || 0), 0);
+    const totalSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.duracion_segundos || 0), 0);
     return totalSeconds / 3600;
   });
   
@@ -136,8 +131,8 @@ export const useSessionStore = defineStore('session', () => {
 
   const averageBreakDuration = computed(() => {
     if (sessionCount.value === 0) return 0;
-    const totalBreakSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.totalBreakTime || 0), 0);
-    const sessionsWithBreaks = filteredSessionsForSummary.value.filter(s => s.totalBreakTime > 0).length;
+    const totalBreakSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.tiempo_descanso_segundos || 0), 0);
+    const sessionsWithBreaks = filteredSessionsForSummary.value.filter(s => s.tiempo_descanso_segundos > 0).length;
     if (sessionsWithBreaks === 0) return 0;
     return (totalBreakSeconds / sessionsWithBreaks) / 60;
   });
@@ -149,16 +144,32 @@ export const useSessionStore = defineStore('session', () => {
 
   const averageRebuys = computed(() => {
     if (sessionCount.value === 0) return 0;
-    const totalRebuysAmount = filteredSessionsForSummary.value.reduce((sum, session) => sum + (session.totalRebuys || 0), 0);
+    const totalRebuysAmount = filteredSessionsForSummary.value.reduce((sum, session) => sum + (parseFloat(session.total_recompras) || 0), 0);
     return totalRebuysAmount / sessionCount.value;
   });
 
   const totalAllExpenses = computed(() => {
-    return filteredSessionsForSummary.value.reduce((sum, session) => sum + (session.totalExpenses || 0), 0);
+    return filteredSessionsForSummary.value.reduce((sum, session) => sum + (parseFloat(session.total_gastos) || 0), 0);
   });
 
-  // --- ACTIONS --- (Sin cambios aquí)
-  
+  async function fetchSessions() {
+    const authStore = useAuthStore();
+    if (!authStore.user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('sesiones_juego')
+        .select('*')
+        .eq('usuario_id', authStore.user.id)
+        .order('fecha', { ascending: false });
+
+      if (error) throw error;
+      savedSessions.value = data;
+    } catch (error) {
+      console.error('Error fetching sessions:', error.message);
+    }
+  }
+
   function startSession() {
     elapsedTime.value = 0;
     totalBreakTime.value = 0;
@@ -205,52 +216,91 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
   
-  function stopAndSaveSession(finalStack) {
-    if (isOnBreak.value) {
-      totalBreakTime.value += breakElapsedTime.value;
+  async function stopAndSaveSession(finalStack) {
+    const authStore = useAuthStore();
+    if (!authStore.user) {
+      isActive.value = false;
+      clearInterval(sessionTimerInterval);
+      throw new Error("Usuario no autenticado. No se puede guardar la sesión.");
     }
+    
+    try {
+      if (isOnBreak.value) {
+        totalBreakTime.value += breakElapsedTime.value;
+      }
 
-    const currentInvestment = initialStack.value + totalRebuys.value;
-    const result = finalStack - currentInvestment - totalExpenses.value;
+      const currentInvestment = initialStack.value + totalRebuys.value;
+      const result = finalStack - currentInvestment - totalExpenses.value;
 
-    const sessionSummary = {
-      id: uuidv4(),
-      date: new Date().toLocaleDateString(),
-      duration: elapsedTime.value,
-      totalBreakTime: totalBreakTime.value,
-      playerCount: playerCount.value,
-      blinds: blinds.value,
-      location: location.value,
-      currency: currency.value,
-      initialStack: initialStack.value,
-      totalRebuys: totalRebuys.value,
-      totalExpenses: totalExpenses.value,
-      finalStack: finalStack,
-      result: result,
-    };
+      const sessionData = {
+        usuario_id: authStore.user.id,
+        fecha: new Date().toISOString().split('T')[0],
+        duracion_segundos: elapsedTime.value,
+        tiempo_descanso_segundos: totalBreakTime.value,
+        cantidad_jugadores: playerCount.value,
+        ciegas: blinds.value,
+        ubicacion: location.value,
+        moneda: currency.value,
+        stack_inicial: parseFloat(initialStack.value) || 0,
+        total_recompras: parseFloat(totalRebuys.value) || 0,
+        total_gastos: parseFloat(totalExpenses.value) || 0,
+        stack_final: parseFloat(finalStack) || 0,
+        resultado: parseFloat(result) || 0,
+      };
 
-    savedSessions.value.unshift(sessionSummary);
-    localStorage.setItem('pokerSavedSessions', JSON.stringify(savedSessions.value));
+      // =================================================================
+      // =========== LÍNEA DE DEPURACIÓN INTEGRADA ======================
+      console.log('DEBUG: Objeto a insertar en Supabase:', JSON.stringify(sessionData, null, 2));
+      // =================================================================
 
-    isActive.value = false;
-    isOnBreak.value = false;
-    clearInterval(sessionTimerInterval);
-    clearInterval(breakTimerInterval);
-    sessionTimerInterval = null;
-    breakTimerInterval = null;
-    elapsedTime.value = 0;
-    breakElapsedTime.value = 0;
+      const { data, error } = await supabase
+        .from('sesiones_juego')
+        .insert(sessionData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Supabase insert error:", error);
+        throw error;
+      }
+      
+      savedSessions.value.unshift(data);
+
+    } catch (error) {
+      console.error('Error saving session in store:', error.message);
+      throw error;
+    } finally {
+      isActive.value = false;
+      isOnBreak.value = false;
+      clearInterval(sessionTimerInterval);
+      clearInterval(breakTimerInterval);
+      sessionTimerInterval = null;
+      breakTimerInterval = null;
+      elapsedTime.value = 0;
+      breakElapsedTime.value = 0;
+    }
   }
   
-  function deleteSession(sessionId) {
-    savedSessions.value = savedSessions.value.filter(session => session.id !== sessionId);
-    localStorage.setItem('pokerSavedSessions', JSON.stringify(savedSessions.value));
+  async function deleteSession(sessionId) {
+    try {
+      const { error } = await supabase
+        .from('sesiones_juego')
+        .delete()
+        .eq('id', sessionId);
+      
+      if (error) throw error;
+
+      savedSessions.value = savedSessions.value.filter(session => session.id !== sessionId);
+
+    } catch (error) {
+      console.error('Error deleting session:', error.message);
+    }
   }
 
   return {
     isActive, elapsedTime, isOnBreak, breakElapsedTime, playerCount, blinds, 
     location, currency, initialStack, savedSessions, totalRebuys, totalExpenses,
-    summaryDateFilter, // <-- Exportar estado del filtro
+    summaryDateFilter,
     totalNetProfit,
     averageBuyIn,
     averageCashOut,
@@ -269,6 +319,7 @@ export const useSessionStore = defineStore('session', () => {
     totalAllExpenses,
     startSession, startBreak, endBreak, stopAndSaveSession, deleteSession,
     addRebuy, addExpense,
-    setSummaryDateFilter, // <-- Exportar acción del filtro
+    setSummaryDateFilter,
+    fetchSessions,
   };
 });
