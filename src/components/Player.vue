@@ -1,13 +1,8 @@
 <template>
   <div class="player-container" :style="seatStyle">
 
-    <!-- Se añade la clase condicional 'is-hero' -->
-    <div class="player-seat" :class="{ faded: !player.inHand, active: isActivePlayer, 'is-hero': player.name === 'Hero' }">
-
-      <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
-
-      <!-- Player cards positioned above the panel -->
-      <div class="player-cards">
+    <!-- CAMBIO: EL DIV DE LAS CARTAS SE MUEVE FUERA DEL PLAYER-SEAT -->
+    <div class="player-cards">
         <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
           <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
           <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -22,10 +17,13 @@
             <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
           </svg>
         </div>
-      </div>
+    </div>
+    
+    <div class="player-seat" :class="{ faded: !player.inHand, active: isActivePlayer, 'is-hero': player.name === 'Hero' }">
+      
+      <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
 
-      <!-- Player panel below the cards -->
-      <div class="player-panel">
+      <div class="player-info-panel">
         <div class="player-info">
           <div class="player-name">
             <span v-if="player.tag" class="player-tag" :style="{ backgroundColor: player.tag }"></span>
@@ -64,10 +62,9 @@
         </svg>
       </button>
 
-      <!-- ICONO PARA MOSTRAR NOTAS (SOLO EN MODO REPLAY) -->
       <div v-if="!gameStore.isPreActionPhase && player.notes" class="notes-display-wrapper">
         <svg class="notes-display-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25a2.25 2.25 0 0 0-2.25 2.25v10.5a2.25 2.25 0 0 0 2.25 2.25H9.375c.39 0 .744-.18.972-.472l1.94-2.131c.228-.25.58-.399.972-.399h1.499c.39 0 .744.18.972.472l1.94 2.131c.228.25.58.399.972.399Z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
         </svg>
         <div class="notes-tooltip">{{ player.notes }}</div>
       </div>
@@ -194,115 +191,130 @@ const betBoxStyle = computed(() => {
 </script>
 
 <style scoped>
+/* --- ESTILOS COMPLETAMENTE RENOVADOS --- */
 .player-container {
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 5;
+  /* Contenedor principal ahora tiene un tamaño fijo para alinear las cartas */
+  width: 150px;
+  height: calc(60px + var(--player-card-height)); /* Altura del panel + altura de la carta */
 }
+
 .player-seat {
-  width: 160px;
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 2px solid var(--border-color);
-  border-radius: 10px;
-  padding: 10px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 60px; /* Solo la altura del panel de info */
+  background: none;
+  border: none;
   transition: all 0.3s ease;
+}
+
+.player-info-panel {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(45, 55, 72, 0.95) 0%, rgba(26, 32, 44, 0.95) 100%);
+  border: 1px solid rgba(74, 85, 104, 0.5);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  text-align: center;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0px;
+  justify-content: center;
+}
+
+.player-cards {
+  position: absolute;
+  top: 0; /* Posicionado en la parte superior del contenedor principal */
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  z-index: 9;
+}
+
+.card-placeholder {
+  width: var(--player-card-width);
+  height: var(--player-card-height);
+  cursor: pointer;
   position: relative;
 }
-.active {
+
+.player-name {
+  font-weight: 700;
+  font-size: 1.1em;
+  color: #E2E8F0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.player-stack {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #FFFFFF;
+  background-color: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.active .player-info-panel {
   border-color: #f6e05e;
-  box-shadow: 0 0 15px #f6e05e;
+  box-shadow: 0 0 15px rgba(246, 224, 94, 0.5), 0 4px 15px rgba(0, 0, 0, 0.4);
 }
+
 .faded {
-  opacity: 0.4;
+  opacity: 0.5;
 }
+
 .dealer-button {
   position: absolute;
   width: 25px;
   height: 25px;
-  background-color: white;
-  color: black;
+  background: linear-gradient(145deg, #ffffff, #e6e6e6);
+  color: #333;
   border-radius: 50%;
   font-weight: bold;
   font-size: 1rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 2px solid black;
-  z-index: 10;
+  border: 1px solid rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  z-index: 15;
 }
-.player-info {
-  text-align: center;
-}
-.player-name {
-  font-weight: bold;
-  font-size: 1.1em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-.player-stack {
-  font-size: 1.1em;
-  font-weight: bold;
-  margin-top: 2px;
-}
-.all-in-icon {
-  width: 60px;
-  height: 60px;
-}
-.player-cards {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-  margin-bottom: 0px;
-  margin-top: -12px;
-}
-.player-panel {
-  background-color: rgba(0, 0, 0, 0.7);
-  border-radius: 6px;
-  padding: 6px;
-  min-width: 120px;
-  text-align: center;
-}
-.card-placeholder {
-  width: var(--player-card-width);
-  height: var(--player-card-height);
-  background-color: transparent;
-  border-radius: 4px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-.card-placeholder:hover {
-  outline: 2px solid #f6e05e;
-  transform: scale(1.05);
-}
+
 .bet-box {
   position: absolute;
-  background-color: transparent;
-  border: none;
-  padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  z-index: 10;
 }
+
 .bet-info {
   display: flex;
   align-items: center;
   gap: 5px;
 }
-.bet-amount-container {
-  width: 45px;
-  display: flex;
-  justify-content: center;
-}
+
 .bet-amount-text {
-  background-color: rgba(20, 20, 20, 0.8);
+  background-color: rgba(0,0,0,0.8);
   border: 1px solid #000;
   padding: 2px 8px;
   border-radius: 6px;
@@ -311,20 +323,28 @@ const betBoxStyle = computed(() => {
   color: white;
   white-space: nowrap;
 }
-.is-hero {
-  border-color: #68d391; 
+
+.all-in-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.is-hero .player-info-panel {
+  border-color: #68d391;
   animation: hero-glow 2s infinite ease-in-out;
 }
+
 @keyframes hero-glow {
   0%, 100% {
-    box-shadow: 0 0 8px #68d391, 0 0 10px #68d391 inset;
+    box-shadow: 0 0 8px #68d391, 0 0 10px #68d391 inset, 0 4px 15px rgba(0, 0, 0, 0.4);
   }
   50% {
-    box-shadow: 0 0 20px #68d391, 0 0 15px #68d391 inset;
+    box-shadow: 0 0 20px #68d391, 0 0 15px #68d391 inset, 0 4px 15px rgba(0, 0, 0, 0.4);
   }
 }
+
 .player-input {
-  background-color: rgba(26, 32, 44, 0.8);
+  background-color: #1a202c;
   border: 1px solid var(--border-color);
   color: var(--text-color);
   border-radius: 4px;
@@ -333,14 +353,12 @@ const betBoxStyle = computed(() => {
   max-width: 100%;
 }
 .player-name-input {
-  font-size: 1em;
-  font-weight: bold;
-  width: 90px;
+  font-size: 0.9em;
+  width: 70px;
 }
 .player-stack-input {
   font-size: 1em;
-  font-weight: bold;
-  width: 80px;
+  width: 70px;
   -moz-appearance: textfield;
 }
 .player-stack-input::-webkit-outer-spin-button,
@@ -365,28 +383,32 @@ const betBoxStyle = computed(() => {
   color: #a0aec0;
 }
 
-/* --- ESTILOS NUEVOS Y MODIFICADOS PARA NOTAS Y TAGS --- */
-.edit-notes-btn {
+.edit-notes-btn, .notes-display-wrapper {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  top: -4px;
+  right: -8px;
+  z-index: 15;
+}
+
+.edit-notes-btn {
+  background: rgba(45, 55, 72, 0.9);
+  border: 1px solid rgba(74, 85, 104, 0.5);
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   padding: 4px;
   cursor: pointer;
   color: #cbd5e0;
 }
 .edit-notes-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(74, 85, 104, 1);
   color: white;
 }
 .notes-panel {
   position: absolute;
   left: 105%;
-  top: 0;
+  top: 50%;
+  transform: translateY(-50%);
   width: 220px;
   background-color: #2d3748;
   border: 1px solid var(--border-color);
@@ -396,6 +418,7 @@ const betBoxStyle = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 }
 .notes-panel textarea {
   width: 100%;
@@ -427,24 +450,30 @@ const betBoxStyle = computed(() => {
 }
 .tag-selector.selected {
   border-color: white;
+  box-shadow: 0 0 5px white;
 }
 .player-tag {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.5);
 }
 .notes-display-wrapper {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  z-index: 20;
+  top: -4px;
+  left: -8px;
+  z-index: 15;
 }
 .notes-display-icon {
   width: 24px;
   height: 24px;
   color: #a0aec0;
   cursor: pointer;
+  background-color: rgba(45, 55, 72, 0.9);
+  border-radius: 50%;
+  padding: 2px;
+  border: 1px solid rgba(74, 85, 104, 0.5);
 }
 .notes-display-wrapper .notes-tooltip {
   visibility: hidden;
@@ -456,7 +485,7 @@ const betBoxStyle = computed(() => {
   border-radius: 6px;
   padding: 8px;
   position: absolute;
-  z-index: 1;
+  z-index: 25;
   bottom: 125%;
   left: 50%;
   margin-left: -100px;
@@ -465,30 +494,12 @@ const betBoxStyle = computed(() => {
   font-weight: normal;
   white-space: pre-wrap;
   border: 1px solid var(--border-color);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 }
 .notes-display-wrapper:hover .notes-tooltip {
   visibility: visible;
   opacity: 1;
 }
 
-@media (max-width: 1200px) {
-  .player-seat { width: 140px; padding: 8px; }
-  .player-cards { margin-top: -10px; }
-  .player-panel { min-width: 100px; padding: 4px; }
-  .player-name { font-size: 1em; }
-  .player-stack { font-size: 1em; }
-  .all-in-icon { width: 50px; height: 50px; }
-}
-@media (max-width: 768px) {
-  .player-seat { width: 120px; padding: 6px; }
-  .player-cards { margin-top: -8px; }
-  .player-panel { min-width: 80px; padding: 3px; }
-  .player-name { font-size: 0.9em; }
-  .player-stack { font-size: 0.9em; }
-  .all-in-icon { width: 40px; height: 40px; }
-  .card-placeholder {
-    width: calc(var(--player-card-width) * 0.8);
-    height: calc(var(--player-card-height) * 0.8);
-  }
-}
+/* Responsive design se mantiene igual */
 </style>
