@@ -1,5 +1,5 @@
 <template>
-  <div class="action-panel-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: isDraggable ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
+  <div class="action-panel-wrapper" ref="panelRef" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: 'default' }">
     
     <div class="actions-grid">
       <!-- Fila 1 -->
@@ -98,18 +98,12 @@ function stopDrag() {
 }
 
 onMounted(() => {
-  const savedPosition = localStorage.getItem('actionPanelPosition');
-  if (savedPosition) {
-    panelPosition.value = JSON.parse(savedPosition);
-  } else {
-    // Set initial position to center below the table
-    const rect = panelRef.value.getBoundingClientRect();
-    panelPosition.value = {
-      x: window.innerWidth / 2 - rect.width / 2,
-      y: 600 // below the poker table
-    };
-  }
-  isDraggable.value = false;
+  // Set fixed position with coordinates
+  panelPosition.value = {
+    x: 550,  // Cambia este valor para la coordenada X
+    y: 880   // Cambia este valor para la coordenada Y
+  };
+  isDraggable.value = false;  // Deshabilita el arrastre para mantenerlo fijo
 });
 
 onUnmounted(() => {
