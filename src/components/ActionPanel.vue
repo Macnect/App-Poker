@@ -1,5 +1,5 @@
 <template>
-  <div class="action-panel-wrapper" style="position: fixed; top: 880px; left: 50%; transform: translateX(-50%);">
+  <div class="action-panel-wrapper" style="position: fixed; top: 800px; left: 50%; transform: translateX(-50%);">
     
     <div class="actions-grid">
       <!-- Fila 1 -->
