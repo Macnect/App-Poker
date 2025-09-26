@@ -1,5 +1,5 @@
 <template>
-  <div class="action-panel-wrapper">
+  <div class="action-panel-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: isDraggable ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
     
     <div class="actions-grid">
       <!-- Fila 1 -->
@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '../store/game';
 
@@ -63,6 +63,61 @@ const { t } = useI18n();
 const props = defineProps({ modelValue: String });
 const emit = defineEmits(['update:modelValue']);
 const gameStore = useGameStore();
+
+const panelRef = ref(null);
+const isDragging = ref(false);
+const dragOffset = ref({ x: 0, y: 0 });
+const panelPosition = ref({ x: 0, y: 0 });
+const isDraggable = ref(true);
+
+function startDrag(event) {
+  if (!isDraggable.value) return;
+  isDragging.value = true;
+  const rect = panelRef.value.getBoundingClientRect();
+  dragOffset.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  };
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', stopDrag);
+}
+
+function drag(event) {
+  if (!isDragging.value) return;
+  panelPosition.value = {
+    x: event.clientX - dragOffset.value.x,
+    y: event.clientY - dragOffset.value.y
+  };
+}
+
+function stopDrag() {
+  isDragging.value = false;
+  isDraggable.value = false;
+  localStorage.setItem('actionPanelPosition', JSON.stringify(panelPosition.value));
+  document.removeEventListener('mousemove', drag);
+  document.removeEventListener('mouseup', stopDrag);
+}
+
+onMounted(() => {
+  const savedPosition = localStorage.getItem('actionPanelPosition');
+  if (savedPosition) {
+    panelPosition.value = JSON.parse(savedPosition);
+    isDraggable.value = false;
+  } else {
+    // Set initial position to center below the table
+    const rect = panelRef.value.getBoundingClientRect();
+    panelPosition.value = {
+      x: window.innerWidth / 2 - rect.width / 2,
+      y: window.innerHeight - 200 // below
+    };
+    isDraggable.value = true;
+  }
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', drag);
+  document.removeEventListener('mouseup', stopDrag);
+});
 
 const amountToCall = computed(() => {
   if (!gameStore.activePlayer) return 0;
@@ -196,7 +251,7 @@ function handleWheelScroll(event) {
   padding: 20px;
   width: 900px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--border-color);
+  border: 3px solid var(--border-color);
   color: white;
 }
 .actions-grid {

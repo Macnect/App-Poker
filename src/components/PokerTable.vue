@@ -232,12 +232,13 @@ function justNewHand() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 50px;
+  gap: 60px;
+  margin-bottom: 150px;
 }
 .game-controls {
   display: flex;
   gap: 12px;
+  margin-top: 340px;
 }
 /* REGLA CSS MODIFICADA PARA INCLUIR EL SELECT */
 .game-controls > button, .game-controls > select {
