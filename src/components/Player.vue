@@ -172,26 +172,11 @@ const seatStyle = computed(() => {
   return { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` };
 });
 const dealerButtonStyle = computed(() => {
-  const { x, y } = seatCoordinates.value;
-  const styles = {};
-  if (Math.abs(y) > Math.abs(x)) {
-    styles.left = x > 0 ? 'calc(50% + 10px)' : 'calc(50% - 10px)';
-    styles.transform = 'translateX(-50%)';
-    if (y > 0) {
-      styles.bottom = '110%';
-    } else {
-      styles.top = '110%';
-    }
-  } else {
-    styles.top = y > 0 ? 'calc(50% + 10px)' : 'calc(50% - 10px)';
-    styles.transform = 'translateY(-50%)';
-    if (x > 0) {
-      styles.right = '110%';
-    } else {
-      styles.left = '110%';
-    }
-  }
-  return styles;
+  return {
+    bottom: '-40px',
+    left: '50%',
+    transform: 'translateX(-50%)'
+  };
 });
 const betBoxStyle = computed(() => {
   const { x, y } = seatCoordinates.value;
