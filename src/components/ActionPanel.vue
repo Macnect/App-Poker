@@ -98,10 +98,10 @@ function stopDrag() {
 }
 
 onMounted(() => {
-  // Set fixed position with coordinates
+  // Center the panel horizontally based on screen resolution
   panelPosition.value = {
-    x: 550,  // Cambia este valor para la coordenada X
-    y: 880   // Cambia este valor para la coordenada Y
+    x: window.innerWidth / 2 - 450,  // 900px width / 2
+    y: 850  // Fixed vertical position
   };
   isDraggable.value = false;  // Deshabilita el arrastre para mantenerlo fijo
 });
