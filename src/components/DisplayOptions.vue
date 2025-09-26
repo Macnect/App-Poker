@@ -1,5 +1,5 @@
 <template>
-  <div class="display-options-wrapper">
+  <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: isDraggable ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
     <h3>Color de Mesa</h3>
     <div class="options-row">
       <select class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
@@ -20,6 +20,7 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '../store/game';
 
 // Definimos las propiedades y eventos para comunicarnos con el componente padre
@@ -29,6 +30,61 @@ defineProps({
 defineEmits(['update:modelValue']);
 
 const gameStore = useGameStore();
+
+const panelRef = ref(null);
+const isDragging = ref(false);
+const dragOffset = ref({ x: 0, y: 0 });
+const panelPosition = ref({ x: 0, y: 0 });
+const isDraggable = ref(true);
+
+function startDrag(event) {
+  if (!isDraggable.value) return;
+  isDragging.value = true;
+  const rect = panelRef.value.getBoundingClientRect();
+  dragOffset.value = {
+    x: event.clientX - rect.left,
+    y: event.clientY - rect.top
+  };
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('mouseup', stopDrag);
+}
+
+function drag(event) {
+  if (!isDragging.value) return;
+  panelPosition.value = {
+    x: event.clientX - dragOffset.value.x,
+    y: event.clientY - dragOffset.value.y
+  };
+}
+
+function stopDrag() {
+  isDragging.value = false;
+  isDraggable.value = false;
+  localStorage.setItem('displayOptionsPosition', JSON.stringify(panelPosition.value));
+  document.removeEventListener('mousemove', drag);
+  document.removeEventListener('mouseup', stopDrag);
+}
+
+onMounted(() => {
+  const savedPosition = localStorage.getItem('displayOptionsPosition');
+  if (savedPosition) {
+    panelPosition.value = JSON.parse(savedPosition);
+    isDraggable.value = false;
+  } else {
+    // Set initial position
+    const rect = panelRef.value.getBoundingClientRect();
+    panelPosition.value = {
+      x: window.innerWidth / 2 - rect.width / 2,
+      y: window.innerHeight - 300
+    };
+    isDraggable.value = true;
+  }
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', drag);
+  document.removeEventListener('mouseup', stopDrag);
+});
 </script>
 
 <style scoped>
