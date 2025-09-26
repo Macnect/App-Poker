@@ -49,22 +49,39 @@
         </div>
 
         <div class="session-actions">
-          <button class="delete-btn" @click="confirmDelete(session.id)">Eliminar Sesión</button>
-        </div>
+           <button class="notes-btn" @click="openNotesModal(session.id)" title="Añadir Notas">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+             </svg>
+           </button>
+           <button class="delete-btn" @click="confirmDelete(session.id)">Eliminar Sesión</button>
+         </div>
       </li>
     </ul>
 
     <!-- Confirmation Modal -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
-      <div class="modal-content" @click.stop>
-        <h3>Confirmar Eliminación</h3>
-        <p>¿Estás seguro de que deseas eliminar esta sesión?</p>
-        <div class="modal-actions">
-          <button class="cancel-btn" @click="closeModal">No</button>
-          <button class="confirm-btn" @click="deleteSession">Sí</button>
-        </div>
-      </div>
-    </div>
+     <div v-if="showModal" class="modal-overlay" @click="closeModal">
+       <div class="modal-content" @click.stop>
+         <h3>Confirmar Eliminación</h3>
+         <p>¿Estás seguro de que deseas eliminar esta sesión?</p>
+         <div class="modal-actions">
+           <button class="cancel-btn" @click="closeModal">No</button>
+           <button class="confirm-btn" @click="deleteSession">Sí</button>
+         </div>
+       </div>
+     </div>
+
+     <!-- Notes Modal -->
+     <div v-if="showNotesModal" class="modal-overlay" @click="closeNotesModal">
+       <div class="modal-content notes-modal" @click.stop>
+         <h3>Notas de la Sesión</h3>
+         <textarea v-model="sessionNotes" placeholder="Escribe tus notas sobre esta sesión..." rows="6"></textarea>
+         <div class="modal-actions">
+           <button class="cancel-btn" @click="closeNotesModal">Cancelar</button>
+           <button class="confirm-btn" @click="saveNotes">Guardar</button>
+         </div>
+       </div>
+     </div>
 
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
@@ -87,6 +104,11 @@ const selectedFilter = ref('all');
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedSessionId = ref(null);
+
+// --- ESTADO PARA EL MODAL DE NOTAS ---
+const showNotesModal = ref(false);
+const sessionNotes = ref('');
+const notesSessionId = ref(null);
 
 // --- NUEVA PROPIEDAD COMPUTADA PARA FILTRAR LAS SESIONES ---
 const filteredSessions = computed(() => {
@@ -176,6 +198,25 @@ function deleteSession() {
     closeModal();
   }
 }
+
+function openNotesModal(sessionId) {
+  notesSessionId.value = sessionId;
+  sessionNotes.value = localStorage.getItem(`sessionNotes_${sessionId}`) || '';
+  showNotesModal.value = true;
+}
+
+function closeNotesModal() {
+  showNotesModal.value = false;
+  sessionNotes.value = '';
+  notesSessionId.value = null;
+}
+
+function saveNotes() {
+  if (notesSessionId.value) {
+    localStorage.setItem(`sessionNotes_${notesSessionId.value}`, sessionNotes.value);
+    closeNotesModal();
+  }
+}
 </script>
 
 <style scoped>
@@ -240,7 +281,10 @@ function deleteSession() {
 .stat-item:last-child { border-bottom: none; }
 .stat-item strong { color: #a0aec0; margin-right: 1rem; }
 .stat-item span { font-weight: bold; }
-.session-actions { display: flex; justify-content: center; margin-top: 1rem; }
+.session-actions { display: flex; justify-content: space-between; margin-top: 1rem; }
+.notes-btn { background-color: #48bb78; padding: 12px; font-size: 1.1rem; border: none; border-radius: 6px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.notes-btn:hover { background-color: #38a169; }
+.notes-btn svg { width: 20px; height: 20px; }
 .delete-btn { background-color: #c53030; padding: 12px 25px; font-size: 1.1rem; width: 100%; max-width: 300px; }
 .delete-btn:hover { background-color: #9b2c2c; }
 
@@ -311,6 +355,27 @@ function deleteSession() {
 
 .confirm-btn:hover {
   background-color: #9b2c2c;
+}
+
+.notes-modal textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: #1a202c;
+  color: white;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  margin-bottom: 1rem;
+}
+
+.notes-modal .confirm-btn {
+  background-color: #48bb78;
+}
+
+.notes-modal .confirm-btn:hover {
+  background-color: #38a169;
 }
 
 /* Toast Styles */
