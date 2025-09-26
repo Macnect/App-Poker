@@ -415,17 +415,17 @@ const notesPanelStyle = computed(() => {
 .edit-notes-btn, .notes-display-wrapper {
   position: absolute;
   top: -4px;
-  right: -8px;
+  right: -26px;
   z-index: 15;
 }
 
 .edit-notes-btn {
   background: rgba(45, 55, 72, 0.9);
-  border: 1px solid rgba(74, 85, 104, 0.5);
+  border: 3px solid rgba(74, 85, 104, 0.5);
   border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  padding: 4px;
+  width: 30px;
+  height: 30px;
+  padding: 2px;
   cursor: pointer;
   color: #cbd5e0;
 }
