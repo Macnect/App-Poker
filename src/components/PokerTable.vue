@@ -215,6 +215,7 @@ function justNewHand() {
   border-radius: 10px;
   min-width: 420px;
   justify-content: center;
+  z-index: 10;
 }
 .card-placeholder {
   width: var(--player-card-width);

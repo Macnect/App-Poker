@@ -55,7 +55,7 @@
         </div>
       </div>
       
-      <button v-if="gameStore.isPreActionPhase" @click="isNotesPanelOpen = !isNotesPanelOpen" class="edit-notes-btn" ref="editBtnRef">
+      <button v-if="gameStore.isPreActionPhase" @click="gameStore.toggleNotesPanel(player.id)" class="edit-notes-btn" ref="editBtnRef">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
         </svg>
@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div v-if="isNotesPanelOpen" class="notes-panel" ref="notesPanelRef">
+    <div v-if="isNotesPanelOpen" class="notes-panel" :style="notesPanelStyle" ref="notesPanelRef">
       <textarea
         :value="player.notes"
         @input="gameStore.updatePlayerNotes(player.id, $event.target.value)"
@@ -109,8 +109,6 @@ import { useGameStore } from '../store/game'
 import PlayingCard from './PlayingCard.vue';
 import ChipStack from './ChipStack.vue';
 
-const isNotesPanelOpen = ref(false);
-
 const notesPanelRef = ref(null);
 const editBtnRef = ref(null);
 
@@ -125,6 +123,8 @@ const props = defineProps({
 
 const gameStore = useGameStore();
 
+const isNotesPanelOpen = computed(() => gameStore.openNotesPanelPlayerId === props.player.id);
+
 function handleCardClick(playerId, cardIndex) {
   const target = { type: 'player', id: playerId, cardIndex: cardIndex };
   if (props.player.cards[cardIndex]) {
@@ -135,8 +135,8 @@ function handleCardClick(playerId, cardIndex) {
 }
 
 function handleClickOutside(event) {
-  if (isNotesPanelOpen.value && notesPanelRef.value && !notesPanelRef.value.contains(event.target) && editBtnRef.value && !editBtnRef.value.contains(event.target)) {
-    isNotesPanelOpen.value = false;
+  if (gameStore.openNotesPanelPlayerId === props.player.id && notesPanelRef.value && !notesPanelRef.value.contains(event.target) && editBtnRef.value && !editBtnRef.value.contains(event.target)) {
+    gameStore.closeNotesPanel();
   }
 }
 
@@ -175,34 +175,61 @@ const dealerButtonStyle = computed(() => {
   const { x, y } = seatCoordinates.value;
   const styles = {};
   if (Math.abs(y) > Math.abs(x)) {
-    styles.left = '50%';
+    styles.left = x > 0 ? 'calc(50% + 10px)' : 'calc(50% - 10px)';
     styles.transform = 'translateX(-50%)';
     if (y > 0) {
-      styles.bottom = '90%';
+      styles.bottom = '110%';
     } else {
-      styles.top = '90%';
+      styles.top = '110%';
     }
   } else {
-    styles.top = '50%';
+    styles.top = y > 0 ? 'calc(50% + 10px)' : 'calc(50% - 10px)';
     styles.transform = 'translateY(-50%)';
     if (x > 0) {
-      styles.right = '90%';
+      styles.right = '110%';
     } else {
-      styles.left = '90%';
+      styles.left = '110%';
     }
   }
   return styles;
 });
 const betBoxStyle = computed(() => {
   const { x, y } = seatCoordinates.value;
+  const threshold = 150;
+
+  if (Math.abs(y) > threshold) {
+    // Top/bottom players: original positioning (105% distance, no margins)
+    const distance = '105%';
+    if (y > 0) {
+      // Top player: position below
+      return { bottom: distance, left: '130%', top: '50%', transform: 'translateX(-50%)', zIndex: 9 };
+    } else {
+      // Bottom player: position above
+      return { top: distance, left: '140%', top: '65%', transform: 'translateX(-50%)', zIndex: 9 };
+    }
+  } else {
+    // Left/right players: new positioning (115% distance, 10px offsets)
+    const distance = '-45%';
+    const offset = 10; // directional offset in px
+    if (x < 0) {
+      // Left player: position to the right
+      return { right: distance, top: '80%', transform: 'translateY(-50%)', marginLeft: `${offset}px`, zIndex: 9 };
+    } else {
+      // Right player: position to the left
+      return { left: distance, top: '80%', transform: 'translateY(-50%)', marginRight: `${offset}px`, zIndex: 9 };
+    }
+  }
+});
+const notesPanelStyle = computed(() => {
+  const { x, y } = seatCoordinates.value;
   const verticalThreshold = 150;
   const horizontalThreshold = 300;
-  if (y < -verticalThreshold) return { top: '105%', left: '50%', transform: 'translateX(-50%)' };
-  if (y > verticalThreshold) return { bottom: '105%', left: '50%', transform: 'translateX(-50%)' };
-  if (x > horizontalThreshold) return { right: '105%', top: '50%', transform: 'translateY(-50%)' };
-  if (x < -horizontalThreshold) return { left: '105%', top: '50%', transform: 'translateY(-50%)' };
-  if (y > 0) return { bottom: '105%', left: '50%', transform: 'translateX(-50%)' };
-  else return { top: '105%', left: '50%', transform: 'translateX(-50%)' };
+  if (y < -verticalThreshold) return { top: '-120%', left: '50%', transform: 'translateX(-50%)' };
+  if (y > verticalThreshold) return { bottom: '-120%', left: '50%', transform: 'translateX(-50%)' };
+  if (x > horizontalThreshold) return { right: '-120%', top: '50%', transform: 'translateY(-50%)' };
+  if (x < -horizontalThreshold) return { left: '-120%', top: '50%', transform: 'translateY(-50%)' };
+  if (y > 0) return { bottom: '-120%', left: '50%', transform: 'translateX(-50%)' };
+  else return { top: '-120%', left: '50%', transform: 'translateX(-50%)' };
 });
 </script>
 
@@ -215,7 +242,7 @@ const betBoxStyle = computed(() => {
   z-index: 5;
   width: 150px;
   /* CAMBIO: La altura ahora es fija y tiene en cuenta el nuevo tamaño de las cartas */
-  height: 158px; /* 60px del panel + 98px de la carta */
+  height: 200px; /* Increased height to create space above for community cards */
 }
 
 .player-seat {
@@ -246,8 +273,8 @@ const betBoxStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  /* CAMBIO: Posicionamos las cartas arriba del todo del contenedor */
-  top: 0;
+  /* CAMBIO: Repositioned cards downward to create space above */
+  top: 30px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -321,7 +348,7 @@ const betBoxStyle = computed(() => {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  z-index: 10;
+  z-index: 9;
 }
 
 .bet-info {
@@ -423,9 +450,6 @@ const betBoxStyle = computed(() => {
 }
 .notes-panel {
   position: absolute;
-  left: 105%;
-  top: 50%;
-  transform: translateY(-50%);
   width: 220px;
   background-color: #2d3748;
   border: 1px solid var(--border-color);

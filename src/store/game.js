@@ -52,6 +52,7 @@ export const useGameStore = defineStore('game', () => {
   const cardPickerTarget = ref(null);
 
   const isPreActionPhase = ref(true);
+  const openNotesPanelPlayerId = ref(null);
 
   const totalPot = computed(() => pots.value.reduce((sum, pot) => sum + pot.amount, 0));
 
@@ -570,19 +571,31 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  function toggleNotesPanel(playerId) {
+    if (openNotesPanelPlayerId.value === playerId) {
+      openNotesPanelPlayerId.value = null;
+    } else {
+      openNotesPanelPlayerId.value = playerId;
+    }
+  }
+
+  function closeNotesPanel() {
+    openNotesPanelPlayerId.value = null;
+  }
+
 
   return {
     players, heroPosition, smallBlind, bigBlind, currency, board, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,
-    replaySpeed, isPreActionPhase,
+    replaySpeed, isPreActionPhase, openNotesPanelPlayerId,
     toggleDisplayMode,
     playReplay, pauseReplay, restartReplay, setReplaySpeed,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
     performAction, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
-    updatePlayerNotes, updatePlayerTag, // <-- EXPORTAR NUEVAS ACCIONES
+    updatePlayerNotes, updatePlayerTag, toggleNotesPanel, closeNotesPanel,
   }
 });
