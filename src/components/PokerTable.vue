@@ -175,10 +175,10 @@ function justNewHand() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  padding: 40px;
   gap: 20px;
   /* CAMBIO: Aumentamos el margen superior para bajar toda la mesa */
-  margin-top: 50px;
+  margin-top: px;
 }
 .poker-table {
   position: relative;
@@ -233,7 +233,7 @@ function justNewHand() {
   flex-direction: column;
   align-items: center;
   gap: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 50px;
 }
 .game-controls {
   display: flex;
