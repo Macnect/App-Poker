@@ -92,7 +92,6 @@ function drag(event) {
 
 function stopDrag() {
   isDragging.value = false;
-  isDraggable.value = false;
   localStorage.setItem('actionPanelPosition', JSON.stringify(panelPosition.value));
   document.removeEventListener('mousemove', drag);
   document.removeEventListener('mouseup', stopDrag);
@@ -102,16 +101,15 @@ onMounted(() => {
   const savedPosition = localStorage.getItem('actionPanelPosition');
   if (savedPosition) {
     panelPosition.value = JSON.parse(savedPosition);
-    isDraggable.value = false;
   } else {
     // Set initial position to center below the table
     const rect = panelRef.value.getBoundingClientRect();
     panelPosition.value = {
       x: window.innerWidth / 2 - rect.width / 2,
-      y: window.innerHeight - 200 // below
+      y: 600 // below the poker table
     };
-    isDraggable.value = true;
   }
+  isDraggable.value = false;
 });
 
 onUnmounted(() => {

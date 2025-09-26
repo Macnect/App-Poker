@@ -244,8 +244,11 @@ function goToHandConfig() {
 }
 .game-controls {
   display: flex;
-  gap: 12px;
-  margin-top: 60px;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 50px;
+  align-self: flex-end;
+  margin-right: -650px;
 }
 /* REGLA CSS MODIFICADA PARA INCLUIR EL SELECT */
 .game-controls > button, .game-controls > select {
