@@ -234,13 +234,13 @@ function handleWheelScroll(event) {
 <style scoped>
 /* El CSS es idéntico al que me pasaste */
 .action-panel-wrapper {
-  --btn-red: #FA5637;
+  --btn-red: #f95f41;
   --btn-red-hover: #e04a2f;
-  --btn-green: #6CCF4E;
+  --btn-green: #70b75b;
   --btn-green-hover: #59b33f;
-  --btn-orange: #F5A342;
+  --btn-orange: #e39e49;
   --btn-orange-hover: #de8f32;
-  --btn-purple: #AF62D1;
+  --btn-purple: #a955cd;
   --btn-purple-hover: #9c51bb;
   --btn-grey: #4A5568;
   --btn-grey-hover: #2D3748;
