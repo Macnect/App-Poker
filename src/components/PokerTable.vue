@@ -177,7 +177,8 @@ function justNewHand() {
   align-items: center;
   padding: 20px;
   gap: 20px;
-  margin-top: 20px;
+  /* CAMBIO: Aumentamos el margen superior para bajar toda la mesa */
+  margin-top: 50px;
 }
 .poker-table {
   position: relative;
@@ -190,13 +191,13 @@ function justNewHand() {
 }
 .center-content {
   position: absolute;
-  top: 45%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 .pot {
   font-size: 1.3rem;
@@ -212,12 +213,12 @@ function justNewHand() {
   padding: 10px;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
-  min-width: 385px;
+  min-width: 420px;
   justify-content: center;
 }
 .card-placeholder {
-  width: var(--board-card-width);
-  height: var(--board-card-height);
+  width: var(--player-card-width);
+  height: var(--player-card-height);
   background-color: transparent;
   border-radius: 6px;
   overflow: hidden;
