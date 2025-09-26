@@ -185,7 +185,7 @@ function goToHandConfig() {
   padding: 40px;
   gap: 20px;
   /* CAMBIO: Aumentamos el margen superior para bajar toda la mesa */
-  margin-top: px;
+  margin-top: 65px;
 }
 .poker-table {
   position: relative;
