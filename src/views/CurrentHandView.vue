@@ -44,6 +44,17 @@
         </select>
       </div>
 
+      <!-- SELECTOR DE BOMB POT BB (solo visible cuando Bomb Pot está seleccionado) -->
+      <div v-if="selectedSpecialRule === 'Bomb Pot'" class="config-item">
+        <label for="bomb-pot-bb-select">Bomb Pot BB:</label>
+        <select id="bomb-pot-bb-select" v-model="selectedBombPotBB">
+          <option value="2">2bb</option>
+          <option value="3">3bb</option>
+          <option value="4">4bb</option>
+          <option value="5">5bb</option>
+        </select>
+      </div>
+
       <button @click="loadHandClicked">Iniciar Mano</button>
     </div>
 
@@ -74,6 +85,7 @@ const sbInput = ref(1);
 const bbInput = ref(2);
 const selectedCurrency = ref('$'); // Moneda por defecto
 const selectedSpecialRule = ref('Ninguno'); // Regla especial por defecto
+const selectedBombPotBB = ref(2); // Valor por defecto para Bomb Pot
 
 // --- LISTA AMPLIADA DE LAS 30 MONEDAS MÁS USADAS ---
 const currencies = ref([
@@ -127,7 +139,8 @@ function handlePositionSelected(heroPosition) {
     selectedCurrency.value,
     sbInput.value,
     bbInput.value,
-    selectedSpecialRule.value
+    selectedSpecialRule.value,
+    selectedSpecialRule.value === 'Bomb Pot' ? selectedBombPotBB.value : null
   );
 }
 

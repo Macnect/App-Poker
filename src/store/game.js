@@ -31,6 +31,7 @@ export const useGameStore = defineStore('game', () => {
   const bigBlind = ref(2);
   const currency = ref('$');
   const specialRule = ref('Ninguno');
+  const bombPotBB = ref(2);
   const board = ref(['', '', '', '', '']);
   const pots = ref([]);
   const history = ref([]);
@@ -111,7 +112,7 @@ export const useGameStore = defineStore('game', () => {
     board.value = deepCopy(stateToRestore.board);
     pots.value = deepCopy(stateToRestore.pots);
   }
-  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule) {
+  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null) {
     pauseReplay();
     players.value = [];
     heroPosition.value = newHeroPosition;
@@ -119,6 +120,7 @@ export const useGameStore = defineStore('game', () => {
     smallBlind.value = newSb;
     bigBlind.value = newBb;
     specialRule.value = newSpecialRule;
+    bombPotBB.value = newBombPotBB || 2;
     board.value = ['', '', '', '', ''];
     pots.value = [{ amount: 0, eligiblePlayers: [] }];
     history.value = [];
@@ -146,6 +148,7 @@ export const useGameStore = defineStore('game', () => {
         isBB: false,
         isStraddle: false,
         isMississippi: false,
+        isBombPot: false,
         // --- PROPIEDADES NUEVAS AÑADIDAS ---
         notes: '',
         tag: null,
@@ -199,6 +202,23 @@ export const useGameStore = defineStore('game', () => {
       lastRaiserIndex.value = players.value[buttonIndex].id;
       recordState(`Mississippi puesto por ${players.value[buttonIndex].name}.`);
       // Action starts from next to BB, already set
+    }
+
+    // Handle Bomb Pot
+    if (specialRule.value === 'Bomb Pot') {
+      // For Bomb Pot, typically the first player to act posts a large bet
+      // Here we'll assume it's the player after BB (like in some variants)
+      const bombPotIndex = (bbIndex + 1) % numPlayers;
+      players.value[bombPotIndex].isBombPot = true;
+      const bombAmount = bigBlind.value * bombPotBB.value;
+      postBet(players.value[bombPotIndex].id, bombAmount, true);
+      currentBet.value = Math.max(currentBet.value, bombAmount);
+      minRaise.value = bombAmount * 2;
+      lastRaiseAmount.value = bombAmount;
+      lastRaiserIndex.value = players.value[bombPotIndex].id;
+      recordState(`Bomb Pot de ${bombPotBB.value} BB puesto por ${players.value[bombPotIndex].name}.`);
+      // Adjust active player
+      activePlayerIndex.value = players.value[(bombPotIndex + 1) % numPlayers].id;
     }
   }
   function performAction(action, amount = 0) {
@@ -522,6 +542,7 @@ export const useGameStore = defineStore('game', () => {
       bigBlind: bigBlind.value,
       currency: currency.value,
       specialRule: specialRule.value,
+      bombPotBB: bombPotBB.value,
     };
     savedHands.value.push(handToSave);
     localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
@@ -537,6 +558,7 @@ export const useGameStore = defineStore('game', () => {
     bigBlind.value = handData.bigBlind;
     currency.value = handData.currency;
     specialRule.value = handData.specialRule || 'Ninguno';
+    bombPotBB.value = handData.bombPotBB || 2;
     history.value = deepCopy(handData.history);
     currentActionIndex.value = 0;
     gamePhase.value = 'replay';
@@ -618,7 +640,7 @@ export const useGameStore = defineStore('game', () => {
 
 
   return {
-    players, heroPosition, smallBlind, bigBlind, currency, specialRule, board, savedHands, pots,
+    players, heroPosition, smallBlind, bigBlind, currency, specialRule, bombPotBB, board, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,
