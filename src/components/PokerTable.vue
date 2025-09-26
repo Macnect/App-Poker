@@ -243,12 +243,13 @@ function goToHandConfig() {
   margin-bottom: 150px;
 }
 .game-controls {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
   gap: 6px;
-  margin-top: 50px;
+  margin-top: 150px;
   align-self: flex-end;
-  margin-right: -650px;
+  margin-right: -820px;
 }
 /* REGLA CSS MODIFICADA PARA INCLUIR EL SELECT */
 .game-controls > button, .game-controls > select {
