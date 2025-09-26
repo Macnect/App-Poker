@@ -59,9 +59,12 @@ const filteredSessions = computed(() => {
   });
 });
 
-// --- DATOS PARA LA GRÁFICA DE LÍNEAS (CON DEGRADADO DE COLOR CORRECTO) ---
+const sessionsInChronologicalOrder = computed(() => {
+  return [...filteredSessions.value].reverse();
+});
+
 const lineChartData = computed(() => {
-  const sessions = [...filteredSessions.value].reverse();
+  const sessions = sessionsInChronologicalOrder.value;
   const labels = sessions.map(s => s.date);
   let cumulativeProfit = 0;
   const dataPoints = sessions.map(s => {
@@ -79,9 +82,9 @@ const lineChartData = computed(() => {
         const { ctx, chartArea } = chart;
         if (!chartArea) return null;
         const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-        gradient.addColorStop(0, '#c53030'); // Rojo para pérdidas
-        gradient.addColorStop(0.5, '#718096'); // Gris para el punto cero
-        gradient.addColorStop(1, '#38a169'); // Verde para ganancias
+        gradient.addColorStop(0, '#c53030');
+        gradient.addColorStop(0.5, '#718096');
+        gradient.addColorStop(1, '#38a169');
         return gradient;
       },
       backgroundColor: (context) => {
@@ -103,9 +106,8 @@ const lineChartData = computed(() => {
   };
 });
 
-// --- DATOS PARA LA GRÁFICA DE BARRAS (CON COLORES DINÁMICOS CORRECTOS) ---
 const barChartData = computed(() => {
-  const sessions = [...filteredSessions.value].reverse();
+  const sessions = sessionsInChronologicalOrder.value;
   const labels = sessions.map(s => s.date);
   const dataPoints = sessions.map(s => s.result || 0);
 
@@ -121,7 +123,6 @@ const barChartData = computed(() => {
   };
 });
 
-// Opciones de la gráfica (comunes para ambas)
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: true,
@@ -130,13 +131,54 @@ const chartOptions = {
     tooltip: {
       callbacks: {
         label: function (context) {
-          let label = context.dataset.label || '';
-          if (label) label += ': ';
-          if (context.parsed.y !== null) {
-            label += new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(context.parsed.y);
+          if (context.dataIndex === 0 && context.dataset.label === t('charts.cumulativeProfit')) {
+            return ` ${t('charts.cumulativeProfit')}: ${sessionStore.currency}0.00`;
+          }
+
+          let label = '';
+          let value = 0;
+
+          if (context.dataset.label === t('charts.cumulativeProfit')) {
+            const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
+            if (session) {
+              label = 'Resultado de la Sesión: ';
+              value = session.result;
+            }
+          } 
+          else {
+            label = 'Resultado de la Sesión: ';
+            value = context.parsed.y;
+          }
+
+          if (value !== null) {
+            const prefix = value >= 0 ? '+' : '';
+            label += `${prefix}${new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(value)}`;
           }
           return label;
         },
+        // --- FUNCIÓN AÑADIDA PARA EL COLOR DEL TEXTO ---
+        labelColor: function(context) {
+          let value = 0;
+          // Si es el gráfico de líneas, obtenemos el resultado de la sesión individual
+          if (context.dataset.label === t('charts.cumulativeProfit')) {
+            // El índice de la sesión es dataIndex - 1 porque el gráfico tiene un punto extra de "Inicio"
+            if (context.dataIndex > 0) {
+              const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
+              if (session) {
+                value = session.result;
+              }
+            }
+          } 
+          // Si es el gráfico de barras, el valor ya es el resultado de la sesión
+          else {
+            value = context.parsed.y;
+          }
+
+          return {
+            borderColor: value >= 0 ? '#68d391' : '#fc8181', // Verde para positivo, Rojo para negativo
+            backgroundColor: value >= 0 ? '#68d391' : '#fc8181',
+          };
+        }
       },
       backgroundColor: 'rgba(26, 32, 44, 0.9)',
       titleFont: { size: 14, weight: 'bold' },
@@ -144,6 +186,9 @@ const chartOptions = {
       padding: 10,
       borderColor: 'rgba(74, 85, 104, 0.8)',
       borderWidth: 1,
+      // Habilitar que el color de la etiqueta (label) cambie
+      usePointStyle: true, 
+      boxPadding: 4
     },
   },
   scales: {
