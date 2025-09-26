@@ -1,5 +1,5 @@
 <template>
-  <div class="action-panel-wrapper" ref="panelRef" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: 'default' }">
+  <div class="action-panel-wrapper" style="position: fixed; top: 880px; left: 50%; transform: translateX(-50%);">
     
     <div class="actions-grid">
       <!-- Fila 1 -->
@@ -64,52 +64,7 @@ const props = defineProps({ modelValue: String });
 const emit = defineEmits(['update:modelValue']);
 const gameStore = useGameStore();
 
-const panelRef = ref(null);
-const isDragging = ref(false);
-const dragOffset = ref({ x: 0, y: 0 });
-const panelPosition = ref({ x: 0, y: 0 });
-const isDraggable = ref(true);
-
-function startDrag(event) {
-  if (!isDraggable.value) return;
-  isDragging.value = true;
-  const rect = panelRef.value.getBoundingClientRect();
-  dragOffset.value = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
-  };
-  document.addEventListener('mousemove', drag);
-  document.addEventListener('mouseup', stopDrag);
-}
-
-function drag(event) {
-  if (!isDragging.value) return;
-  panelPosition.value = {
-    x: event.clientX - dragOffset.value.x,
-    y: event.clientY - dragOffset.value.y
-  };
-}
-
-function stopDrag() {
-  isDragging.value = false;
-  localStorage.setItem('actionPanelPosition', JSON.stringify(panelPosition.value));
-  document.removeEventListener('mousemove', drag);
-  document.removeEventListener('mouseup', stopDrag);
-}
-
-onMounted(() => {
-  // Center the panel horizontally based on screen resolution
-  panelPosition.value = {
-    x: window.innerWidth / 2 - 450,  // 900px width / 2
-    y: 850  // Fixed vertical position
-  };
-  isDraggable.value = false;  // Deshabilita el arrastre para mantenerlo fijo
-});
-
-onUnmounted(() => {
-  document.removeEventListener('mousemove', drag);
-  document.removeEventListener('mouseup', stopDrag);
-});
+// No drag functionality needed since it's fixed positioned
 
 const amountToCall = computed(() => {
   if (!gameStore.activePlayer) return 0;
