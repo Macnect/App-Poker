@@ -149,12 +149,32 @@ onUnmounted(() => {
 });
 
 const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.player.id);
+function calculateEquidistantPositions(playerCount, radiusX = 450, radiusY = 220) {
+  const positions = [];
+  const angleStep = (Math.PI * 2) / playerCount;
+  for (let i = 0; i < playerCount; i++) {
+    const angleRad = angleStep * i + Math.PI / 2; // Start from top
+    const x = Math.cos(angleRad) * radiusX;
+    let y = Math.sin(angleRad) * radiusY;
+    // Adjust top and bottom players to be closer to table edges
+    const angleDeg = (angleRad * 180) / Math.PI;
+    if (angleDeg > 60 && angleDeg < 120) { // Top area
+      y *= 1.1; // Move higher
+    } else if (angleDeg > 240 && angleDeg < 300) { // Bottom area
+      y *= 1.1; // Move lower
+    }
+    positions.push({ x: Math.round(x), y: Math.round(y) });
+  }
+  return positions;
+}
+
 const PREDEFINED_LAYOUTS = {
   3: [ { x: 0, y: 190 }, { x: -450, y: -100 }, { x: 450, y: -100 }, ],
   5: [ { x: 0, y: 190 }, { x: -450, y: 80 }, { x: -350, y: -200 }, { x: 350, y: -200 }, { x: 450, y: 80 }, ],
   6: [ { x: 0, y: 190 }, { x: -450, y: 100 }, { x: -450, y: -120 }, { x: 0, y: -220 }, { x: 450, y: -120 }, { x: 450, y: 100 }, ],
-  7: [ { x: 0, y: 190 }, { x: -350, y: 160 }, { x: -480, y: 0 }, { x: -350, y: -200 }, { x: 350, y: -200 }, { x: 480, y: 0 }, { x: 350, y: 160 }, ],
-  9: [ { x: 0, y: 190 }, { x: -300, y: 170 }, { x: -480, y: 80 }, { x: -480, y: -80 }, { x: -300, y: -220 }, { x: 300, y: -220 }, { x: 480, y: -80 }, { x: 480, y: 80 }, { x: 300, y: 170 }, ]
+  7: calculateEquidistantPositions(7, 500, 260),
+  8: calculateEquidistantPositions(8, 500, 260),
+  9: calculateEquidistantPositions(9, 500, 260),
 };
 const seatCoordinates = computed(() => {
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
