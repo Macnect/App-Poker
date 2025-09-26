@@ -71,20 +71,12 @@ def generar_listado_archivos(directorio_proyecto, nombre_archivo_salida):
                 
                 # --- Opcional: Ignorar directorios que no te interesan ---
                 # Esto es útil para carpetas como node_modules, .git, venv, etc.
-                # Se han añadido carpetas comunes de proyectos Vue/Vite.
                 if 'node_modules' in directorios:
                     directorios.remove('node_modules')
                 if '.git' in directorios:
                     directorios.remove('.git')
                 if '__pycache__' in directorios:
                     directorios.remove('__pycache__')
-                if 'dist' in directorios: # Carpeta de compilación de Vite/Vue
-                    directorios.remove('dist')
-                if '.vscode' in directorios: # Carpeta de configuración del editor
-                    directorios.remove('.vscode')
-                if '.idea' in directorios: # Carpeta de configuración de JetBrains
-                    directorios.remove('.idea')
-
 
                 # Escribimos la ruta del directorio que estamos analizando
                 f.write(f"--- Directorio: {ruta_actual} ---\n\n")
@@ -34754,6 +34746,21 @@ Ruta: .\.vite\deps\_metadata.json
     }
   }
 }
+--- FIN CONTENIDO ---
+
+
+--- Directorio: .\.vscode ---
+
+----------------------------------------
+Archivo: extensions.json
+----------------------------------------
+Ruta: .\.vscode\extensions.json
+
+--- INICIO CONTENIDO ---
+{
+  "recommendations": ["Vue.volar"]
+}
+
 --- FIN CONTENIDO ---
 
 

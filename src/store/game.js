@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
+// Importamos nuestras nuevas funciones de API
+import { apiFetchHands, apiAddHand, apiDeleteHand } from '@/api';
 
 const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
 
@@ -36,7 +37,8 @@ export const useGameStore = defineStore('game', () => {
   const pots = ref([]);
   const history = ref([]);
   const currentActionIndex = ref(-1);
-  const savedHands = ref(JSON.parse(localStorage.getItem('pokerReplayerHands')) || []);
+  // Reemplazamos localStorage con un ref vacío
+  const savedHands = ref([]);
   const displayInBBs = ref(false);
   
   const replaySpeed = ref(1);
@@ -74,6 +76,65 @@ export const useGameStore = defineStore('game', () => {
     });
     return cards;
   });
+
+  // --- ACCIONES NUEVAS Y MODIFICADAS ---
+
+  async function fetchHands() {
+    savedHands.value = await apiFetchHands();
+  }
+
+  async function saveCurrentHand() {
+    if (history.value.length === 0) return;
+    const handToSave = {
+      // id y fecha los genera la BD, ya no los necesitamos aquí
+      fecha: new Date().toISOString(),
+      posicion_heroe: heroPosition.value,
+      cantidad_jugadores: players.value.length,
+      historial: deepCopy(history.value), // El historial se guarda en JSONB
+      ciega_pequena: smallBlind.value,
+      ciega_grande: bigBlind.value,
+      moneda: currency.value,
+      regla_especial: specialRule.value,
+      bomb_pot_bb: bombPotBB.value,
+    };
+    try {
+      const newHand = await apiAddHand(handToSave);
+      savedHands.value.unshift(newHand); // Añadimos la mano devuelta a nuestro estado local
+    } catch (error) {
+      console.error("Error al guardar la mano:", error);
+      // Opcional: mostrar un error al usuario
+    }
+  }
+  
+  async function deleteHand(handId) {
+    try {
+      await apiDeleteHand(handId);
+      savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
+    } catch(error) {
+       console.error("Error al borrar la mano:", error);
+    }
+  }
+
+  // loadHand no necesita ser async, porque opera con datos ya cargados
+  function loadHand(handData) {
+    pauseReplay();
+    const initialState = handData.historial[0]; // El historial viene del campo JSONB
+    players.value = deepCopy(initialState.players);
+    board.value = deepCopy(initialState.board);
+    pots.value = deepCopy(initialState.pots);
+    heroPosition.value = handData.posicion_heroe;
+    smallBlind.value = handData.ciega_pequena;
+    bigBlind.value = handData.ciega_grande;
+    currency.value = handData.moneda;
+    specialRule.value = handData.regla_especial || 'Ninguno';
+    bombPotBB.value = handData.bomb_pot_bb || 2;
+    history.value = deepCopy(handData.historial);
+    currentActionIndex.value = 0;
+    gamePhase.value = 'replay';
+    isPreActionPhase.value = false;
+  }
+  
+  // --- RESTO DE FUNCIONES (sin cambios en su mayoría) ---
 
   function toggleDisplayMode() { displayInBBs.value = !displayInBBs.value; }
   
@@ -113,6 +174,8 @@ export const useGameStore = defineStore('game', () => {
     pots.value = deepCopy(stateToRestore.pots);
   }
   function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null) {
+    // ... (El resto de la lógica de setupNewHand, performAction, etc., es interna y no cambia)
+    // ... (ya que solo manipula el estado de la mano actual, no la lista de manos guardadas)
     pauseReplay();
     players.value = [];
     heroPosition.value = newHeroPosition;
@@ -149,7 +212,6 @@ export const useGameStore = defineStore('game', () => {
         isStraddle: false,
         isMississippi: false,
         isBombPot: false,
-        // --- PROPIEDADES NUEVAS AÑADIDAS ---
         notes: '',
         tag: null,
       });
@@ -169,9 +231,7 @@ export const useGameStore = defineStore('game', () => {
       lastRaiserIndex.value = players.value[bbIndex].id;
     }
 
-    // Handle Bomb Pot first (replaces blinds)
     if (specialRule.value === 'Bomb Pot') {
-      // All players post the bomb pot amount as initial bet
       const bombAmount = bigBlind.value * bombPotBB.value;
       players.value.forEach(player => {
         postBet(player.id, bombAmount, true);
@@ -180,12 +240,10 @@ export const useGameStore = defineStore('game', () => {
       currentBet.value = bombAmount;
       minRaise.value = bombAmount * 2;
       lastRaiseAmount.value = bombAmount;
-      // Action starts from the player to the left of BB (normal action)
       activePlayerIndex.value = players.value[(bbIndex + 1) % numPlayers].id;
       lastRaiserIndex.value = activePlayerIndex.value;
       recordState(`Bomb Pot: Todos los jugadores ponen ${bombPotBB.value} BB inicialmente.`);
     } else {
-      // Normal blinds
       players.value[sbIndex].isSB = true;
       postBet(players.value[sbIndex].id, smallBlind.value, true);
       players.value[bbIndex].isBB = true;
@@ -195,7 +253,6 @@ export const useGameStore = defineStore('game', () => {
       lastRaiseAmount.value = bigBlind.value;
       recordState("Inicio de mano. Ciegas puestas.");
 
-      // Handle Straddle
       if (specialRule.value === 'Straddle' && numPlayers > 2) {
         const straddleIndex = (bbIndex + 1) % numPlayers;
         players.value[straddleIndex].isStraddle = true;
@@ -205,11 +262,9 @@ export const useGameStore = defineStore('game', () => {
         lastRaiseAmount.value = bigBlind.value * 2;
         lastRaiserIndex.value = players.value[straddleIndex].id;
         recordState(`Straddle puesto por ${players.value[straddleIndex].name}.`);
-        // Adjust active player for straddle
         activePlayerIndex.value = players.value[(straddleIndex + 1) % numPlayers].id;
       }
 
-      // Handle Mississippi
       if (specialRule.value === 'Mississippi') {
         const buttonIndex = players.value.findIndex(p => p.isDealer);
         players.value[buttonIndex].isMississippi = true;
@@ -219,7 +274,6 @@ export const useGameStore = defineStore('game', () => {
         lastRaiseAmount.value = bigBlind.value * 2;
         lastRaiserIndex.value = players.value[buttonIndex].id;
         recordState(`Mississippi puesto por ${players.value[buttonIndex].name}.`);
-        // Action starts from next to BB, already set
       }
     }
   }
@@ -286,18 +340,14 @@ export const useGameStore = defineStore('game', () => {
       endHand(playersInHand[0]);
       return;
     }
-
     const playersAbleToAct = playersInHand.filter(p => !p.isAllIn);
-    
     const roundIsOver = playersAbleToAct.every(p => {
       return p.hasActedThisRound && p.betThisRound === currentBet.value;
     });
-
     if (roundIsOver) {
       const isPreflopBbCheck = gamePhase.value === 'preflop' &&
         activePlayer.value.isBB &&
         currentBet.value === bigBlind.value;
-      
       if (isPreflopBbCheck || playersAbleToAct.length < 2) {
         advanceRound();
       } else {
@@ -532,44 +582,7 @@ export const useGameStore = defineStore('game', () => {
       recordState(`Se desasigna la carta ${cardToUnassign}.`);
     }
   }
-  function saveCurrentHand() {
-    if (history.value.length === 0) return;
-    const handToSave = {
-      id: uuidv4(),
-      date: new Date().toLocaleString(),
-      heroPosition: heroPosition.value,
-      numPlayers: players.value.length,
-      history: deepCopy(history.value),
-      smallBlind: smallBlind.value,
-      bigBlind: bigBlind.value,
-      currency: currency.value,
-      specialRule: specialRule.value,
-      bombPotBB: bombPotBB.value,
-    };
-    savedHands.value.push(handToSave);
-    localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
-  }
-  function loadHand(handData) {
-    pauseReplay();
-    const initialState = handData.history[0];
-    players.value = deepCopy(initialState.players);
-    board.value = deepCopy(initialState.board);
-    pots.value = deepCopy(initialState.pots);
-    heroPosition.value = handData.heroPosition;
-    smallBlind.value = handData.smallBlind;
-    bigBlind.value = handData.bigBlind;
-    currency.value = handData.currency;
-    specialRule.value = handData.specialRule || 'Ninguno';
-    bombPotBB.value = handData.bombPotBB || 2;
-    history.value = deepCopy(handData.history);
-    currentActionIndex.value = 0;
-    gamePhase.value = 'replay';
-    isPreActionPhase.value = false;
-  }
-  function deleteHand(handId) {
-    savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
-    localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
-  }
+
   function getPositions(numPlayers) {
     if (numPlayers === 2) { return ['BTN / SB', 'BB']; }
     if (numPlayers === 3) { return ['BTN', 'SB', 'BB']; }
@@ -606,7 +619,6 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  // --- NUEVAS ACCIONES PARA NOTAS Y TAGS ---
   function updatePlayerNotes(playerId, newNotes) {
     const player = players.value.find(p => p.id === playerId);
     if (player) {
@@ -620,7 +632,6 @@ export const useGameStore = defineStore('game', () => {
   function updatePlayerTag(playerId, newTag) {
     const player = players.value.find(p => p.id === playerId);
     if (player) {
-      // Si se hace clic en el mismo tag, se deselecciona
       player.tag = player.tag === newTag ? null : newTag;
     }
     if (isPreActionPhase.value && history.value.length > 0) {
@@ -640,7 +651,6 @@ export const useGameStore = defineStore('game', () => {
     openNotesPanelPlayerId.value = null;
   }
 
-
   return {
     players, heroPosition, smallBlind, bigBlind, currency, specialRule, bombPotBB, board, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
@@ -654,5 +664,6 @@ export const useGameStore = defineStore('game', () => {
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
     updatePlayerNotes, updatePlayerTag, toggleNotesPanel, closeNotesPanel,
+    fetchHands, // Exportamos la nueva acción
   }
 });
