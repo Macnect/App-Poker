@@ -91,11 +91,11 @@ const stackDetails = computed(() => {
 
 .chip {
   position: absolute;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   box-sizing: border-box;
-  left: 2.5px; /* Centrado en el contenedor de 45px */
+  left: 5.5px; /* Centrado en el contenedor de 45px */
   
   /* --- EFECTO 3D Y REALISMO --- */
 
