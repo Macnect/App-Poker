@@ -203,25 +203,22 @@ const betBoxStyle = computed(() => {
   const threshold = 150;
 
   if (Math.abs(y) > threshold) {
-    // Top/bottom players: original positioning (105% distance, no margins)
-    const distance = '105%';
+    // Top/bottom players: position bets on the players
     if (y > 0) {
-      // Top player: position below
-      return { bottom: distance, left: '130%', top: '50%', transform: 'translateX(-50%)', zIndex: 9 };
+      // Top player: position bet on player
+      return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
     } else {
-      // Bottom player: position above
-      return { top: distance, left: '140%', top: '65%', transform: 'translateX(-50%)', zIndex: 9 };
+      // Bottom player: position bet on player
+      return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
     }
   } else {
-    // Left/right players: new positioning (115% distance, 10px offsets)
-    const distance = '-45%';
-    const offset = 10; // directional offset in px
+    // Left/right players: position bets on the players
     if (x < 0) {
-      // Left player: position to the right
-      return { right: distance, top: '80%', transform: 'translateY(-50%)', marginLeft: `${offset}px`, zIndex: 9 };
+      // Left player: position bet on player
+      return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
     } else {
-      // Right player: position to the left
-      return { left: distance, top: '80%', transform: 'translateY(-50%)', marginRight: `${offset}px`, zIndex: 9 };
+      // Right player: position bet on player
+      return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
     }
   }
 });
