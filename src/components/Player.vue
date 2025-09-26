@@ -206,15 +206,7 @@ const betBoxStyle = computed(() => {
   }
 });
 const notesPanelStyle = computed(() => {
-  const { x, y } = seatCoordinates.value;
-  const verticalThreshold = 150;
-  const horizontalThreshold = 300;
-  if (y < -verticalThreshold) return { top: '-120%', left: '50%', transform: 'translateX(-50%)' };
-  if (y > verticalThreshold) return { bottom: '-120%', left: '50%', transform: 'translateX(-50%)' };
-  if (x > horizontalThreshold) return { right: '-120%', top: '50%', transform: 'translateY(-50%)' };
-  if (x < -horizontalThreshold) return { left: '-120%', top: '50%', transform: 'translateY(-50%)' };
-  if (y > 0) return { bottom: '-120%', left: '50%', transform: 'translateX(-50%)' };
-  else return { top: '-120%', left: '50%', transform: 'translateX(-50%)' };
+  return { top: '10%', left: '50%', transform: 'translateX(-50%)' };
 });
 </script>
 
