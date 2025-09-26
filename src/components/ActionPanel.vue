@@ -12,6 +12,7 @@
       
       <!-- Input ahora usa 'displayRaiseAmount' para ser dinámico -->
       <input type="number" v-model="displayRaiseAmount" class="grid-input" />
+      <div v-if="isAllIn" class="all-in-indicator">▲</div>
       
       <input 
         type="range" 
@@ -135,6 +136,7 @@ const sliderStyle = computed(() => {
 const betOrRaiseLabel = computed(() => (gameStore.currentBet > 0 ? t('actionPanel.raise') : t('actionPanel.bet')));
 const isCallDisabled = computed(() => !gameStore.activePlayer || amountToCall.value > gameStore.activePlayer.stack);
 const isRaiseDisabled = computed(() => !gameStore.activePlayer || raiseAmount.value < minRaiseValue.value || raiseAmount.value > maxSliderValue.value);
+const isAllIn = computed(() => gameStore.activePlayer && raiseAmount.value >= gameStore.activePlayer.stack);
 
 function handleCheckCall() {
   const action = amountToCall.value > 0 ? 'call' : 'check';
@@ -245,6 +247,16 @@ function handleWheelScroll(event) {
   font-size: 2rem;
   text-align: center;
   width: 84%;
+  position: relative;
+}
+.all-in-indicator {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #f95f41;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 .grid-quick-bets {
   display: flex;
