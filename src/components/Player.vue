@@ -174,7 +174,7 @@ const seatStyle = computed(() => {
 const dealerButtonStyle = computed(() => {
   return {
     bottom: '-40px',
-    left: '50%',
+    left: '57%',
     transform: 'translateX(-50%)'
   };
 });
