@@ -168,57 +168,59 @@ export const useGameStore = defineStore('game', () => {
       activePlayerIndex.value = players.value[(bbIndex + 1) % numPlayers].id;
       lastRaiserIndex.value = players.value[bbIndex].id;
     }
-    players.value[sbIndex].isSB = true;
-    postBet(players.value[sbIndex].id, smallBlind.value, true);
-    players.value[bbIndex].isBB = true;
-    postBet(players.value[bbIndex].id, bigBlind.value, true);
-    currentBet.value = bigBlind.value;
-    minRaise.value = bigBlind.value * 2;
-    lastRaiseAmount.value = bigBlind.value;
-    recordState("Inicio de mano. Ciegas puestas.");
 
-    // Handle Straddle
-    if (specialRule.value === 'Straddle' && numPlayers > 2) {
-      const straddleIndex = (bbIndex + 1) % numPlayers;
-      players.value[straddleIndex].isStraddle = true;
-      postBet(players.value[straddleIndex].id, bigBlind.value * 2, true);
-      currentBet.value = bigBlind.value * 2;
-      minRaise.value = bigBlind.value * 4;
-      lastRaiseAmount.value = bigBlind.value * 2;
-      lastRaiserIndex.value = players.value[straddleIndex].id;
-      recordState(`Straddle puesto por ${players.value[straddleIndex].name}.`);
-      // Adjust active player for straddle
-      activePlayerIndex.value = players.value[(straddleIndex + 1) % numPlayers].id;
-    }
-
-    // Handle Mississippi
-    if (specialRule.value === 'Mississippi') {
-      const buttonIndex = players.value.findIndex(p => p.isDealer);
-      players.value[buttonIndex].isMississippi = true;
-      postBet(players.value[buttonIndex].id, bigBlind.value * 2, true);
-      currentBet.value = Math.max(currentBet.value, bigBlind.value * 2);
-      minRaise.value = bigBlind.value * 4;
-      lastRaiseAmount.value = bigBlind.value * 2;
-      lastRaiserIndex.value = players.value[buttonIndex].id;
-      recordState(`Mississippi puesto por ${players.value[buttonIndex].name}.`);
-      // Action starts from next to BB, already set
-    }
-
-    // Handle Bomb Pot
+    // Handle Bomb Pot first (replaces blinds)
     if (specialRule.value === 'Bomb Pot') {
-      // For Bomb Pot, typically the first player to act posts a large bet
-      // Here we'll assume it's the player after BB (like in some variants)
-      const bombPotIndex = (bbIndex + 1) % numPlayers;
-      players.value[bombPotIndex].isBombPot = true;
+      // All players post the bomb pot amount as initial bet
       const bombAmount = bigBlind.value * bombPotBB.value;
-      postBet(players.value[bombPotIndex].id, bombAmount, true);
-      currentBet.value = Math.max(currentBet.value, bombAmount);
+      players.value.forEach(player => {
+        postBet(player.id, bombAmount, true);
+        player.isBombPot = true;
+      });
+      currentBet.value = bombAmount;
       minRaise.value = bombAmount * 2;
       lastRaiseAmount.value = bombAmount;
-      lastRaiserIndex.value = players.value[bombPotIndex].id;
-      recordState(`Bomb Pot de ${bombPotBB.value} BB puesto por ${players.value[bombPotIndex].name}.`);
-      // Adjust active player
-      activePlayerIndex.value = players.value[(bombPotIndex + 1) % numPlayers].id;
+      // Action starts from the player to the left of BB (normal action)
+      activePlayerIndex.value = players.value[(bbIndex + 1) % numPlayers].id;
+      lastRaiserIndex.value = activePlayerIndex.value;
+      recordState(`Bomb Pot: Todos los jugadores ponen ${bombPotBB.value} BB inicialmente.`);
+    } else {
+      // Normal blinds
+      players.value[sbIndex].isSB = true;
+      postBet(players.value[sbIndex].id, smallBlind.value, true);
+      players.value[bbIndex].isBB = true;
+      postBet(players.value[bbIndex].id, bigBlind.value, true);
+      currentBet.value = bigBlind.value;
+      minRaise.value = bigBlind.value * 2;
+      lastRaiseAmount.value = bigBlind.value;
+      recordState("Inicio de mano. Ciegas puestas.");
+
+      // Handle Straddle
+      if (specialRule.value === 'Straddle' && numPlayers > 2) {
+        const straddleIndex = (bbIndex + 1) % numPlayers;
+        players.value[straddleIndex].isStraddle = true;
+        postBet(players.value[straddleIndex].id, bigBlind.value * 2, true);
+        currentBet.value = bigBlind.value * 2;
+        minRaise.value = bigBlind.value * 4;
+        lastRaiseAmount.value = bigBlind.value * 2;
+        lastRaiserIndex.value = players.value[straddleIndex].id;
+        recordState(`Straddle puesto por ${players.value[straddleIndex].name}.`);
+        // Adjust active player for straddle
+        activePlayerIndex.value = players.value[(straddleIndex + 1) % numPlayers].id;
+      }
+
+      // Handle Mississippi
+      if (specialRule.value === 'Mississippi') {
+        const buttonIndex = players.value.findIndex(p => p.isDealer);
+        players.value[buttonIndex].isMississippi = true;
+        postBet(players.value[buttonIndex].id, bigBlind.value * 2, true);
+        currentBet.value = Math.max(currentBet.value, bigBlind.value * 2);
+        minRaise.value = bigBlind.value * 4;
+        lastRaiseAmount.value = bigBlind.value * 2;
+        lastRaiserIndex.value = players.value[buttonIndex].id;
+        recordState(`Mississippi puesto por ${players.value[buttonIndex].name}.`);
+        // Action starts from next to BB, already set
+      }
     }
   }
   function performAction(action, amount = 0) {
