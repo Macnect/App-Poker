@@ -238,7 +238,7 @@ function justNewHand() {
 .game-controls {
   display: flex;
   gap: 12px;
-  margin-top: 340px;
+  margin-top: 60px;
 }
 /* REGLA CSS MODIFICADA PARA INCLUIR EL SELECT */
 .game-controls > button, .game-controls > select {
