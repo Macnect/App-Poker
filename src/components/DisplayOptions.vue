@@ -1,6 +1,6 @@
 <template>
   <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: isDraggable ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
-    <h3>Color de Mesa</h3>
+    <h3>Opciones mesa</h3>
     <div class="options-row">
       <select class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
         <option value="#28563a">Verde</option>

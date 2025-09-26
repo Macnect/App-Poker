@@ -6,7 +6,7 @@
         <div class="pot">
           Bote: 
           <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ gameStore.totalPot }}</span>
-          <span v-else>{{ (gameStore.totalPot / gameStore.bigBlind).toFixed(1) }} BBs</span>
+          <span v-else>{{ (gameStore.totalPot / gameStore.bigBlind).toFixed(1) }}</span>
         </div>
 
         <div class="board">

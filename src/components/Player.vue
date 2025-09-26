@@ -93,7 +93,7 @@
         <div class="bet-amount-container">
           <div class="bet-amount-text">
             <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
-            <span v-else>{{ (player.betThisRound / gameStore.bigBlind).toFixed(1) }} BBs</span>
+            <span v-else>{{ (player.betThisRound / gameStore.bigBlind).toFixed(1) }}</span>
           </div>
         </div>
         <img v-if="player.isAllIn" src="/icons/all-in-icon.svg" alt="All-in" class="all-in-icon" />
