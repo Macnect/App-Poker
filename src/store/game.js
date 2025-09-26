@@ -145,6 +145,7 @@ export const useGameStore = defineStore('game', () => {
         isSB: false,
         isBB: false,
         isStraddle: false,
+        isMississippi: false,
         // --- PROPIEDADES NUEVAS AÑADIDAS ---
         notes: '',
         tag: null,
@@ -185,6 +186,19 @@ export const useGameStore = defineStore('game', () => {
       recordState(`Straddle puesto por ${players.value[straddleIndex].name}.`);
       // Adjust active player for straddle
       activePlayerIndex.value = players.value[(straddleIndex + 1) % numPlayers].id;
+    }
+
+    // Handle Mississippi
+    if (specialRule.value === 'Mississippi') {
+      const buttonIndex = players.value.findIndex(p => p.isDealer);
+      players.value[buttonIndex].isMississippi = true;
+      postBet(players.value[buttonIndex].id, bigBlind.value * 2, true);
+      currentBet.value = Math.max(currentBet.value, bigBlind.value * 2);
+      minRaise.value = bigBlind.value * 4;
+      lastRaiseAmount.value = bigBlind.value * 2;
+      lastRaiserIndex.value = players.value[buttonIndex].id;
+      recordState(`Mississippi puesto por ${players.value[buttonIndex].name}.`);
+      // Action starts from next to BB, already set
     }
   }
   function performAction(action, amount = 0) {
