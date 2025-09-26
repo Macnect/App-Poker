@@ -297,7 +297,7 @@ function handleWheelScroll(event) {
   color: white;
   font-size: 2rem;
   text-align: center;
-  width: 100%;
+  width: 84%;
 }
 .grid-quick-bets {
   display: flex;
@@ -344,7 +344,7 @@ button:disabled {
 .grid-slider {
   -webkit-appearance: none;
   appearance: none;
-  width: 100%;
+  width: 98%;
   height: 16px;
   background: transparent;
   outline: none;
