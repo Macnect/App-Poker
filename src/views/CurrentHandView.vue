@@ -32,7 +32,18 @@
           </option>
         </select>
       </div>
-      
+
+      <!-- SELECTOR DE REGLA ESPECIAL -->
+      <div class="config-item">
+        <label for="special-rule-select">Regla Especial:</label>
+        <select id="special-rule-select" v-model="selectedSpecialRule">
+          <option value="Ninguno">Ninguno</option>
+          <option value="Straddle">Straddle</option>
+          <option value="Mississippi">Mississippi</option>
+          <option value="Bomb Pot">Bomb Pot</option>
+        </select>
+      </div>
+
       <button @click="loadHandClicked">Iniciar Mano</button>
     </div>
 
@@ -62,6 +73,7 @@ const selectedPlayers = ref(6);
 const sbInput = ref(1);
 const bbInput = ref(2);
 const selectedCurrency = ref('$'); // Moneda por defecto
+const selectedSpecialRule = ref('Ninguno'); // Regla especial por defecto
 
 // --- LISTA AMPLIADA DE LAS 30 MONEDAS MÁS USADAS ---
 const currencies = ref([
@@ -114,7 +126,8 @@ function handlePositionSelected(heroPosition) {
     heroPosition,
     selectedCurrency.value,
     sbInput.value,
-    bbInput.value
+    bbInput.value,
+    selectedSpecialRule.value
   );
 }
 

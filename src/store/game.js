@@ -30,6 +30,7 @@ export const useGameStore = defineStore('game', () => {
   const smallBlind = ref(1);
   const bigBlind = ref(2);
   const currency = ref('$');
+  const specialRule = ref('Ninguno');
   const board = ref(['', '', '', '', '']);
   const pots = ref([]);
   const history = ref([]);
@@ -110,13 +111,14 @@ export const useGameStore = defineStore('game', () => {
     board.value = deepCopy(stateToRestore.board);
     pots.value = deepCopy(stateToRestore.pots);
   }
-  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb) {
+  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule) {
     pauseReplay();
     players.value = [];
     heroPosition.value = newHeroPosition;
     currency.value = newCurrency;
     smallBlind.value = newSb;
     bigBlind.value = newBb;
+    specialRule.value = newSpecialRule;
     board.value = ['', '', '', '', ''];
     pots.value = [{ amount: 0, eligiblePlayers: [] }];
     history.value = [];
@@ -142,6 +144,7 @@ export const useGameStore = defineStore('game', () => {
         isDealer: false,
         isSB: false,
         isBB: false,
+        isStraddle: false,
         // --- PROPIEDADES NUEVAS AÑADIDAS ---
         notes: '',
         tag: null,
@@ -169,6 +172,20 @@ export const useGameStore = defineStore('game', () => {
     minRaise.value = bigBlind.value * 2;
     lastRaiseAmount.value = bigBlind.value;
     recordState("Inicio de mano. Ciegas puestas.");
+
+    // Handle Straddle
+    if (specialRule.value === 'Straddle' && numPlayers > 2) {
+      const straddleIndex = (bbIndex + 1) % numPlayers;
+      players.value[straddleIndex].isStraddle = true;
+      postBet(players.value[straddleIndex].id, bigBlind.value * 2, true);
+      currentBet.value = bigBlind.value * 2;
+      minRaise.value = bigBlind.value * 4;
+      lastRaiseAmount.value = bigBlind.value * 2;
+      lastRaiserIndex.value = players.value[straddleIndex].id;
+      recordState(`Straddle puesto por ${players.value[straddleIndex].name}.`);
+      // Adjust active player for straddle
+      activePlayerIndex.value = players.value[(straddleIndex + 1) % numPlayers].id;
+    }
   }
   function performAction(action, amount = 0) {
     if (isPreActionPhase.value) {
@@ -490,6 +507,7 @@ export const useGameStore = defineStore('game', () => {
       smallBlind: smallBlind.value,
       bigBlind: bigBlind.value,
       currency: currency.value,
+      specialRule: specialRule.value,
     };
     savedHands.value.push(handToSave);
     localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
@@ -504,6 +522,7 @@ export const useGameStore = defineStore('game', () => {
     smallBlind.value = handData.smallBlind;
     bigBlind.value = handData.bigBlind;
     currency.value = handData.currency;
+    specialRule.value = handData.specialRule || 'Ninguno';
     history.value = deepCopy(handData.history);
     currentActionIndex.value = 0;
     gamePhase.value = 'replay';
@@ -585,7 +604,7 @@ export const useGameStore = defineStore('game', () => {
 
 
   return {
-    players, heroPosition, smallBlind, bigBlind, currency, board, savedHands, pots,
+    players, heroPosition, smallBlind, bigBlind, currency, specialRule, board, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,
