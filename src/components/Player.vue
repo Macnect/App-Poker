@@ -258,9 +258,9 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  /* CAMBIO: Repositioned cards downward to create space above */
-  top: 30px;
-  left: 50%;
+  /* Moved closer to the player panel */
+  top: 38px;
+  left: 55%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
