@@ -169,9 +169,11 @@ function calculateEquidistantPositions(playerCount, radiusX = 450, radiusY = 220
 }
 
 const PREDEFINED_LAYOUTS = {
-  3: [ { x: 0, y: 190 }, { x: -450, y: -100 }, { x: 450, y: -100 }, ],
-  5: [ { x: 0, y: 190 }, { x: -450, y: 80 }, { x: -350, y: -200 }, { x: 350, y: -200 }, { x: 450, y: 80 }, ],
-  6: [ { x: 0, y: 190 }, { x: -450, y: 100 }, { x: -450, y: -120 }, { x: 0, y: -220 }, { x: 450, y: -120 }, { x: 450, y: 100 }, ],
+  2: [ { x: 0, y: 280 }, { x: 0, y: -280 } ],
+  3: [ { x: 0, y: 240 }, { x: -520, y: -120 }, { x: 520, y: -120 } ],
+  4: [ { x: 0, y: 280 }, { x: -420, y: 0 }, { x: 0, y: -280 }, { x: 420, y: 0 } ],
+  5: [ { x: 0, y: 240 }, { x: -520, y: 100 }, { x: -400, y: -240 }, { x: 400, y: -240 }, { x: 520, y: 100 } ],
+  6: [ { x: 0, y: 240 }, { x: -520, y: 120 }, { x: -520, y: -140 }, { x: 0, y: -280 }, { x: 520, y: -140 }, { x: 520, y: 120 } ],
   7: calculateEquidistantPositions(7, 500, 240),
   8: calculateEquidistantPositions(8, 500, 260),
   9: calculateEquidistantPositions(9, 500, 280),
