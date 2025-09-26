@@ -9,12 +9,12 @@
   --card-bg: #ffffff;
 
   /* --- TAMAÑOS DE CARTAS --- */
-  /* Cartas comunitarias (Board) */
-  --board-card-width: 65px;
-  --board-card-height: 91px;
-  /* Cartas de los jugadores (AUMENTADAS DE TAMAÑO) */
-  --player-card-width: 60px;
-  --player-card-height: 84px;
+  /* CAMBIO: Cartas del board igualadas a las del jugador */
+  --board-card-width: 70px;
+  --board-card-height: 98px;
+  /* Cartas de los jugadores */
+  --player-card-width: 70px;
+  --player-card-height: 98px;
 }
 
 body {

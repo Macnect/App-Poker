@@ -1,7 +1,6 @@
 <template>
   <div class="player-container" :style="seatStyle">
 
-    <!-- CAMBIO: EL DIV DE LAS CARTAS SE MUEVE FUERA DEL PLAYER-SEAT -->
     <div class="player-cards">
         <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
           <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
@@ -197,9 +196,9 @@ const betBoxStyle = computed(() => {
   top: 50%;
   left: 50%;
   z-index: 5;
-  /* Contenedor principal ahora tiene un tamaño fijo para alinear las cartas */
   width: 150px;
-  height: calc(60px + var(--player-card-height)); /* Altura del panel + altura de la carta */
+  /* CAMBIO: La altura ahora es fija y tiene en cuenta el nuevo tamaño de las cartas */
+  height: 158px; /* 60px del panel + 98px de la carta */
 }
 
 .player-seat {
@@ -207,7 +206,7 @@ const betBoxStyle = computed(() => {
   bottom: 0;
   left: 0;
   width: 100%;
-  height: 60px; /* Solo la altura del panel de info */
+  height: 60px;
   background: none;
   border: none;
   transition: all 0.3s ease;
@@ -230,7 +229,8 @@ const betBoxStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  top: 0; /* Posicionado en la parte superior del contenedor principal */
+  /* CAMBIO: Posicionamos las cartas arriba del todo del contenedor */
+  top: 0;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
