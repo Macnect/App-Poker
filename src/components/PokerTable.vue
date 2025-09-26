@@ -67,6 +67,8 @@
             <option value="2">x2</option>
             <option value="3">x3</option>
           </select>
+
+          <button @click="goToHandConfig" title="Ir a Configuración de Mano" class="new-hand-btn">Nueva Mano</button>
           
         </template>
       </div>
@@ -168,6 +170,11 @@ function justNewHand() {
   gameStore.resetHand();
   closeNewHandModal();
 }
+
+function goToHandConfig() {
+  gameStore.gamePhase = 'pre-action';
+  gameStore.resetHand();
+}
 </script>
 
 <style scoped>
@@ -258,6 +265,8 @@ function justNewHand() {
 .reset-btn:hover { background-color: #c53030 !important; }
 .save-btn { background-color: #48bb78 !important; }
 .save-btn:hover { background-color: #38a169 !important; }
+.new-hand-btn { background-color: #48bb78 !important; }
+.new-hand-btn:hover { background-color: #38a169 !important; }
 .play-btn { background-color: #38a169 !important; }
 .play-btn:hover { background-color: #2f855a !important; }
 .pause-btn { background-color: #dd6b20 !important; }
