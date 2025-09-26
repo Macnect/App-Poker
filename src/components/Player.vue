@@ -55,7 +55,7 @@
         </div>
       </div>
       
-      <button v-if="gameStore.isPreActionPhase" @click="isNotesPanelOpen = !isNotesPanelOpen" class="edit-notes-btn">
+      <button v-if="gameStore.isPreActionPhase" @click="isNotesPanelOpen = !isNotesPanelOpen" class="edit-notes-btn" ref="editBtnRef">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
         </svg>
@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div v-if="isNotesPanelOpen" class="notes-panel">
+    <div v-if="isNotesPanelOpen" class="notes-panel" ref="notesPanelRef">
       <textarea
         :value="player.notes"
         @input="gameStore.updatePlayerNotes(player.id, $event.target.value)"
@@ -104,12 +104,15 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../store/game'
 import PlayingCard from './PlayingCard.vue';
 import ChipStack from './ChipStack.vue';
 
 const isNotesPanelOpen = ref(false);
+
+const notesPanelRef = ref(null);
+const editBtnRef = ref(null);
 
 const tagColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
 
@@ -130,6 +133,20 @@ function handleCardClick(playerId, cardIndex) {
     gameStore.openCardPicker(target);
   }
 }
+
+function handleClickOutside(event) {
+  if (isNotesPanelOpen.value && notesPanelRef.value && !notesPanelRef.value.contains(event.target) && editBtnRef.value && !editBtnRef.value.contains(event.target)) {
+    isNotesPanelOpen.value = false;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 
 const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.player.id);
 const PREDEFINED_LAYOUTS = {
