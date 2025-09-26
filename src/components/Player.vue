@@ -341,7 +341,7 @@ const notesPanelStyle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 0px;
   z-index: 9;
 }
 
