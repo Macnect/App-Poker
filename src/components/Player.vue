@@ -172,9 +172,9 @@ const PREDEFINED_LAYOUTS = {
   3: [ { x: 0, y: 190 }, { x: -450, y: -100 }, { x: 450, y: -100 }, ],
   5: [ { x: 0, y: 190 }, { x: -450, y: 80 }, { x: -350, y: -200 }, { x: 350, y: -200 }, { x: 450, y: 80 }, ],
   6: [ { x: 0, y: 190 }, { x: -450, y: 100 }, { x: -450, y: -120 }, { x: 0, y: -220 }, { x: 450, y: -120 }, { x: 450, y: 100 }, ],
-  7: calculateEquidistantPositions(7, 500, 260),
+  7: calculateEquidistantPositions(7, 500, 240),
   8: calculateEquidistantPositions(8, 500, 260),
-  9: calculateEquidistantPositions(9, 500, 260),
+  9: calculateEquidistantPositions(9, 500, 280),
 };
 const seatCoordinates = computed(() => {
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
