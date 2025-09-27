@@ -33,15 +33,17 @@
       </button>
     </nav>
     <main>
-      <!-- CAMBIO CLAVE: Pasamos currentView como una prop -->
-      <component :is="views[currentView]" :current-view="currentView" @switch-view="switchToView" />
+      <!-- CAMBIO CLAVE: Envolvemos el componente dinámico en KeepAlive -->
+      <KeepAlive>
+        <component :is="views[currentView]" @switch-view="switchToView" />
+      </KeepAlive>
     </main>
   </div>
   <AuthView v-else />
 </template>
 
 <script setup>
-import { ref, shallowRef, watch } from 'vue';
+import { ref, shallowRef } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
 import CurrentHandView from './views/CurrentHandView.vue';
@@ -56,22 +58,8 @@ import SavedTripsView from './views/SavedTripsView.vue';
 import AuthView from './views/AuthView.vue';
 
 const authStore = useAuthStore();
-console.log('[DEBUG] App.vue: authStore initialized, user:', authStore.user?.id || 'null');
-
 const currentView = ref('CurrentHandView');
-console.log('[DEBUG] App.vue: currentView initialized to:', currentView.value);
-
 const tripStore = useTripStore();
-
-// Watch for auth changes
-watch(() => authStore.user, (newUser) => {
-  console.log('[DEBUG] App.vue: authStore.user changed to:', newUser?.id || 'null');
-}, { immediate: true });
-
-// Watch for view changes
-watch(currentView, (newView) => {
-  console.log('[DEBUG] App.vue: currentView changed to:', newView);
-});
 
 const views = shallowRef({
   CurrentHandView,

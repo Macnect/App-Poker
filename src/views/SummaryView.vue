@@ -17,9 +17,9 @@
         <option value="last1year">Último año</option>
       </select>
     </div>
-    
+
     <div v-if="isLoading" class="loading-message">
-        Cargando datos del sumario...
+      Cargando datos del sumario...
     </div>
     <div v-else-if="sessionStore.sessionCount === 0" class="no-data-message">
       No hay sesiones guardadas para el período seleccionado.
@@ -110,48 +110,42 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'; // Añadir ref y onMounted
+import { computed, ref, onActivated } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
 import { useGameStore } from '../store/game';
 
 const sessionStore = useSessionStore();
 const gameStore = useGameStore();
-const isLoading = ref(true); // Estado de carga
+const isLoading = ref(true);
 
-// Cargar los datos necesarios al montar la vista
-onMounted(async () => {
+onActivated(async () => {
     isLoading.value = true;
-    // Cargamos tanto sesiones como manos para tener todos los datos
-    await sessionStore.fetchSessions();
-    await gameStore.fetchHands();
+    await Promise.all([
+        sessionStore.fetchSessions(),
+        gameStore.fetchHands()
+    ]);
     isLoading.value = false;
 });
 
 const bbPer100 = computed(() => {
   const totalHands = gameStore.savedHands.length;
-  if (totalHands === 0) {
-    return 0;
-  }
+  if (totalHands === 0) return 0;
   
   const totalProfit = sessionStore.totalNetProfit;
-
-  // Usamos solo las manos guardadas que tienen un valor de bigBlind
+  
   const handsWithBlinds = gameStore.savedHands.filter(hand => hand.ciega_grande > 0);
   if (handsWithBlinds.length === 0) return 0;
   
   const totalBigBlindValue = handsWithBlinds.reduce((sum, hand) => sum + hand.ciega_grande, 0);
   const averageBigBlind = totalBigBlindValue / handsWithBlinds.length;
 
-  if (averageBigBlind === 0) {
-    return 0;
-  }
+  if (averageBigBlind === 0) return 0;
   
   const profitInBB = totalProfit / averageBigBlind;
   const winRate = (profitInBB / totalHands) * 100;
   
   return winRate;
 });
-
 
 function formatCurrency(value, showSign = true) {
   if (typeof value !== 'number') return `${sessionStore.currency}0.00`;
@@ -181,7 +175,6 @@ h2 {
   margin-bottom: 2rem;
   font-size: 2rem;
 }
-
 .filters-container {
   background-color: #2d3748;
   padding: 1rem 1.5rem;
@@ -205,7 +198,6 @@ h2 {
   border-radius: 6px;
   color: white;
 }
-
 .loading-message, .no-data-message {
   text-align: center;
   font-size: 1.2rem;
@@ -214,7 +206,6 @@ h2 {
   padding: 2rem;
   border-radius: 12px;
 }
-
 .stats-grid {
   display: flex;
   flex-direction: column;
@@ -273,7 +264,6 @@ h2 {
 .profit-text { color: #68d391; }
 .loss-text { color: #fc8181; }
 .even-text { color: #e2e8f0; }
-
 @media (min-width: 768px) {
   .summary-container { padding: 2rem; }
   .stats-grid {

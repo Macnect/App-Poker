@@ -53,22 +53,25 @@ const filteredSessions = computed(() => {
   }
 
   return allSessions.filter(session => {
-    const parts = session.date.split('/');
-    const sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    // La fecha de la DB ya es un objeto Date o un string compatible
+    const sessionDate = new Date(session.fecha);
     return sessionDate >= cutoffDate;
   });
 });
 
 const sessionsInChronologicalOrder = computed(() => {
-  return [...filteredSessions.value].reverse();
+  // Ordenamos de la más antigua a la más nueva para la gráfica de líneas
+  return [...filteredSessions.value].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 });
 
 const lineChartData = computed(() => {
   const sessions = sessionsInChronologicalOrder.value;
-  const labels = sessions.map(s => s.date);
+  // Usamos 'fecha' y lo formateamos para las etiquetas
+  const labels = sessions.map(s => new Date(s.fecha + 'T12:00:00').toLocaleDateString());
   let cumulativeProfit = 0;
   const dataPoints = sessions.map(s => {
-    cumulativeProfit += s.result || 0; 
+    // *** CAMBIO CLAVE: Usamos 'resultado' y lo convertimos a número ***
+    cumulativeProfit += parseFloat(s.resultado) || 0; 
     return cumulativeProfit;
   });
 
@@ -108,8 +111,10 @@ const lineChartData = computed(() => {
 
 const barChartData = computed(() => {
   const sessions = sessionsInChronologicalOrder.value;
-  const labels = sessions.map(s => s.date);
-  const dataPoints = sessions.map(s => s.result || 0);
+  // Usamos 'fecha' y lo formateamos para las etiquetas
+  const labels = sessions.map(s => new Date(s.fecha + 'T12:00:00').toLocaleDateString());
+  // *** CAMBIO CLAVE: Usamos 'resultado' y lo convertimos a número ***
+  const dataPoints = sessions.map(s => parseFloat(s.resultado) || 0);
 
   return {
     labels,
@@ -142,7 +147,8 @@ const chartOptions = {
             const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
             if (session) {
               label = 'Resultado de la Sesión: ';
-              value = session.result;
+              // *** CAMBIO CLAVE: Usamos 'resultado' ***
+              value = parseFloat(session.resultado);
             }
           } 
           else {
@@ -156,26 +162,23 @@ const chartOptions = {
           }
           return label;
         },
-        // --- FUNCIÓN AÑADIDA PARA EL COLOR DEL TEXTO ---
         labelColor: function(context) {
           let value = 0;
-          // Si es el gráfico de líneas, obtenemos el resultado de la sesión individual
           if (context.dataset.label === t('charts.cumulativeProfit')) {
-            // El índice de la sesión es dataIndex - 1 porque el gráfico tiene un punto extra de "Inicio"
             if (context.dataIndex > 0) {
               const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
               if (session) {
-                value = session.result;
+                // *** CAMBIO CLAVE: Usamos 'resultado' ***
+                value = parseFloat(session.resultado);
               }
             }
           } 
-          // Si es el gráfico de barras, el valor ya es el resultado de la sesión
           else {
             value = context.parsed.y;
           }
 
           return {
-            borderColor: value >= 0 ? '#68d391' : '#fc8181', // Verde para positivo, Rojo para negativo
+            borderColor: value >= 0 ? '#68d391' : '#fc8181',
             backgroundColor: value >= 0 ? '#68d391' : '#fc8181',
           };
         }
@@ -186,7 +189,6 @@ const chartOptions = {
       padding: 10,
       borderColor: 'rgba(74, 85, 104, 0.8)',
       borderWidth: 1,
-      // Habilitar que el color de la etiqueta (label) cambie
       usePointStyle: true, 
       boxPadding: 4
     },

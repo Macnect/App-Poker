@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'; // Añadir ref y onMounted
+import { ref, onActivated } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
 import { useChartsStore } from '../store/useChartsStore';
 import SessionChart from '../components/SessionChart.vue';
@@ -49,8 +49,7 @@ const sessionStore = useSessionStore();
 const chartsStore = useChartsStore();
 const isLoading = ref(true);
 
-// Cargar las sesiones al montar la vista
-onMounted(async () => {
+onActivated(async () => {
     isLoading.value = true;
     await sessionStore.fetchSessions();
     isLoading.value = false;
