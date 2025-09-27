@@ -23,7 +23,6 @@
         </div>
       </div>
       
-      <!-- SELECTOR DE MONEDA ACTUALIZADO CON 30 OPCIONES -->
       <div class="config-item">
         <label for="currency-select">Moneda:</label>
         <select id="currency-select" v-model="selectedCurrency">
@@ -33,7 +32,6 @@
         </select>
       </div>
 
-      <!-- SELECTOR DE REGLA ESPECIAL -->
       <div class="config-item">
         <label for="special-rule-select">Regla Especial:</label>
         <select id="special-rule-select" v-model="selectedSpecialRule">
@@ -44,7 +42,6 @@
         </select>
       </div>
 
-      <!-- SELECTOR DE BOMB POT BB (solo visible cuando Bomb Pot está seleccionado) -->
       <div v-if="selectedSpecialRule === 'Bomb Pot'" class="config-item">
         <label for="bomb-pot-bb-select">Bomb Pot BB:</label>
         <select id="bomb-pot-bb-select" v-model="selectedBombPotBB">
@@ -58,15 +55,20 @@
       <button @click="loadHandClicked">Iniciar Mano</button>
     </div>
 
-    <PokerTable v-else />
+    <!-- Contenedor del Editor de Manos (se oculta en móvil vertical) -->
+    <div v-else class="hand-editor-content">
+      <PokerTable />
+      <CardPicker v-if="gameStore.isCardPickerOpen" />
+    </div>
+    
+    <!-- Overlay que pide girar el dispositivo (se muestra en móvil vertical) -->
+    <RotateDeviceOverlay class="rotate-device-prompt" />
 
     <ConfigurationModal
       v-if="showPositionModal"
       :positions="availablePositions"
       @confirm="handlePositionSelected"
     />
-
-    <CardPicker v-if="gameStore.isCardPickerOpen" />
   </div>
 </template>
 
@@ -76,6 +78,8 @@ import { useGameStore } from '../store/game';
 import PokerTable from '../components/PokerTable.vue';
 import ConfigurationModal from '../components/ConfigurationModal.vue';
 import CardPicker from '../components/CardPicker.vue';
+// Importamos el componente de overlay para la rotación
+import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 
 const gameStore = useGameStore();
 const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
@@ -83,11 +87,10 @@ const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
 const selectedPlayers = ref(6);
 const sbInput = ref(1);
 const bbInput = ref(2);
-const selectedCurrency = ref('$'); // Moneda por defecto
-const selectedSpecialRule = ref('Ninguno'); // Regla especial por defecto
-const selectedBombPotBB = ref(2); // Valor por defecto para Bomb Pot
+const selectedCurrency = ref('$');
+const selectedSpecialRule = ref('Ninguno');
+const selectedBombPotBB = ref(2);
 
-// --- LISTA AMPLIADA DE LAS 30 MONEDAS MÁS USADAS ---
 const currencies = ref([
   { symbol: '$', name: 'USD - Dólar estadounidense' },
   { symbol: '€', name: 'EUR - Euro' },
@@ -213,7 +216,6 @@ select, input[type="number"] {
   box-sizing: border-box;
   border-radius: 8px;
 }
-/* Aumentamos el ancho del selector de moneda para que quepa el texto */
 #currency-select {
   width: 350px;
   text-align: left;
@@ -234,5 +236,57 @@ button {
   font-weight: bold;
   border-radius: 8px;
   margin-top: 10px;
+}
+
+/* --- LÓGICA DE VISIBILIDAD PARA EL EDITOR DE MANOS --- */
+
+/* Por defecto, el prompt de rotación está oculto */
+.rotate-device-prompt {
+  display: none;
+}
+
+/* Media query para dispositivos táctiles (la mayoría de móviles y tablets) */
+@media (hover: none) and (pointer: coarse) {
+  /* Si el dispositivo está en vertical (portrait)... */
+  @media (orientation: portrait) {
+    /* ...mostramos el prompt de rotación... */
+    .rotate-device-prompt {
+      display: flex;
+    }
+    /* ...y ocultamos el contenido del editor. */
+    .hand-editor-content {
+      display: none;
+    }
+  }
+}
+
+/* --- ESTILOS RESPONSIVOS PARA EL PANEL DE CONFIGURACIÓN --- */
+@media screen and (max-width: 640px) {
+  .configuration-panel {
+    padding: 2rem;
+    margin: 2rem 1rem;
+    gap: 20px;
+  }
+  h2 {
+    font-size: 2rem;
+  }
+  .config-item {
+    width: 100%;
+  }
+  select, input[type="number"] {
+    width: 100%;
+    max-width: 350px;
+  }
+  .blinds-container {
+    flex-direction: column;
+    width: 100%;
+  }
+  .blinds-container .config-item,
+  .blinds-container input {
+    width: 100%;
+  }
+  button {
+    width: 100%;
+  }
 }
 </style>

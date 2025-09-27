@@ -50,6 +50,7 @@ function selectCard(card) {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background-color: rgba(0, 0, 0, 0.8);
   display: flex; justify-content: center; align-items: center; z-index: 2000;
+  padding: 1rem;
 }
 .card-picker-content {
   background-color: #1a202c;
@@ -84,7 +85,6 @@ function selectCard(card) {
   font-size: 1.2rem;
   line-height: 1;
 }
-/* 4-Color Deck */
 .card.black { background-color: #2d3748; }
 .card.red { background-color: #c53030; }
 .card.green { background-color: #2f855a; }
@@ -105,5 +105,24 @@ function selectCard(card) {
   margin-top: 1rem;
   padding: 10px;
   font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .card-picker-content {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .suit-row {
+    gap: 0.25rem;
+  }
+  .card {
+    width: clamp(28px, 6vw, 40px); /* Ancho fluido */
+    height: clamp(40px, 8.4vw, 56px); /* Alto fluido */
+    font-size: clamp(1rem, 3vw, 1.5rem); /* Fuente fluida */
+    border-radius: 4px;
+  }
+  .suit-icon {
+    font-size: clamp(0.7rem, 2vw, 1rem);
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="action-panel-wrapper" style="position: fixed; top: 800px; left: 50%; transform: translateX(-50%);">
+  <div class="action-panel-wrapper">
     
     <div class="actions-grid">
       <!-- Fila 1 -->
@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '../store/game';
 
@@ -64,8 +64,6 @@ const { t } = useI18n();
 const props = defineProps({ modelValue: String });
 const emit = defineEmits(['update:modelValue']);
 const gameStore = useGameStore();
-
-// No drag functionality needed since it's fixed positioned
 
 const amountToCall = computed(() => {
   if (!gameStore.activePlayer) return 0;
@@ -157,10 +155,8 @@ function setRaiseAmountByPot(multiplier) {
   raiseAmount.value = betValue;
 }
 
-// --- NUEVA FUNCIÓN PARA EL BOTÓN ALL-IN ---
 function setRaiseAmountToAllIn() {
   if (!gameStore.activePlayer) return;
-  // Simplemente establece el raiseAmount al valor máximo posible (el stack del jugador)
   raiseAmount.value = maxSliderValue.value;
 }
 
@@ -181,7 +177,7 @@ function handleWheelScroll(event) {
 </script>
 
 <style scoped>
-/* El CSS es idéntico al que me pasaste */
+/* --- ESTILOS ESCRITORIO --- */
 .action-panel-wrapper {
   --btn-red: #f95f41;
   --btn-red-hover: #e04a2f;
@@ -195,6 +191,12 @@ function handleWheelScroll(event) {
   --btn-grey-hover: #2D3748;
   --slider-color-active: #FAB76B;
   --slider-color-inactive: #1A202C;
+  
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+
   background-color: #2d3748;
   border-radius: 12px;
   padding: 20px;
@@ -202,6 +204,7 @@ function handleWheelScroll(event) {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border: 3px solid var(--border-color);
   color: white;
+  transition: all 0.3s ease;
 }
 .actions-grid {
   display: grid;
@@ -288,13 +291,10 @@ function handleWheelScroll(event) {
   cursor: pointer;
 }
 .btn-fold { background-color: var(--btn-red); }
-.btn-fold:hover { background-color: var(--btn-red-hover); }
 .btn-call { background-color: var(--btn-green); }
-.btn-call:hover { background-color: var(--btn-green-hover); }
 .btn-raise { background-color: var(--btn-orange); }
-.btn-raise:hover { background-color: var(--btn-orange-hover); }
 .btn-allin { background-color: var(--btn-purple) !important; }
-.btn-allin:hover { background-color: var(--btn-purple-hover) !important; }
+
 button:disabled {
   background-color: #718096 !important;
   cursor: not-allowed;
@@ -331,23 +331,45 @@ button:disabled {
   cursor: pointer;
   margin-top: -8px;
 }
-.grid-slider::-moz-range-track {
-  width: 100%;
-  height: 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  border: 1px solid #000;
-  background: linear-gradient(to right, 
-    var(--slider-color-active) var(--slider-fill-percentage), 
-    var(--slider-color-inactive) var(--slider-fill-percentage)
-  );
+
+/* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .action-panel-wrapper {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    height: auto;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    border-width: 2px;
+    min-height: 0;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto 1fr auto auto;
+    gap: 8px;
+    height: 100%;
+    grid-template-areas:
+      "turn-info  turn-info"
+      "fold       call"
+      "raise      input"
+      "slider     slider"
+      "quick-bets quick-bets"
+      "color-select bbs-toggle";
+  }
+
+  .grid-turn-info { font-size: 0.9rem; }
+  .grid-fold, .grid-call, .grid-raise { height: 45px; font-size: 0.9rem; }
+  .grid-input { height: 45px; font-size: 1.1rem; width: 100%; }
+  .all-in-indicator { font-size: 0.9rem; bottom: -14px; }
+  .grid-slider { margin: 5px 0; }
+  .grid-quick-bets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .grid-quick-bets button { padding: 6px; font-size: 0.7rem; }
+  .grid-quick-bets .btn-allin { grid-column: 1 / -1; }
+  .grid-color-select, .grid-bbs-toggle { height: 35px; font-size: 0.8rem; padding: 0 8px; }
 }
-.grid-slider::-moz-range-thumb {
-  border: 1px solid #000;
-  height: 30px;
-  width: 20px;
-  border-radius: 4px;
-  background: #E2E8F0;
-  cursor: pointer;
-}
-</style>
+</style>```

@@ -42,13 +42,14 @@ const selectedPosition = ref(null);
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 1rem;
 }
 .modal-content {
   background-color: #2d3748;
   padding: 2rem;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  width: 90%;
+  width: 100%;
   max-width: 500px;
   text-align: center;
 }
@@ -78,5 +79,19 @@ h3 {
   padding: 15px;
   font-size: 1.2rem;
   font-weight: bold;
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 1.5rem;
+  }
+  .positions-grid button {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+  .confirm-btn {
+    padding: 12px;
+    font-size: 1.1rem;
+  }
 }
 </style>

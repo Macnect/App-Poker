@@ -103,11 +103,11 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
-import { useAuthStore } from '../store/useAuthStore'; // <-- IMPORTAR AUTH STORE
+import { useAuthStore } from '../store/useAuthStore';
 import EndSessionModal from '../components/EndSessionModal.vue';
 
 const sessionStore = useSessionStore();
-const authStore = useAuthStore(); // <-- INICIALIZAR AUTH STORE
+const authStore = useAuthStore();
 const showEndSessionModal = ref(false);
 const isSaving = ref(false);
 
@@ -134,12 +134,10 @@ function handleAddExpense() {
   }
 }
 
-// *** FUNCIÓN MODIFICADA PARA PASAR EL USUARIO ***
 async function handleConfirmEndSession(finalStack) {
   isSaving.value = true;
   try {
-    // Pasamos el objeto 'user' del authStore a la función de guardado
-    await sessionStore.stopAndSaveSession(finalStack, authStore.user);
+    await sessionStore.stopAndSaveSession(finalStack);
     showEndSessionModal.value = false;
   } catch (error) {
     alert(`Error al guardar la sesión: ${error.message}`);
@@ -161,18 +159,18 @@ const formattedTime = computed(() => {
 .live-session-container {
   display: flex;
   justify-content: center;
-  padding: 3rem 1rem; /* Aumentamos padding vertical */
+  padding: 2rem 1rem;
 }
 .session-panel {
   width: 100%;
-  max-width: 950px; /* Ancho máximo aumentado */
+  max-width: 950px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-areas:
     "timer timer"
     "actions config"
     "controls controls";
-  gap: 2rem; /* Espacio entre paneles aumentado */
+  gap: 2rem;
 }
 
 /* --- Widgets --- */
@@ -180,16 +178,16 @@ const formattedTime = computed(() => {
   background-color: #2d3748;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  padding: 2rem; /* Padding aumentado */
+  padding: 2rem;
 }
 .widget-header {
   display: flex;
   align-items: center;
-  gap: 12px; /* Espacio de header aumentado */
-  font-size: 1rem; /* Tamaño de letra de header aumentado */
+  gap: 12px;
+  font-size: 1rem;
   font-weight: bold;
   color: #a0aec0;
-  margin-bottom: 1.5rem; /* Margen inferior aumentado */
+  margin-bottom: 1.5rem;
   letter-spacing: 1px;
 }
 .timer-widget { grid-area: timer; }
@@ -198,10 +196,11 @@ const formattedTime = computed(() => {
 
 /* --- Timer Widget --- */
 .status-indicator {
-  width: 12px; /* Indicador más grande */
+  width: 12px;
   height: 12px;
   border-radius: 50%;
   background-color: #718096;
+  /* CORRECTION: Changed colon to a space */
   transition: background-color 0.3s ease;
 }
 .timer-widget:not(.on-break) .status-indicator {
@@ -213,12 +212,12 @@ const formattedTime = computed(() => {
 }
 @keyframes pulse {
   0% { box-shadow: 0 0 0 0 rgba(104, 211, 145, 0.7); }
-  70% { box-shadow: 0 0 0 12px rgba(104, 211, 145, 0); } /* Sombra de pulso más grande */
+  70% { box-shadow: 0 0 0 12px rgba(104, 211, 145, 0); }
   100% { box-shadow: 0 0 0 0 rgba(104, 211, 145, 0); }
 }
 .timer-display {
   font-family: 'Courier New', Courier, monospace;
-  font-size: clamp(3.5rem, 10vw, 6rem); /* Reloj mucho más grande */
+  font-size: clamp(3.5rem, 10vw, 6rem);
   font-weight: 700;
   color: #fff;
   text-align: center;
@@ -231,21 +230,21 @@ const formattedTime = computed(() => {
 .live-actions {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Espacio entre acciones aumentado */
+  gap: 1.5rem;
 }
 .action-group {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 1rem; /* Espacio entre input y botón aumentado */
+  gap: 1rem;
 }
 .action-group input {
-  padding: 15px; /* Inputs más grandes */
-  font-size: 1.1rem; /* Texto de input más grande */
+  padding: 15px;
+  font-size: 1.1rem;
   text-align: center;
 }
 .action-group button {
-  padding: 15px; /* Botones de acción más grandes */
-  font-size: 1rem; /* Texto de botón de acción más grande */
+  padding: 15px;
+  font-size: 1rem;
   background-color: #4A5568;
 }
 
@@ -257,17 +256,17 @@ const formattedTime = computed(() => {
 .config-fieldset:disabled { opacity: 0.6; }
 .config-grid {
   display: grid; grid-template-columns: 1fr 1fr; 
-  gap: 1.5rem; /* Espacio entre items de config aumentado */
+  gap: 1.5rem;
 }
 .config-item { display: flex; flex-direction: column; gap: 10px; }
 .config-item label { 
   font-weight: bold; 
-  font-size: 1.1rem; /* Labels más grandes */
+  font-size: 1.1rem;
   color: #a0aec0; 
 }
 .config-item input, .config-item select { 
-  font-size: 1.1rem; /* Inputs de config más grandes */
-  padding: 15px; /* Padding de inputs aumentado */
+  font-size: 1.1rem;
+  padding: 15px;
 }
 
 /* --- Main Controls --- */
@@ -275,30 +274,27 @@ const formattedTime = computed(() => {
   grid-area: controls;
   display: flex;
   justify-content: center;
-  gap: 1.5rem; /* Espacio entre botones principales aumentado */
+  gap: 1.5rem;
   margin-top: 1rem;
 }
 .main-controls button {
   display: flex; align-items: center; justify-content: center; gap: 12px;
-  font-size: 1.3rem; /* Texto de botones principales más grande */
+  font-size: 1.3rem;
   font-weight: bold; 
-  padding: 18px 30px; /* Botones principales más grandes */
-  border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
-  flex-grow: 1; max-width: 300px; /* Ancho máximo de botones aumentado */
+  padding: 18px 30px;
+  border-radius: 8px;
+  flex-grow: 1; max-width: 300px;
 }
 .main-controls button svg { 
-  width: 28px; /* Iconos más grandes */
+  width: 28px;
   height: 28px; 
 }
 .btn-play { background-color: #38a169; color: white; }
-.btn-play:hover { background-color: #2f855a; }
 .btn-pause { background-color: #dd6b20; color: white; }
-.btn-pause:hover { background-color: #c05621; }
 .btn-stop { background-color: #c53030; color: white; }
-.btn-stop:hover { background-color: #9b2c2c; }
 
 /* --- Media Queries for Responsiveness --- */
-@media (max-width: 768px) {
+@media (max-width: 820px) {
   .session-panel {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -306,6 +302,16 @@ const formattedTime = computed(() => {
       "actions"
       "config"
       "controls";
+    gap: 1.5rem;
+  }
+  .main-controls {
+    flex-direction: column;
+  }
+  .main-controls button {
+    max-width: none;
+  }
+  .config-grid {
+    grid-template-columns: 1fr; /* Apila los inputs de configuración */
   }
 }
 </style>

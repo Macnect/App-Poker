@@ -355,4 +355,28 @@ h2 {
     opacity: 1;
   }
 }
+
+@media (max-width: 640px) {
+  .saved-trips-container {
+    padding: 1rem 0.5rem;
+  }
+  .trip-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .trip-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .trip-destination {
+    font-size: 1.2rem;
+  }
+  .trip-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat-item .value {
+    font-size: 1.2rem;
+  }
+}
 </style>

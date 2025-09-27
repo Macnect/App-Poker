@@ -135,7 +135,7 @@ function handleCardClick(playerId, cardIndex) {
 }
 
 function handleClickOutside(event) {
-  if (gameStore.openNotesPanelPlayerId === props.player.id && notesPanelRef.value && !notesPanelRef.value.contains(event.target) && editBtnRef.value && !editBtnRef.value.contains(event.target)) {
+  if (isNotesPanelOpen.value && notesPanelRef.value && !notesPanelRef.value.contains(event.target) && editBtnRef.value && !editBtnRef.value.contains(event.target)) {
     gameStore.closeNotesPanel();
   }
 }
@@ -178,21 +178,28 @@ const PREDEFINED_LAYOUTS = {
   8: calculateEquidistantPositions(8, 500, 260),
   9: calculateEquidistantPositions(9, 500, 280),
 };
+
 const seatCoordinates = computed(() => {
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
   if (PREDEFINED_LAYOUTS[props.playerCount]) {
     return PREDEFINED_LAYOUTS[props.playerCount][visualIndex];
-  } else {
-    const angleRad = (Math.PI * 2 / props.playerCount) * visualIndex + Math.PI / 2;
-    const radiusX = 450;
-    const radiusY = 220;
-    return { x: Math.cos(angleRad) * radiusX, y: Math.sin(angleRad) * radiusY };
   }
+  return { x: 0, y: 0 };
 });
+
 const seatStyle = computed(() => {
   const { x, y } = seatCoordinates.value;
-  return { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` };
+  // Convertimos los píxeles (basados en 1000x480) a porcentajes
+  const xPercent = (x / 1000) * 100;
+  const yPercent = (y / 480) * 100;
+  
+  return {
+    top: '50%',
+    left: '50%',
+    transform: `translate(calc(-50% + ${xPercent}%), calc(-50% + ${yPercent}%))`
+  };
 });
+
 const dealerButtonStyle = computed(() => {
   return {
     bottom: '-40px',
@@ -205,21 +212,15 @@ const betBoxStyle = computed(() => {
   const threshold = 150;
 
   if (Math.abs(y) > threshold) {
-    // Top/bottom players: position bets on the players
     if (y > 0) {
-      // Top player: position bet on player
       return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
     } else {
-      // Bottom player: position bet on player
       return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
     }
   } else {
-    // Left/right players: position bets on the players
     if (x < 0) {
-      // Left player: position bet on player
       return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
     } else {
-      // Right player: position bet on player
       return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
     }
   }
@@ -230,15 +231,14 @@ const notesPanelStyle = computed(() => {
 </script>
 
 <style scoped>
-/* --- ESTILOS COMPLETAMENTE RENOVADOS --- */
+/* --- ESTILOS BASE (ESCRITORIO) --- */
 .player-container {
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 5;
-  width: 150px;
-  /* CAMBIO: La altura ahora es fija y tiene en cuenta el nuevo tamaño de las cartas */
-  height: 200px; /* Increased height to create space above for community cards */
+  width: 15%; 
+  height: 40%;
 }
 
 .player-seat {
@@ -269,20 +269,20 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  /* Moved closer to the player panel */
   top: 38px;
   left: 55%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  gap: 5px;
+  gap: 5%;
   width: 100%;
   z-index: 9;
 }
 
 .card-placeholder {
-  width: var(--player-card-width);
-  height: var(--player-card-height);
+  width: 45%; 
+  height: auto;
+  aspect-ratio: 100 / 140; 
   cursor: pointer;
   position: relative;
 }
@@ -538,5 +538,43 @@ const notesPanelStyle = computed(() => {
   opacity: 1;
 }
 
-/* Responsive design se mantiene igual */
+/* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .player-container {
+    width: 18%; /* Hacemos los jugadores un poco más grandes en relación a la mesa */
+    height: 45%;
+  }
+  .player-seat {
+    height: 50px; /* Reducimos la altura del panel de info */
+  }
+  .player-info-panel {
+    padding: 4px;
+    border-radius: 6px;
+  }
+  .player-name {
+    font-size: 0.8em;
+    gap: 4px;
+    margin-bottom: 2px;
+  }
+  .player-stack {
+    font-size: 0.9em;
+  }
+  .player-cards {
+    top: 5px; /* Acercamos las cartas al panel de info */
+  }
+  .dealer-button {
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+    bottom: -30px;
+  }
+  .bet-box {
+    /* Reducimos el tamaño de la info de apuesta */
+    transform: scale(0.8) translateY(-50%);
+  }
+  /* Ocultamos elementos de edición para simplificar la UI */
+  .edit-notes-btn, .notes-display-wrapper {
+    display: none;
+  }
+}
 </style>
