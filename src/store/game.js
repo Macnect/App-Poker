@@ -40,6 +40,11 @@ export const useGameStore = defineStore('game', () => {
   // Reemplazamos localStorage con un ref vacío
   const savedHands = ref([]);
   const displayInBBs = ref(false);
+
+  // Pagination state
+  const hasMore = ref(true);
+  const currentOffset = ref(0);
+  const pageSize = ref(20);
   
   const replaySpeed = ref(1);
   const isReplaying = ref(false);
@@ -79,8 +84,29 @@ export const useGameStore = defineStore('game', () => {
 
   // --- ACCIONES NUEVAS Y MODIFICADAS ---
 
-  async function fetchHands() {
-    savedHands.value = await apiFetchHands();
+  async function fetchHands(date = null, incremental = false) {
+    console.log('[DEBUG] gameStore.fetchHands: Starting with date:', date, 'incremental:', incremental, 'currentOffset:', currentOffset.value);
+    const limit = pageSize.value;
+    const offset = incremental ? currentOffset.value : 0;
+    console.log('[DEBUG] gameStore.fetchHands: Calling apiFetchHands with limit:', limit, 'offset:', offset);
+    const result = await apiFetchHands(date, limit, offset);
+    console.log('[DEBUG] gameStore.fetchHands: apiFetchHands completed, result count:', result?.length || 0);
+    if (incremental) {
+      savedHands.value = [...savedHands.value, ...result];
+      console.log('[DEBUG] gameStore.fetchHands: Appended to savedHands, new total:', savedHands.value.length);
+    } else {
+      savedHands.value = result;
+      currentOffset.value = 0;
+      console.log('[DEBUG] gameStore.fetchHands: Replaced savedHands, count:', savedHands.value.length, 'offset reset to 0');
+    }
+    currentOffset.value += result.length;
+    hasMore.value = result.length === limit;
+    console.log('[DEBUG] gameStore.fetchHands: Updated currentOffset to:', currentOffset.value, 'hasMore:', hasMore.value);
+  }
+
+  async function loadMoreHands(date = null) {
+    if (!hasMore.value) return;
+    await fetchHands(date, true);
   }
 
   async function saveCurrentHand() {
@@ -664,6 +690,6 @@ export const useGameStore = defineStore('game', () => {
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
     updatePlayerNotes, updatePlayerTag, toggleNotesPanel, closeNotesPanel,
-    fetchHands, // Exportamos la nueva acción
+    fetchHands, loadMoreHands, hasMore, currentOffset, pageSize,
   }
 });

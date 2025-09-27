@@ -1,4 +1,5 @@
 import { supabase } from '@/supabase';
+import { useAuthStore } from '@/store/useAuthStore';
 
 /**
  * ============================================================================
@@ -8,16 +9,56 @@ import { supabase } from '@/supabase';
 
 // Función auxiliar para obtener el usuario actual de forma segura
 const getCurrentUser = async () => {
-  const { data: { session }, error } = await supabase.auth.getSession();
-  if (error) {
-    console.error("Error al obtener la sesión:", error);
+  console.log('[DEBUG] getCurrentUser: Starting...');
+
+  // First, try to get user from authStore (reactive and up-to-date)
+  const authStore = useAuthStore();
+  if (authStore.user) {
+    console.log('[DEBUG] getCurrentUser: User found in authStore, ID:', authStore.user.id);
+    return authStore.user;
+  }
+
+  console.log('[DEBUG] getCurrentUser: No user in authStore, falling back to Supabase calls...');
+
+  try {
+    // Add short timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Session retrieval timeout')), 3000)
+    );
+
+    const sessionPromise = supabase.auth.getSession();
+    const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
+    console.log('[DEBUG] getCurrentUser: getSession returned, session exists:', !!session, 'error:', error ? error.message : 'none');
+
+    if (error) {
+      console.error("[DEBUG] getCurrentUser: Error from getSession:", error);
+      return null;
+    }
+    if (!session?.user) {
+      console.warn("[DEBUG] getCurrentUser: No session or user found");
+      return null;
+    }
+    console.log('[DEBUG] getCurrentUser: User authenticated via getSession, ID:', session.user.id, 'email:', session.user.email);
+    return session.user;
+  } catch (timeoutError) {
+    console.error('[DEBUG] getCurrentUser: Timeout or error getting session:', timeoutError.message);
+    // As fallback, try to get user directly
+    console.log('[DEBUG] getCurrentUser: Attempting fallback with getUser...');
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('[DEBUG] getCurrentUser: getUser error:', userError);
+        return null;
+      }
+      if (user) {
+        console.log('[DEBUG] getCurrentUser: Fallback successful, user ID:', user.id);
+        return user;
+      }
+    } catch (fallbackError) {
+      console.error('[DEBUG] getCurrentUser: Fallback failed:', fallbackError.message);
+    }
     return null;
   }
-  if (!session?.user) {
-    console.warn("Intento de operación sin usuario autenticado.");
-    return null;
-  }
-  return session.user;
 };
 
 
@@ -77,20 +118,59 @@ export const apiDeleteSession = async (sessionId) => {
 // API para Manos Guardadas (manos_guardadas)
 // ----------------------------------------------------------------------------
 
-export const apiFetchHands = async () => {
+export const apiFetchHands = async (date = null, limit = null, offset = 0) => {
+  console.log('[DEBUG] apiFetchHands: Starting with params - date:', date, 'limit:', limit, 'offset:', offset);
   const user = await getCurrentUser();
-  if (!user) return [];
+  console.log('[DEBUG] apiFetchHands: User obtained:', user ? `ID: ${user.id}` : 'not authenticated');
 
-  const { data, error } = await supabase
+  console.log('[DEBUG] apiFetchHands: Building query...');
+  let query = supabase
     .from('manos_guardadas')
-    .select('*')
-    .eq('usuario_id', user.id)
-    .order('fecha_creacion', { ascending: false });
+    .select('*');
+
+  // Re-enable user filter - ensure RLS policy allows select for authenticated users
+  if (user) {
+    query = query.eq('usuario_id', user.id);
+    console.log('[DEBUG] apiFetchHands: Added user filter for ID:', user.id);
+  } else {
+    console.log('[DEBUG] apiFetchHands: No user filter applied');
+  }
+
+  if (date) {
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+    query = query.gte('fecha_creacion', startDate.toISOString()).lt('fecha_creacion', endDate.toISOString());
+    console.log('[DEBUG] apiFetchHands: Added date filter from', startDate.toISOString(), 'to', endDate.toISOString());
+  }
+
+  query = query.order('fecha_creacion', { ascending: false });
+  console.log('[DEBUG] apiFetchHands: Added ordering by fecha_creacion desc');
+
+  if (limit !== null && limit !== undefined) {
+    query = query.range(offset || 0, (offset || 0) + limit - 1);
+    console.log('[DEBUG] apiFetchHands: Added range from', offset || 0, 'to', (offset || 0) + limit - 1);
+  }
+
+  console.log('[DEBUG] apiFetchHands: Executing query...');
+
+  // Add timeout to prevent hanging
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+  );
+
+  const queryPromise = query;
+  const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
+  console.log('[DEBUG] apiFetchHands: Query completed - error:', error ? `${error.message} (code: ${error.code})` : 'none', 'data count:', data ? data.length : 'null');
 
   if (error) {
-    console.error("Error en apiFetchHands:", error);
+    console.error("[DEBUG] apiFetchHands: Full error object:", error);
     throw error;
   }
+
+  console.log('[DEBUG] apiFetchHands: Returning data array of length:', data?.length || 0);
   return data;
 };
 

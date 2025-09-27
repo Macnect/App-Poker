@@ -4,9 +4,7 @@
 
     <div class="filters-container">
       <div class="filter-group">
-        <label for="date-filter">Filtrar por Fecha:</label>
-        <input id="date-filter" type="date" v-model="selectedDate">
-        <button v-if="selectedDate" @click="selectedDate = ''" class="clear-btn">Limpiar</button>
+        <button v-if="selectedDate" @click="selectedDate = null" class="clear-btn">Mostrar Todas las Manos</button>
       </div>
       <div class="filter-group">
         <button @click="toggleHandStrengthSort" class="sort-btn">
@@ -15,49 +13,93 @@
       </div>
     </div>
 
-    <!-- ESTADO DE CARGA AÑADIDO -->
     <div v-if="isLoading" class="loading-message">
       Cargando manos...
     </div>
-    <div v-else-if="filteredAndSortedHands.length === 0" class="no-hands">
-      No se encontraron manos que coincidan con los filtros.
+    <div v-else-if="selectedDate && filteredAndSortedHands.length === 0" class="no-hands">
+      No se encontraron manos para la fecha seleccionada.
     </div>
-    <ul v-else class="hands-list">
-      <li v-for="hand in filteredAndSortedHands" :key="hand.id">
-        <div class="hand-info">
-          <!-- Usamos las columnas de la BD y formateamos la fecha -->
-          <span><strong>Fecha:</strong> {{ new Date(hand.fecha).toLocaleString('es-ES') }}</span>
-          <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
-          <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
-        </div>
+    <div v-else-if="!selectedDate && groupedHands.length === 0" class="no-hands">
+      No se encontraron manos.
+    </div>
+    <div v-else-if="selectedDate" class="hands-container">
+      <ul class="hands-list">
+        <li v-for="hand in filteredAndSortedHands" :key="hand.id">
+          <div class="hand-info">
+            <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
+            <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
+            <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
+          </div>
 
-        <div class="hand-preview">
-          <div class="card-group hero-hand-preview">
-            <span class="group-label">Hero</span>
-            <div class="cards-display">
-              <template v-if="getHeroFromHand(hand)?.cards">
-                <PlayingCard v-for="(card, index) in getHeroFromHand(hand).cards" :key="`hero-${card}-${index}`" :cardId="card" />
-              </template>
+          <div class="hand-preview">
+            <div class="card-group hero-hand-preview">
+              <span class="group-label">Hero</span>
+              <div class="cards-display">
+                <template v-if="getHeroFromHand(hand)?.cards">
+                  <PlayingCard v-for="(card, index) in getHeroFromHand(hand).cards" :key="`hero-${card}-${index}`" :cardId="card" />
+                </template>
+              </div>
+            </div>
+            <div class="card-group">
+              <span class="group-label">Board</span>
+              <div class="cards-display">
+                <template v-if="getBoardFromHand(hand).length > 0">
+                  <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
+                </template>
+              </div>
             </div>
           </div>
-          <div class="card-group">
-            <span class="group-label">Board</span>
-            <div class="cards-display">
-              <template v-if="getBoardFromHand(hand).length > 0">
-                <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
-              </template>
-            </div>
+
+          <div class="hand-actions">
+            <button @click="loadHandForReplay(hand)">Cargar Replay</button>
+            <button class="delete-btn" @click="confirmDelete(hand.id)">Eliminar</button>
           </div>
-        </div>
+        </li>
+      </ul>
+    </div>
+    <div v-else class="grouped-hands-container">
+      <div v-for="group in groupedHands" :key="group.date" class="date-group">
+        <h3 @click="selectedDate = group.date" class="date-header">{{ new Date(group.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</h3>
+        <ul class="hands-list">
+          <li v-for="hand in group.hands" :key="hand.id">
+            <div class="hand-info">
+              <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
+              <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
+              <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
+            </div>
 
-        <div class="hand-actions">
-          <button @click="loadHandForReplay(hand)">Cargar Replay</button>
-          <button class="delete-btn" @click="confirmDelete(hand.id)">Eliminar</button>
-        </div>
-      </li>
-    </ul>
+            <div class="hand-preview">
+              <div class="card-group hero-hand-preview">
+                <span class="group-label">Hero</span>
+                <div class="cards-display">
+                  <template v-if="getHeroFromHand(hand)?.cards">
+                    <PlayingCard v-for="(card, index) in getHeroFromHand(hand).cards" :key="`hero-${card}-${index}`" :cardId="card" />
+                  </template>
+                </div>
+              </div>
+              <div class="card-group">
+                <span class="group-label">Board</span>
+                <div class="cards-display">
+                  <template v-if="getBoardFromHand(hand).length > 0">
+                    <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
+                  </template>
+                </div>
+              </div>
+            </div>
 
-    <!-- Confirmation Modal -->
+            <div class="hand-actions">
+              <button @click="loadHandForReplay(hand)">Cargar Replay</button>
+              <button class="delete-btn" @click="confirmDelete(hand.id)">Eliminar</button>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div v-if="gameStore.hasMore && !selectedDate" class="load-more-container">
+      <button @click="gameStore.loadMoreHands(selectedDate)">Cargar Más</button>
+    </div>
+
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <h3>Confirmar Eliminación</h3>
@@ -69,7 +111,6 @@
       </div>
     </div>
 
-    <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
       <div class="toast-icon">✓</div>
       <div class="toast-message">Mano eliminada con éxito</div>
@@ -78,29 +119,24 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useGameStore } from '../store/game'
+import { useAuthStore } from '../store/useAuthStore'
 import PlayingCard from '../components/PlayingCard.vue';
 
 const gameStore = useGameStore();
+const authStore = useAuthStore();
 const emit = defineEmits(['switch-view']);
 
-const isLoading = ref(true);
-const selectedDate = ref('');
+const isLoading = computed(() => !authStore.isInitialized);
+
+const selectedDate = ref(null);
 const sortKey = ref('date');
 
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedHandId = ref(null);
 
-// Carga las manos al montar el componente
-onMounted(async () => {
-  isLoading.value = true;
-  await gameStore.fetchHands();
-  isLoading.value = false;
-});
-
-// Lógica de ranking de manos (sin cambios)
 const HAND_STRENGTH_MAP = { 'AA': 1, 'KK': 2, 'QQ': 3, 'AKs': 4, 'JJ': 5, 'AQs': 6, 'KQs': 7, 'AJs': 8, 'KJs': 9, 'TT': 10, 'AKo': 11, 'ATs': 12, 'QJs': 13, 'KTs': 14, 'QTs': 15, 'JTs': 16, '99': 17, 'AQo': 18, 'A9s': 19, 'K9s': 20, 'Q9s': 21, 'J9s': 22, 'T9s': 23, 'A8s': 24, '88': 25, 'K8s': 26, 'Q8s': 27, 'J8s': 28, 'AJo': 29, 'A5s': 30, 'T8s': 31, '98s': 32, 'A7s': 33, 'A4s': 34, 'K7s': 35, '77': 36, 'A3s': 37, 'Q7s': 38, 'A6s': 39, 'KJo': 40, 'A2s': 41, 'K6s': 42, '87s': 43, 'T7s': 44, 'K5s': 45, '66': 46, 'ATo': 47, 'J7s': 48, 'Q6s': 49, 'K4s': 50, '97s': 51, '76s': 52, 'K3s': 53, 'Q5s': 54, '55': 55, 'K2s': 56, 'J6s': 57, 'T6s': 58, 'Q4s': 59, '86s': 60, 'Q3s': 61, '65s': 62, 'KTo': 63, 'A9o': 64, 'Q2s': 65, '44': 66, 'J5s': 67, '96s': 68, 'J4s': 69, '75s': 70, 'QJo': 71, 'A8o': 72, 'T5s': 73, 'J3s': 74, '54s': 75, '85s': 76, 'K9o': 77, 'Q9o': 78, '33': 79, 'J2s': 80, '64s': 81, 'T4s': 82, 'J9o': 83, 'T9o': 84, 'A7o': 85, 'K8o': 86, '95s': 87, '22': 88, '74s': 89, 'T3s': 90, '53s': 91, 'Q8o': 92, 'A5o': 93, '84s': 94, 'A4o': 95, 'K7o': 96, 'J8o': 97, 'T2s': 98, 'A6o': 99, '98o': 100, '43s': 101, 'A3o': 102, 'K6o': 103, '63s': 104, 'T8o': 105, 'A2o': 106, 'Q7o': 107, 'J7o': 108, 'K5o': 109, '87o': 110, '52s': 111, 'K4o': 112, 'T7o': 113, '76o': 114, 'Q6o': 115, '94s': 116, 'K3o': 117, 'J6o': 118, '83s': 119, 'K2o': 120, 'Q5o': 121, '97o': 122, '73s': 123, '42s': 124, 'T6o': 125, '65o': 126, 'Q4o': 127, 'J5o': 128, '86o': 129, 'Q3o': 130, 'J4o': 131, '96o': 132, '75o': 133, 'T5o': 134, 'Q2o': 135, '62s': 136, 'J3o': 137, '82s': 138, '54o': 139, '85o': 140, 'J2o': 141, '93s': 142, 'T4o': 143, '64o': 144, '95o': 145, '72s': 146, 'T3o': 147, '74o': 148, '53o': 149, '84o': 150, 'T2o': 151, '43o': 152, '92s': 153, '63o': 154, '83o': 155, '73o': 156, '52o': 157, '94o': 158, '42o': 159, '82o': 160, '62o': 161, '93o': 162, '72o': 163, '92o': 164 };
 const RANK_ORDER = 'AKQJT98765432';
 
@@ -118,12 +154,23 @@ function getHandRank(cards) {
   return HAND_STRENGTH_MAP[handKey] || 999;
 }
 
+const groupedHands = computed(() => {
+  const groups = {};
+  gameStore.savedHands.forEach(hand => {
+    const date = hand.fecha.split('T')[0];
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(hand);
+  });
+  const sortedDates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
+  return sortedDates.map(date => ({ date, hands: groups[date] }));
+});
+
 const filteredAndSortedHands = computed(() => {
   let hands = [...gameStore.savedHands];
 
   if (selectedDate.value) {
     hands = hands.filter(hand => {
-      const handDate = hand.fecha.split('T')[0]; // El formato de la DB es YYYY-MM-DD...
+      const handDate = hand.fecha.split('T')[0];
       return handDate === selectedDate.value;
     });
   }
@@ -137,7 +184,7 @@ const filteredAndSortedHands = computed(() => {
       return rankA - rankB;
     });
   } else {
-    // No es necesario ordenar por fecha, la API ya devuelve los datos ordenados
+    hands.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   }
   return hands;
 });
@@ -244,6 +291,27 @@ async function deleteAndClose() {
 }
 .clear-btn {
   background-color: #718096;
+}
+.date-header {
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #4A5568;
+}
+.date-header:hover {
+  color: #e2e8f0;
+}
+.grouped-hands-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.date-group {
+  border: 1px solid #4A5568;
+  border-radius: 8px;
+  padding: 1rem;
 }
 .hand-info {
   display: flex;
@@ -393,6 +461,21 @@ async function deleteAndClose() {
   border-radius: 8px;
   border: 1px solid #68d391;
   animation: hero-glow-list 2s infinite ease-in-out;
+}
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+.load-more-container button {
+  padding: 10px 20px;
+  background-color: #4A5568;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.load-more-container button:hover {
+  background-color: #2D3748;
 }
 @keyframes hero-glow-list {
   0%, 100% {

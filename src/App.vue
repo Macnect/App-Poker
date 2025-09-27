@@ -28,22 +28,22 @@
       <button @click="currentView = 'SettingsView'" :class="{ active: currentView === 'SettingsView' }">
         {{ $t('nav.settings') }}
       </button>
-      <!-- Botón para cerrar sesión -->
       <button @click="authStore.signOut()" class="logout-btn">
         Salir
       </button>
     </nav>
     <main>
-      <component :is="views[currentView]" @switch-view="switchToView" />
+      <!-- CAMBIO CLAVE: Pasamos currentView como una prop -->
+      <component :is="views[currentView]" :current-view="currentView" @switch-view="switchToView" />
     </main>
   </div>
   <AuthView v-else />
 </template>
 
 <script setup>
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, watch } from 'vue';
 import { useTripStore } from './store/useTripStore';
-import { useAuthStore } from './store/useAuthStore'; // <-- IMPORTAR AUTH STORE
+import { useAuthStore } from './store/useAuthStore';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
 import LiveSessionView from './views/LiveSessionView.vue';
@@ -53,11 +53,25 @@ import SettingsView from './views/SettingsView.vue';
 import SummaryView from './views/SummaryView.vue';
 import CommunityView from './views/CommunityView.vue';
 import SavedTripsView from './views/SavedTripsView.vue';
-import AuthView from './views/AuthView.vue'; // <-- IMPORTAR AUTH VIEW
+import AuthView from './views/AuthView.vue';
 
-const authStore = useAuthStore(); // <-- INICIALIZAR AUTH STORE
+const authStore = useAuthStore();
+console.log('[DEBUG] App.vue: authStore initialized, user:', authStore.user?.id || 'null');
+
 const currentView = ref('CurrentHandView');
+console.log('[DEBUG] App.vue: currentView initialized to:', currentView.value);
+
 const tripStore = useTripStore();
+
+// Watch for auth changes
+watch(() => authStore.user, (newUser) => {
+  console.log('[DEBUG] App.vue: authStore.user changed to:', newUser?.id || 'null');
+}, { immediate: true });
+
+// Watch for view changes
+watch(currentView, (newView) => {
+  console.log('[DEBUG] App.vue: currentView changed to:', newView);
+});
 
 const views = shallowRef({
   CurrentHandView,
@@ -97,12 +111,12 @@ nav {
   padding: 10px;
   background-color: #2d3748;
   border-bottom: 2px solid var(--border-color);
-  display: flex; /* Añadido para mejor alineación */
-  flex-wrap: wrap; /* Para que los botones se ajusten en pantallas pequeñas */
-  justify-content: center; /* Centrar botones */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 nav button {
-  margin: 5px 10px; /* Ajuste de margen para wrapping */
+  margin: 5px 10px;
   background-color: transparent;
   border: 1px solid var(--primary-color);
 }

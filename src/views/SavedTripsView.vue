@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onActivated } from 'vue';
 import { useTripStore } from '../store/useTripStore';
 
 const tripStore = useTripStore();
@@ -78,11 +78,24 @@ const showModal = ref(false);
 const showToast = ref(false);
 const selectedTripId = ref(null);
 
-onMounted(async () => {
+const loadTrips = async () => {
   isLoading.value = true;
   await tripStore.fetchTrips();
   isLoading.value = false;
-});
+};
+
+onMounted(loadTrips);
+
+// ========================================================================
+// === BLOQUE DE CÓDIGO ADITIVO Y AISLADO PARA SOLUCIONAR EL BUG ==========
+// ========================================================================
+// El hook `onActivated` se ejecuta cada vez que el componente es mostrado
+// al navegar internamente (cuando el componente ya estaba "montado").
+// Esto asegura que los datos se recarguen siempre que el usuario
+// vuelva a esta vista.
+onActivated(loadTrips);
+// ========================================================================
+// ========================================================================
 
 function loadTripForEditing(tripId) {
   tripStore.loadTrip(tripId);
