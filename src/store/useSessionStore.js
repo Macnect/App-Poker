@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/supabase';
 import { useAuthStore } from './useAuthStore';
+import { apiFetchSessions, apiAddSession, apiDeleteSession } from '@/api'; // Importamos la API
 
 export const useSessionStore = defineStore('session', () => {
   // --- STATE ---
@@ -153,21 +154,8 @@ export const useSessionStore = defineStore('session', () => {
   });
 
   async function fetchSessions() {
-    const authStore = useAuthStore();
-    if (!authStore.user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('sesiones_juego')
-        .select('*')
-        .eq('usuario_id', authStore.user.id)
-        .order('fecha', { ascending: false });
-
-      if (error) throw error;
-      savedSessions.value = data;
-    } catch (error) {
-      console.error('Error fetching sessions:', error.message);
-    }
+    // La lógica ahora llama a la API centralizada
+    savedSessions.value = await apiFetchSessions();
   }
 
   function startSession() {
@@ -216,60 +204,47 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
   
+  // *** ÚNICO BLOQUE MODIFICADO ***
   async function stopAndSaveSession(finalStack) {
-    const authStore = useAuthStore();
-    if (!authStore.user) {
-      isActive.value = false;
-      clearInterval(sessionTimerInterval);
-      throw new Error("Usuario no autenticado. No se puede guardar la sesión.");
-    }
-    
     try {
       if (isOnBreak.value) {
         totalBreakTime.value += breakElapsedTime.value;
       }
 
-      const currentInvestment = initialStack.value + totalRebuys.value;
-      const result = finalStack - currentInvestment - totalExpenses.value;
-
-      const sessionData = {
-        usuario_id: authStore.user.id,
-        fecha: new Date().toISOString().split('T')[0],
-        duracion_segundos: elapsedTime.value,
-        tiempo_descanso_segundos: totalBreakTime.value,
-        cantidad_jugadores: playerCount.value,
-        ciegas: blinds.value,
-        ubicacion: location.value,
-        moneda: currency.value,
-        stack_inicial: parseFloat(initialStack.value) || 0,
-        total_recompras: parseFloat(totalRebuys.value) || 0,
-        total_gastos: parseFloat(totalExpenses.value) || 0,
-        stack_final: parseFloat(finalStack) || 0,
-        resultado: parseFloat(result) || 0,
+      const ensureFloat = (value) => {
+          const num = parseFloat(value);
+          return isNaN(num) ? 0.0 : num;
       };
 
-      // =================================================================
-      // =========== LÍNEA DE DEPURACIÓN INTEGRADA ======================
-      console.log('DEBUG: Objeto a insertar en Supabase:', JSON.stringify(sessionData, null, 2));
-      // =================================================================
+      const currentInvestment = ensureFloat(initialStack.value) + ensureFloat(totalRebuys.value);
+      const result = ensureFloat(finalStack) - currentInvestment - ensureFloat(totalExpenses.value);
 
-      const { data, error } = await supabase
-        .from('sesiones_juego')
-        .insert(sessionData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error("Supabase insert error:", error);
-        throw error;
-      }
+      const sessionData = {
+        fecha: new Date().toISOString().split('T')[0],
+        duracion_segundos: ensureFloat(elapsedTime.value),
+        tiempo_descanso_segundos: ensureFloat(totalBreakTime.value),
+        cantidad_jugadores: playerCount.value || 2,
+        ciegas: blinds.value || 'N/A',
+        ubicacion: location.value || null,
+        moneda: currency.value || '$',
+        stack_inicial: ensureFloat(initialStack.value),
+        total_recompras: ensureFloat(totalRebuys.value),
+        total_gastos: ensureFloat(totalExpenses.value),
+        stack_final: ensureFloat(finalStack),
+        resultado: result,
+      };
       
-      savedSessions.value.unshift(data);
+      // 1. Guardamos en la BBDD a través de la API
+      await apiAddSession(sessionData);
+      
+      // 2. Volvemos a cargar TODAS las sesiones para asegurar consistencia
+      await fetchSessions();
 
     } catch (error) {
-      console.error('Error saving session in store:', error.message);
-      throw error;
+      console.error('Error en el store al guardar sesión:', error);
+      throw error; // Propaga el error para que la vista lo maneje
     } finally {
+      // Este bloque se ejecuta siempre, haya error o no.
       isActive.value = false;
       isOnBreak.value = false;
       clearInterval(sessionTimerInterval);
@@ -283,15 +258,10 @@ export const useSessionStore = defineStore('session', () => {
   
   async function deleteSession(sessionId) {
     try {
-      const { error } = await supabase
-        .from('sesiones_juego')
-        .delete()
-        .eq('id', sessionId);
-      
-      if (error) throw error;
-
-      savedSessions.value = savedSessions.value.filter(session => session.id !== sessionId);
-
+      // Llama a la API para borrar
+      await apiDeleteSession(sessionId);
+      // Vuelve a cargar para mantener la consistencia
+      await fetchSessions();
     } catch (error) {
       console.error('Error deleting session:', error.message);
     }
