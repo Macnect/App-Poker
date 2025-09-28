@@ -1,5 +1,5 @@
 <template>
-  <div class="player-container" :style="seatStyle">
+  <div class="player-container" :style="seatStyle" :class="{ 'is-9-max': playerCount >= 9 }">
 
     <div class="player-cards">
         <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
@@ -558,6 +558,99 @@ const notesPanelStyle = computed(() => {
   /* Ocultamos elementos no esenciales para maximizar el espacio */
   .edit-notes-btn, .notes-display-wrapper, .player-tag, .player-position-static {
     display: none;
+  }
+}
+/* --- ESTILOS PARA 9+ JUGADORES (MÁS COMPACTO) --- */
+.is-9-max .player-seat {
+  height: 50px;
+}
+
+.is-9-max .player-info-panel {
+  padding: 4px;
+}
+
+.is-9-max .player-name {
+  font-size: clamp(0.6rem, 1.1vw, 0.9em);
+}
+
+.is-9-max .player-stack {
+  font-size: clamp(0.7rem, 1.3vw, 1em);
+}
+
+.is-9-max .player-cards {
+  top: -20px;
+  gap: 1%;
+  width: 80%;
+  left: 50%;
+}
+
+.is-9-max .card-placeholder {
+  width: 65%;
+}
+
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .is-9-max .player-seat {
+    height: 40px;
+    bottom: 10px;
+  }
+  .is-9-max .player-cards {
+    top: -50%;
+  }
+    .is-9-max .player-name, .is-9-max .player-stack {
+    font-size: 0.7rem;
+  }
+}
+
+/* --- ESTILOS PARA 9 JUGADORES (MÁS COMPACTO) --- */
+.is-9-max .player-seat {
+  height: 50px;
+  width: 100%;
+}
+
+.is-9-max .player-info-panel {
+  padding: 4px;
+}
+
+.is-9-max .player-name {
+  font-size: clamp(0.6rem, 1.1vw, 0.9em);
+  gap: 4px;
+}
+
+.is-9-max .player-stack {
+  font-size: clamp(0.7rem, 1.3vw, 1em);
+}
+
+.is-9-max .player-cards {
+  top: -20px; /* Sube un poco las cartas */
+  left: 50%;
+  width: 90%;
+  gap: 2%;
+}
+
+.is-9-max .card-placeholder {
+  width: 60%;
+}
+
+.is-9-max .edit-notes-btn {
+  width: 26px;
+  height: 26px;
+  top: -8px;
+  right: -20px;
+}
+
+.is-9-max .dealer-button {
+  width: 22px;
+  height: 22px;
+  font-size: 0.9rem;
+  bottom: -30px;
+}
+
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .is-9-max .player-seat {
+    height: 40px;
+  }
+  .is-9-max .player-cards {
+    top: -60%;
   }
 }
 </style>
