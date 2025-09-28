@@ -45,6 +45,8 @@
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
       <button @click="gameStore.saveCurrentHand()" class="grid-save btn-save-hand">Guardar Mano</button>
+      <button @click="gameStore.navigateHistory(-1)" class="grid-prev btn-nav">◀</button>
+      <button @click="gameStore.navigateHistory(1)" class="grid-next btn-nav">▶</button>
     </div>
   </div>
 </template>
@@ -195,17 +197,18 @@ function handleWheelScroll(event) {
 }
 
 .actions-grid {
-  width: 100%;
-  display: grid;
-  gap: clamp(8px, 1.2vw, 15px);
-  align-items: center;
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: auto auto auto;
-  grid-template-areas:
-    "fold       call       turn-info  color-select bbs-toggle"
-    "raise      input      slider     slider       slider"
-    "quick-bets quick-bets quick-bets quick-bets   save-hand";
+ width: 100%;
+ display: grid;
+ gap: clamp(8px, 1.2vw, 15px);
+ align-items: center;
+ grid-template-columns: repeat(6, 1fr); /* Aumentado a 6 columnas */
+ grid-template-rows: auto auto auto;
+ grid-template-areas:
+   "fold       call       turn-info  turn-info    color-select bbs-toggle"
+   "raise      input      slider     slider       slider       slider"
+   "quick-bets quick-bets quick-bets save-hand    prev-action  next-action";
 }
+
 
 .grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(1rem, 2.5vmin, 1.4rem); }
 .grid-fold { grid-area: fold; }
@@ -217,8 +220,10 @@ function handleWheelScroll(event) {
 .grid-color-select { grid-area: color-select; }
 .grid-bbs-toggle { grid-area: bbs-toggle; }
 .grid-save { grid-area: save-hand; }
-
-.grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save {
+.grid-prev { grid-area: prev-action; }
+.grid-next { grid-area: next-action; }
+ 
+.grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
   height: clamp(40px, 8vmin, 65px);
   font-size: clamp(0.8rem, 2.2vmin, 1.3rem);
   font-weight: bold;
@@ -253,10 +258,11 @@ function handleWheelScroll(event) {
 .btn-call { background-color: var(--btn-green); }
 .btn-raise { background-color: var(--btn-orange); }
 .btn-allin { background-color: var(--btn-purple) !important; grid-column: 1 / -1; }
-.btn-save-hand { background-color: var(--btn-purple); }
+.btn-save-hand { background-color: var(--btn-green); }
+.btn-nav { background-color: #718096; }
 button:disabled, .grid-slider:disabled { background-color: #718096 !important; cursor: not-allowed; opacity: 0.6; }
-
-.grid-slider { -webkit-appearance: none; appearance: none; width: 90%; height: clamp(12px, 2.2vmin, 16px); background: transparent; outline: none; border-radius: 8px; }
+ 
+ .grid-slider { -webkit-appearance: none; appearance: none; width: 90%; height: clamp(12px, 2.2vmin, 16px); background: transparent; outline: none; border-radius: 8px; }
 .grid-slider::-webkit-slider-runnable-track { width: 100%; height: 100%; cursor: pointer; border-radius: 8px; border: 1px solid #000; background: linear-gradient(to right, var(--slider-color-active) var(--slider-fill-percentage), var(--slider-color-inactive) var(--slider-fill-percentage)); }
 .grid-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; border: 1px solid #000; height: calc(clamp(12px, 2.2vmin, 16px) + 14px); width: clamp(15px, 2.5vmin, 20px); border-radius: 4px; background: #E2E8F0; cursor: pointer; margin-top: calc(clamp(12px, 2.2vmin, 16px) / -2 + -7px); }
 
@@ -266,14 +272,15 @@ button:disabled, .grid-slider:disabled { background-color: #718096 !important; c
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto auto 1fr auto;
     grid-template-areas:
-      "turn-info  turn-info"
-      "fold       call"
-      "raise      input"
-      "slider     slider"
-      "quick-bets quick-bets"
-      "save-hand  save-hand"
-      "bbs-toggle color-select";
-  }
+     "turn-info  turn-info"
+     "fold       call"
+     "raise      input"
+     "slider     slider"
+     "quick-bets quick-bets"
+     "save-hand  save-hand"
+     "prev-action next-action"
+     "bbs-toggle color-select";
+ }
 }
 
 /* Media query para mover el panel a la derecha en móviles horizontales */
