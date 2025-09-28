@@ -45,8 +45,8 @@
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
       <button @click="gameStore.saveCurrentHand()" class="grid-save btn-save-hand">Guardar Mano</button>
-      <button @click="gameStore.navigateHistory(-1)" class="grid-prev btn-nav">◀</button>
-      <button @click="gameStore.navigateHistory(1)" class="grid-next btn-nav">▶</button>
+      <button @click="gameStore.navigateHistory(-1)" class="grid-prev btn-nav" v-if="gameStore.gamePhase !== 'replay'">◀</button>
+      <button @click="gameStore.navigateHistory(1)" class="grid-next btn-nav" v-if="gameStore.gamePhase !== 'replay'">▶</button>
     </div>
   </div>
 </template>

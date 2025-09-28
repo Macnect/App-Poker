@@ -46,7 +46,7 @@ export const useGameStore = defineStore('game', () => {
   const currentOffset = ref(0);
   const pageSize = ref(20);
   
-  const replaySpeed = ref(1);
+  const replaySpeed = ref(2000);
   const isReplaying = ref(false);
   let replayIntervalId = null;
 
@@ -169,7 +169,7 @@ export const useGameStore = defineStore('game', () => {
   function toggleDisplayMode() { displayInBBs.value = !displayInBBs.value; }
   
   function setReplaySpeed(newSpeed) {
-    replaySpeed.value = parseFloat(newSpeed) || 1;
+    replaySpeed.value = parseInt(newSpeed, 10) || 2000;
     if (isReplaying.value) {
       pauseReplay();
       playReplay();
@@ -180,8 +180,7 @@ export const useGameStore = defineStore('game', () => {
     if (isReplaying.value) return;
     isReplaying.value = true;
     
-    const baseInterval = 1500;
-    const intervalDuration = baseInterval / replaySpeed.value;
+    const intervalDuration = replaySpeed.value;
 
     replayIntervalId = setInterval(() => {
       if (currentActionIndex.value >= history.value.length - 1) {
@@ -202,6 +201,13 @@ export const useGameStore = defineStore('game', () => {
     players.value = deepCopy(stateToRestore.players);
     board.value = deepCopy(stateToRestore.board);
     pots.value = deepCopy(stateToRestore.pots);
+  }
+  function toggleReplay() {
+    if (isReplaying.value) {
+      pauseReplay();
+    } else {
+      playReplay();
+    }
   }
   function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null) {
     // ... (El resto de la lógica de setupNewHand, performAction, etc., es interna y no cambia)
@@ -708,7 +714,7 @@ export const useGameStore = defineStore('game', () => {
     isReplaying, isCardPickerOpen, usedCards,
     replaySpeed, isPreActionPhase, openNotesPanelPlayerId, tableLayout,
     toggleDisplayMode,
-    playReplay, pauseReplay, restartReplay, setReplaySpeed,
+    playReplay, pauseReplay, restartReplay, setReplaySpeed, toggleReplay,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
     performAction, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,

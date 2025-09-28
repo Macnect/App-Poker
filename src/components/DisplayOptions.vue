@@ -11,10 +11,21 @@
         <option value="#1A202C">Negro</option>
         <option value="#4A5568">Gris</option>
       </select>
-
       <button class="option-item" @click="gameStore.toggleDisplayMode()">
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
+    </div>
+    <div class="options-row">
+      <button class="option-item" @click="gameStore.toggleReplay()">
+        {{ gameStore.isReplaying ? '⏸️' : '▶️' }}
+      </button>
+      <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
+      <button class="option-item" @click="gameStore.navigateHistory(1)">▶</button>
+      <select class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
+        <option value="2000">1x</option>
+        <option value="1000">2x</option>
+        <option value="500">4x</option>
+      </select>
     </div>
   </div>
 </template>
@@ -70,7 +81,7 @@ onMounted(() => {
     const rect = panelRef.value.getBoundingClientRect();
     panelPosition.value = {
       x: window.innerWidth / 1.25 - rect.width / 2,
-      y: window.innerHeight - 400
+      y: window.innerHeight - 350
     };
   }
 });
@@ -108,7 +119,7 @@ h3 {
 
 .option-item {
   height: 50px;
-  width: 120px;
+  width: 80px;
   padding: 0 15px;
   font-size: 1.2rem;
   font-weight: bold;
