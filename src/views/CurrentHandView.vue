@@ -57,7 +57,7 @@
     </div>
     
     <!-- Overlay que pide girar el dispositivo (se muestra en móvil vertical) -->
-    <RotateDeviceOverlay class="rotate-device-prompt" />
+    <RotateDeviceOverlay v-if="showRotateOverlay" />
 
     <ConfigurationModal
       v-if="showPositionModal"
@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../store/game';
 import PokerTable from '../components/PokerTable.vue';
 import ActionPanel from '../components/ActionPanel.vue';
@@ -87,6 +87,18 @@ const bbInput = ref(2);
 const selectedCurrency = ref('$');
 const selectedSpecialRule = ref('Ninguno');
 const selectedBombPotBB = ref(2);
+
+const showRotateOverlay = ref(false);
+
+const checkOrientation = () => {
+  const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  showRotateOverlay.value = handIsActive.value && isPortrait && isCoarsePointer;
+};
+
+watch(handIsActive, () => {
+  checkOrientation();
+});
 
 const currencies = ref([
   { symbol: '$', name: 'USD - Dólar estadounidense' },
@@ -167,9 +179,12 @@ function handleKeyDown(event) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('resize', checkOrientation);
+  checkOrientation();
 });
 
 onUnmounted(() => {
+  window.removeEventListener('resize', checkOrientation);
   window.removeEventListener('keydown', handleKeyDown);
   gameStore.pauseReplay();
 });
@@ -216,8 +231,10 @@ button { padding: 18px 35px; font-size: 1.4rem; font-weight: bold; border-radius
 
 /* Ocultar editor y mostrar aviso en móvil vertical */
 @media (hover: none) and (pointer: coarse) and (orientation: portrait) {
-  .rotate-device-prompt { display: flex; }
-  .hand-editor-content { display: none; }
+  /* .rotate-device-prompt { display: flex; } */
+  .hand-editor-content {
+      /* display: none;  */
+  }
 }
 
 /* Reorganizar layout para pantallas apaisadas y no muy altas (móviles horizontales) */
@@ -233,7 +250,7 @@ button { padding: 18px 35px; font-size: 1.4rem; font-weight: bold; border-radius
 
 /* Estilos para el panel de configuración en pantallas pequeñas */
 @media screen and (max-width: 640px) {
-  .configuration-panel { padding: 2rem; margin: 2rem 1rem; gap: 20px; }
+  .configuration-panel { padding: 1.5rem; margin: 1rem; gap: 15px; }
   h2 { font-size: 2rem; }
   .config-item { width: 100%; }
   select, input[type="number"] { width: 100%; max-width: 350px; }
