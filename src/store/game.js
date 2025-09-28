@@ -62,6 +62,10 @@ export const useGameStore = defineStore('game', () => {
 
   const isPreActionPhase = ref(true);
   const openNotesPanelPlayerId = ref(null);
+  const tableLayout = ref({
+    board: { x: 0, y: 0 },
+    pot: { x: 0, y: 0 }
+  });
 
   const totalPot = computed(() => pots.value.reduce((sum, pot) => sum + pot.amount, 0));
 
@@ -240,6 +244,8 @@ export const useGameStore = defineStore('game', () => {
         isBombPot: false,
         notes: '',
         tag: null,
+        x: null,
+        y: null,
       });
     }
     dealerPosition.value = players.value.find((p,i) => i === 0).id
@@ -665,6 +671,24 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  function updatePlayerPosition(playerId, x, y) {
+    const player = players.value.find(p => p.id === playerId);
+    if (player) {
+      player.x = x;
+      player.y = y;
+    }
+    if (isPreActionPhase.value && history.value.length > 0) {
+      history.value[0].players = deepCopy(players.value);
+    }
+  }
+
+  function updateTableLayout(element, x, y) {
+    if (tableLayout.value[element]) {
+      tableLayout.value[element].x = x;
+      tableLayout.value[element].y = y;
+    }
+  }
+
   function toggleNotesPanel(playerId) {
     if (openNotesPanelPlayerId.value === playerId) {
       openNotesPanelPlayerId.value = null;
@@ -682,14 +706,14 @@ export const useGameStore = defineStore('game', () => {
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,
-    replaySpeed, isPreActionPhase, openNotesPanelPlayerId,
+    replaySpeed, isPreActionPhase, openNotesPanelPlayerId, tableLayout,
     toggleDisplayMode,
     playReplay, pauseReplay, restartReplay, setReplaySpeed,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
     performAction, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
-    updatePlayerNotes, updatePlayerTag, toggleNotesPanel, closeNotesPanel,
+    updatePlayerNotes, updatePlayerTag, updatePlayerPosition, updateTableLayout, toggleNotesPanel, closeNotesPanel,
     fetchHands, loadMoreHands, hasMore, currentOffset, pageSize,
   }
 });

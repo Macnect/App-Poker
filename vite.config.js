@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path' // <-- PASO 1: AÑADIR ESTA LÍNEA
+import { liveDesigner } from '@pinegrow/vite-plugin'
 
 export default defineConfig({
   // --- PASO 2: AÑADIR ESTA SECCIÓN 'resolve' COMPLETA ---

@@ -165,6 +165,10 @@ const PREDEFINED_LAYOUTS = {
 };
 
 const seatCoordinates = computed(() => {
+  // Si el jugador tiene coordenadas personalizadas, úsalas
+  if (props.player.x !== null && props.player.y !== null) {
+    return { x: props.player.x, y: props.player.y };
+  }
   // El visualIndex [0] es siempre el Héroe en la parte inferior.
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
   if (PREDEFINED_LAYOUTS[props.playerCount]) {
@@ -254,7 +258,7 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  top: 30px;
+  top: 10px;
   left: 62%;
   transform: translateX(-50%);
   display: flex;

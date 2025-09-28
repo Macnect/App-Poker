@@ -179,11 +179,12 @@ function handleWheelScroll(event) {
   --btn-grey: #4A5568;
   --slider-color-active: #FAB76B;
   --slider-color-inactive: #1A202C;
-  
+
   background-color: #2d3748;
   border-radius: 12px;
   padding: clamp(10px, 1.5vw, 20px);
   width: 90%;
+  margin-left: 5%;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
   color: white;
@@ -268,6 +269,14 @@ button:disabled, .grid-slider:disabled { background-color: #718096 !important; c
       "slider     slider"
       "quick-bets quick-bets"
       "bbs-toggle color-select";
+  }
+}
+
+/* Media query para mover el panel a la derecha en móviles horizontales */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .action-panel-wrapper {
+    margin-left: auto;
+    margin-right: 0;
   }
 }
 </style>

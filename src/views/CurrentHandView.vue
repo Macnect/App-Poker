@@ -223,7 +223,8 @@ button { padding: 18px 35px; font-size: 1.4rem; font-weight: bold; border-radius
 /* Reorganizar layout para pantallas apaisadas y no muy altas (móviles horizontales) */
 @media screen and (orientation: landscape) and (max-height: 600px) {
   .hand-editor-content {
-    grid-template-columns: 1fr minmax(280px, 350px); /* Columna flexible para la mesa, columna fija para acciones */
+    /* Columna flexible para la mesa (min 0), columna fija para acciones */
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 350px);
     grid-template-rows: 100%; /* Una sola fila */
     gap: 10px;
     padding: 10px;

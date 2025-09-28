@@ -2,7 +2,7 @@
   <div class="poker-table-container">
     <div class="poker-table" :style="{ backgroundColor: tableColor }">
       
-      <div class="center-content">
+      <div class="center-content" :style="{ '--board-x': gameStore.tableLayout.board.x + '%', '--board-y': gameStore.tableLayout.board.y + '%' }">
         <div class="pot">
           Bote: 
           <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ gameStore.totalPot }}</span>
@@ -88,28 +88,30 @@ const heroIndex = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 0; 
+  min-height: 0;
   min-width: 0;
 }
 
 .poker-table {
   position: relative;
-  width: 100%;
+  width: 90%;
   max-width: 100%;
   max-height: 100%;
-  aspect-ratio: 1000 / 520;
+  aspect-ratio: 16 / 9;
   border-radius: 50%;
   border-style: solid;
   border-color: #5a3a22;
   border-width: clamp(8px, 1.2vmin, 15px);
   box-shadow: inset 0 0 clamp(15px, 2.5vmin, 30px) rgba(0, 0, 0, 0.6);
   transition: background-color 0.3s ease;
+  right: -60px;
+  top: -10px;
 }
 
 .center-content {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: calc(50% + var(--board-y, 0%));
+  left: calc(50% + var(--board-x, 0%));
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
