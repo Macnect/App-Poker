@@ -44,6 +44,7 @@
       <button class="grid-bbs-toggle" @click="gameStore.toggleDisplayMode()">
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
+      <button @click="gameStore.saveCurrentHand()" class="grid-save btn-save-hand">Guardar Mano</button>
     </div>
   </div>
 </template>
@@ -203,7 +204,7 @@ function handleWheelScroll(event) {
   grid-template-areas:
     "fold       call       turn-info  color-select bbs-toggle"
     "raise      input      slider     slider       slider"
-    "quick-bets quick-bets quick-bets quick-bets   quick-bets";
+    "quick-bets quick-bets quick-bets quick-bets   save-hand";
 }
 
 .grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(1rem, 2.5vmin, 1.4rem); }
@@ -215,8 +216,9 @@ function handleWheelScroll(event) {
 .grid-quick-bets { grid-area: quick-bets; }
 .grid-color-select { grid-area: color-select; }
 .grid-bbs-toggle { grid-area: bbs-toggle; }
+.grid-save { grid-area: save-hand; }
 
-.grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle {
+.grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save {
   height: clamp(40px, 8vmin, 65px);
   font-size: clamp(0.8rem, 2.2vmin, 1.3rem);
   font-weight: bold;
@@ -251,6 +253,7 @@ function handleWheelScroll(event) {
 .btn-call { background-color: var(--btn-green); }
 .btn-raise { background-color: var(--btn-orange); }
 .btn-allin { background-color: var(--btn-purple) !important; grid-column: 1 / -1; }
+.btn-save-hand { background-color: var(--btn-purple); }
 button:disabled, .grid-slider:disabled { background-color: #718096 !important; cursor: not-allowed; opacity: 0.6; }
 
 .grid-slider { -webkit-appearance: none; appearance: none; width: 90%; height: clamp(12px, 2.2vmin, 16px); background: transparent; outline: none; border-radius: 8px; }
@@ -268,6 +271,7 @@ button:disabled, .grid-slider:disabled { background-color: #718096 !important; c
       "raise      input"
       "slider     slider"
       "quick-bets quick-bets"
+      "save-hand  save-hand"
       "bbs-toggle color-select";
   }
 }
