@@ -49,6 +49,7 @@ poker
   },
   "dependencies": {
     "@kurkle/color": "^0.4.0",
+    "@supabase/supabase-js": "^2.58.0",
     "chart.js": "^4.5.0",
     "pinia": "^3.0.3",
     "uuid": "^13.0.0",
@@ -91,48 +92,57 @@ poker
 --- INICIO DEL ARCHIVO: src/App.vue ---
 
 <template>
-  <div id="main-container">
+  <div v-if="authStore.user" id="main-container">
+    <main>
+      <KeepAlive>
+        <component :is="views[currentView]" @switch-view="switchToView" />
+      </KeepAlive>
+    </main>
+
+    <!-- Menú "Más" (Overlay) -->
+    <div v-if="showMoreMenu" class="more-menu-overlay" @click="showMoreMenu = false">
+      <div class="more-menu-panel" @click.stop>
+        <button @click="navigateTo('SavedHandsView')">{{ $t('nav.savedHands') }}</button>
+        <button @click="navigateTo('ChartsView')">{{ $t('nav.charts') }}</button>
+        <button @click="navigateTo('CommunityView')">Viajes</button>
+        <button @click="navigateTo('SavedTripsView')">Viajes Guardados</button>
+        <button @click="navigateTo('SettingsView')">{{ $t('nav.settings') }}</button>
+        <button @click="authStore.signOut()" class="logout-btn">Salir</button>
+      </div>
+    </div>
+
+    <!-- Barra de Navegación Inferior -->
     <nav>
-      <button @click="currentView = 'CurrentHandView'" :class="{ active: currentView === 'CurrentHandView' }">
-        {{ $t('nav.currentHand') }}
+      <button @click="switchToView('CurrentHandView')" :class="{ active: currentView === 'CurrentHandView' }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25 1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" /></svg>
+        <span>{{ $t('nav.currentHand') }}</span>
       </button>
-      <button @click="currentView = 'SavedHandsView'" :class="{ active: currentView === 'SavedHandsView' }">
-        {{ $t('nav.savedHands') }}
+      <button @click="switchToView('LiveSessionView')" :class="{ active: currentView === 'LiveSessionView' }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>{{ $t('nav.liveSession') }}</span>
       </button>
-      <button @click="currentView = 'LiveSessionView'" :class="{ active: currentView === 'LiveSessionView' }">
-        {{ $t('nav.liveSession') }}
+      <button @click="switchToView('SavedSessionsView')" :class="{ active: currentView === 'SavedSessionsView' }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
+        <span>{{ $t('nav.savedSessions') }}</span>
       </button>
-      <button @click="currentView = 'SavedSessionsView'" :class="{ active: currentView === 'SavedSessionsView' }">
-        {{ $t('nav.savedSessions') }}
+      <button @click="switchToView('SummaryView')" :class="{ active: currentView === 'SummaryView' }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+        <span>{{ $t('nav.summary') }}</span>
       </button>
-      <button @click="currentView = 'ChartsView'" :class="{ active: currentView === 'ChartsView' }">
-        {{ $t('nav.charts') }}
-      </button>
-      <button @click="currentView = 'SummaryView'" :class="{ active: currentView === 'SummaryView' }">
-        {{ $t('nav.summary') }}
-      </button>
-      <!-- BOTÓN COMUNIDAD MODIFICADO PARA RESETEAR -->
-      <button @click="switchToView('CommunityView')" :class="{ active: currentView === 'CommunityView' }">
-        Viajes
-      </button>
-      <!-- BOTÓN NUEVO PARA VIAJES GUARDADOS -->
-      <button @click="currentView = 'SavedTripsView'" :class="{ active: currentView === 'SavedTripsView' }">
-        Viajes Guardados
-      </button>
-      <button @click="currentView = 'SettingsView'" :class="{ active: currentView === 'SettingsView' }">
-        {{ $t('nav.settings') }}
+      <button @click="showMoreMenu = !showMoreMenu" :class="{ active: showMoreMenu }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+        <span>Más</span>
       </button>
     </nav>
-    <main>
-      <!-- EMISOR DE EVENTOS MODIFICADO -->
-      <component :is="views[currentView]" @switch-view="switchToView" />
-    </main>
+
   </div>
+  <AuthView v-else />
 </template>
 
 <script setup>
 import { ref, shallowRef } from 'vue';
-import { useTripStore } from './store/useTripStore'; // <-- 1. IMPORTAR EL TRIP STORE
+import { useTripStore } from './store/useTripStore';
+import { useAuthStore } from './store/useAuthStore';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
 import LiveSessionView from './views/LiveSessionView.vue';
@@ -141,10 +151,13 @@ import ChartsView from './views/ChartsView.vue';
 import SettingsView from './views/SettingsView.vue';
 import SummaryView from './views/SummaryView.vue';
 import CommunityView from './views/CommunityView.vue';
-import SavedTripsView from './views/SavedTripsView.vue'; // <-- 2. IMPORTAR LA NUEVA VISTA
+import SavedTripsView from './views/SavedTripsView.vue';
+import AuthView from './views/AuthView.vue';
 
+const authStore = useAuthStore();
 const currentView = ref('CurrentHandView');
-const tripStore = useTripStore(); // <-- 3. INICIALIZAR EL TRIP STORE
+const tripStore = useTripStore();
+const showMoreMenu = ref(false);
 
 const views = shallowRef({
   CurrentHandView,
@@ -155,29 +168,25 @@ const views = shallowRef({
   SettingsView,
   SummaryView,
   CommunityView,
-  SavedTripsView, // <-- 4. REGISTRAR LA NUEVA VISTA
+  SavedTripsView,
 });
 
-// --- 5. LÓGICA DE NAVEGACIÓN ACTUALIZADA ---
 function switchToView(viewName) {
-  // Caso especial para el replay de manos guardadas
-  if (viewName === undefined || viewName === 'CurrentHandView') {
+  if (viewName === undefined) {
     currentView.value = 'CurrentHandView';
     return;
   }
   
-  // Si hacemos clic en "Comunidad" desde cualquier otra vista que no sea "Viajes Guardados",
-  // reseteamos el estado para empezar un viaje nuevo.
   if (viewName === 'CommunityView' && currentView.value !== 'SavedTripsView') {
       tripStore.resetCurrentTrip();
   }
 
   currentView.value = viewName;
+  showMoreMenu.value = false;
 }
 
-// Mantenemos la función original por si algún componente la sigue usando sin argumentos
-function switchToCurrentHandView() {
-  currentView.value = 'CurrentHandView';
+function navigateTo(viewName) {
+  switchToView(viewName);
 }
 </script>
 
@@ -185,25 +194,444 @@ function switchToCurrentHandView() {
 #main-container {
   width: 100%;
 }
-nav {
-  padding: 10px;
-  background-color: #2d3748;
-  border-bottom: 2px solid var(--border-color);
-}
-nav button {
-  margin: 0 10px;
-  background-color: transparent;
-  border: 1px solid var(--primary-color);
-}
-nav button.active {
-  background-color: var(--primary-color);
-}
+
 main {
   width: 100%;
+}
+
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background-color: #2d3748;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+nav button {
+  background-color: transparent;
+  border: none;
+  color: #a0aec0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 100%;
+  flex-grow: 1;
+  font-size: 0.75rem;
+}
+
+nav button svg {
+  width: 24px;
+  height: 24px;
+}
+
+nav button.active {
+  color: var(--primary-color);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  nav button:not(.active):hover {
+      background-color: rgba(74, 85, 104, 0.2);
+  }
+}
+
+.more-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1001;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.more-menu-panel {
+  background-color: #2d3748;
+  width: 100%;
+  max-width: 500px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  padding: 1rem;
+  padding-bottom: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: slide-up 0.3s ease-out;
+}
+
+.more-menu-panel button {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.1rem;
+  text-align: left;
+  background-color: #4a5568;
+  border: none;
+}
+
+.more-menu-panel button.logout-btn {
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+  color: #fc8181;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 </style>
 
 ---------------------------------------
+
+--- INICIO DEL ARCHIVO: src/api/index.js ---
+
+import { supabase } from '@/supabase';
+import { useAuthStore } from '@/store/useAuthStore';
+
+/**
+ * ============================================================================
+ * ARCHIVO CENTRAL DE OPERACIONES DE BASE DE DATOS
+ * ============================================================================
+ */
+
+// Función auxiliar para obtener el usuario actual de forma segura
+const getCurrentUser = async () => {
+  console.log('[DEBUG] getCurrentUser: Starting...');
+
+  // First, try to get user from authStore (reactive and up-to-date)
+  const authStore = useAuthStore();
+  if (authStore.user) {
+    console.log('[DEBUG] getCurrentUser: User found in authStore, ID:', authStore.user.id);
+    return authStore.user;
+  }
+
+  console.log('[DEBUG] getCurrentUser: No user in authStore, falling back to Supabase calls...');
+
+  try {
+    // Add short timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Session retrieval timeout')), 3000)
+    );
+
+    const sessionPromise = supabase.auth.getSession();
+    const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
+    console.log('[DEBUG] getCurrentUser: getSession returned, session exists:', !!session, 'error:', error ? error.message : 'none');
+
+    if (error) {
+      console.error("[DEBUG] getCurrentUser: Error from getSession:", error);
+      return null;
+    }
+    if (!session?.user) {
+      console.warn("[DEBUG] getCurrentUser: No session or user found");
+      return null;
+    }
+    console.log('[DEBUG] getCurrentUser: User authenticated via getSession, ID:', session.user.id, 'email:', session.user.email);
+    return session.user;
+  } catch (timeoutError) {
+    console.error('[DEBUG] getCurrentUser: Timeout or error getting session:', timeoutError.message);
+    // As fallback, try to get user directly
+    console.log('[DEBUG] getCurrentUser: Attempting fallback with getUser...');
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('[DEBUG] getCurrentUser: getUser error:', userError);
+        return null;
+      }
+      if (user) {
+        console.log('[DEBUG] getCurrentUser: Fallback successful, user ID:', user.id);
+        return user;
+      }
+    } catch (fallbackError) {
+      console.error('[DEBUG] getCurrentUser: Fallback failed:', fallbackError.message);
+    }
+    return null;
+  }
+};
+
+
+// ----------------------------------------------------------------------------
+// API para Sesiones de Juego (sesiones_juego)
+// ----------------------------------------------------------------------------
+
+export const apiFetchSessions = async () => {
+  const user = await getCurrentUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('sesiones_juego')
+    .select('*')
+    .eq('usuario_id', user.id)
+    .order('fecha', { ascending: false });
+
+  if (error) {
+    console.error("Error en apiFetchSessions:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const apiAddSession = async (sessionData) => {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Usuario no autenticado");
+
+  const dataToInsert = { ...sessionData, usuario_id: user.id };
+  
+  const { data, error } = await supabase
+    .from('sesiones_juego')
+    .insert(dataToInsert)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error en apiAddSession:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const apiDeleteSession = async (sessionId) => {
+  const { error } = await supabase
+    .from('sesiones_juego')
+    .delete()
+    .eq('id', sessionId);
+
+  if (error) {
+    console.error("Error en apiDeleteSession:", error);
+    throw error;
+  }
+};
+
+// ----------------------------------------------------------------------------
+// API para Manos Guardadas (manos_guardadas)
+// ----------------------------------------------------------------------------
+
+export const apiFetchHands = async (date = null, limit = null, offset = 0) => {
+  console.log('[DEBUG] apiFetchHands: Starting with params - date:', date, 'limit:', limit, 'offset:', offset);
+  const user = await getCurrentUser();
+  console.log('[DEBUG] apiFetchHands: User obtained:', user ? `ID: ${user.id}` : 'not authenticated');
+
+  console.log('[DEBUG] apiFetchHands: Building query...');
+  let query = supabase
+    .from('manos_guardadas')
+    .select('*');
+
+  // Re-enable user filter - ensure RLS policy allows select for authenticated users
+  if (user) {
+    query = query.eq('usuario_id', user.id);
+    console.log('[DEBUG] apiFetchHands: Added user filter for ID:', user.id);
+  } else {
+    console.log('[DEBUG] apiFetchHands: No user filter applied');
+  }
+
+  if (date) {
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+    query = query.gte('fecha_creacion', startDate.toISOString()).lt('fecha_creacion', endDate.toISOString());
+    console.log('[DEBUG] apiFetchHands: Added date filter from', startDate.toISOString(), 'to', endDate.toISOString());
+  }
+
+  query = query.order('fecha_creacion', { ascending: false });
+  console.log('[DEBUG] apiFetchHands: Added ordering by fecha_creacion desc');
+
+  if (limit !== null && limit !== undefined) {
+    query = query.range(offset || 0, (offset || 0) + limit - 1);
+    console.log('[DEBUG] apiFetchHands: Added range from', offset || 0, 'to', (offset || 0) + limit - 1);
+  }
+
+  console.log('[DEBUG] apiFetchHands: Executing query...');
+
+  // Add timeout to prevent hanging
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+  );
+
+  const queryPromise = query;
+  const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
+  console.log('[DEBUG] apiFetchHands: Query completed - error:', error ? `${error.message} (code: ${error.code})` : 'none', 'data count:', data ? data.length : 'null');
+
+  if (error) {
+    console.error("[DEBUG] apiFetchHands: Full error object:", error);
+    throw error;
+  }
+
+  console.log('[DEBUG] apiFetchHands: Returning data array of length:', data?.length || 0);
+  return data;
+};
+
+export const apiAddHand = async (handData) => {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Usuario no autenticado");
+
+  const dataToInsert = { ...handData, usuario_id: user.id };
+
+  const { data, error } = await supabase
+    .from('manos_guardadas')
+    .insert(dataToInsert)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error en apiAddHand:", error);
+    throw error;
+  }
+  return data;
+};
+
+export const apiDeleteHand = async (handId) => {
+  const { error } = await supabase
+    .from('manos_guardadas')
+    .delete()
+    .eq('id', handId);
+
+  if (error) {
+    console.error("Error en apiDeleteHand:", error);
+    throw error;
+  }
+};
+
+// ----------------------------------------------------------------------------
+// API para Viajes de Poker (viajes_poker y relacionadas)
+// ----------------------------------------------------------------------------
+
+export const apiFetchTrips = async () => {
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    const { data: viajes, error: viajesError } = await supabase
+        .from('viajes_poker')
+        .select(`*, participantes_viaje(*), resultados_diarios_viaje(*)`)
+        .eq('creador_id', user.id)
+        .order('fecha_creacion', { ascending: false });
+
+    if (viajesError) {
+        console.error("Error en apiFetchTrips:", viajesError);
+        throw viajesError;
+    }
+
+    return viajes.map(viaje => {
+        const dailyResults = {};
+        const tripDays = [];
+        viaje.resultados_diarios_viaje.forEach(r => {
+            const fecha = r.fecha;
+            if (!dailyResults[fecha]) {
+                dailyResults[fecha] = {};
+                tripDays.push(fecha);
+            }
+            const participante = viaje.participantes_viaje.find(p => p.id === r.participante_id);
+            if (participante) {
+                dailyResults[fecha][participante.id] = {
+                    result: r.resultado,
+                    hours: r.horas_jugadas,
+                    stake: r.stake
+                };
+            }
+        });
+        
+        return { ...viaje, players: viaje.participantes_viaje.map(p => ({
+            id: p.id,
+            name: p.nombre_jugador,
+            individualBankroll: p.aportacion_banca,
+            participation: p.porcentaje_participacion
+        })), tripDays: tripDays.sort(), dailyResults };
+    });
+};
+
+// *** FUNCIÓN COMPLETAMENTE REESCRITA PARA SIMPLIFICAR ***
+export const apiAddOrUpdateTrip = async (tripData) => {
+    const user = await getCurrentUser();
+    if (!user) throw new Error("Usuario no autenticado");
+    
+    let tripId = tripData.id;
+
+    // PASO 1: Insertar o actualizar el viaje principal.
+    const tripPayload = {
+        creador_id: user.id,
+        ciudad: tripData.city,
+        casino: tripData.casino,
+        moneda: tripData.currency,
+        tipo_reparto: tripData.repartoType,
+        activo: tripData.isTripActive,
+        fecha_viaje: new Date().toISOString().split('T')[0],
+    };
+
+    if (tripId) { // Es una actualización
+        tripPayload.id = tripId;
+        const { error } = await supabase.from('viajes_poker').update(tripPayload).eq('id', tripId);
+        if (error) throw new Error(`Error actualizando el viaje principal: ${error.message}`);
+    } else { // Es una inserción
+        const { data, error } = await supabase.from('viajes_poker').insert(tripPayload).select('id').single();
+        if (error) throw new Error(`Error creando el viaje principal: ${error.message}`);
+        tripId = data.id;
+    }
+
+    // PASO 2: Borrar participantes y resultados antiguos para evitar duplicados.
+    await supabase.from('resultados_diarios_viaje').delete().eq('viaje_id', tripId);
+    await supabase.from('participantes_viaje').delete().eq('viaje_id', tripId);
+    
+    // PASO 3: Insertar los nuevos participantes.
+    const participantsPayload = tripData.players.map(p => ({
+        viaje_id: tripId,
+        nombre_jugador: p.name,
+        aportacion_banca: p.individualBankroll || 0,
+        porcentaje_participacion: p.participation || 0
+    }));
+
+    const { data: newParticipants, error: participantsError } = await supabase
+        .from('participantes_viaje')
+        .insert(participantsPayload)
+        .select('id, nombre_jugador');
+        
+    if (participantsError) throw new Error(`Error guardando participantes: ${participantsError.message}`);
+
+    // PASO 4: Insertar los nuevos resultados diarios.
+    const resultsPayload = [];
+    Object.entries(tripData.dailyResults).forEach(([date, dailyData]) => {
+        Object.entries(dailyData).forEach(([frontendPlayerId, resultData]) => {
+            const playerFrontend = tripData.players.find(p => p.id === frontendPlayerId);
+            const participantBackend = newParticipants.find(p => p.nombre_jugador === playerFrontend.name);
+            if (participantBackend) {
+                resultsPayload.push({
+                    viaje_id: tripId,
+                    participante_id: participantBackend.id,
+                    fecha: date,
+                    resultado: resultData.result || 0,
+                    horas_jugadas: resultData.hours || 0,
+                    stake: resultData.stake || ''
+                });
+            }
+        });
+    });
+
+    if (resultsPayload.length > 0) {
+        const { error: resultsError } = await supabase.from('resultados_diarios_viaje').insert(resultsPayload);
+        if (resultsError) throw new Error(`Error guardando resultados diarios: ${resultsError.message}`);
+    }
+
+    return tripId; // Devolvemos el ID del viaje guardado/actualizado.
+};
+
+export const apiDeleteTrip = async (tripId) => {
+    const { error } = await supabase.from('viajes_poker').delete().eq('id', tripId);
+    if (error) {
+        console.error("Error en apiDeleteTrip:", error);
+        throw error;
+    }
+};
+
+--------------------------------------------
 
 --- INICIO DEL ARCHIVO: src/assets/vue.svg ---
 
@@ -214,7 +642,7 @@ main {
 --- INICIO DEL ARCHIVO: src/components/ActionPanel.vue ---
 
 <template>
-  <div class="action-panel-wrapper" style="position: fixed; top: 800px; left: 50%; transform: translateX(-50%);">
+  <div class="action-panel-wrapper">
     
     <div class="actions-grid">
       <!-- Fila 1 -->
@@ -270,7 +698,7 @@ main {
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '../store/game';
 
@@ -279,8 +707,6 @@ const { t } = useI18n();
 const props = defineProps({ modelValue: String });
 const emit = defineEmits(['update:modelValue']);
 const gameStore = useGameStore();
-
-// No drag functionality needed since it's fixed positioned
 
 const amountToCall = computed(() => {
   if (!gameStore.activePlayer) return 0;
@@ -372,10 +798,8 @@ function setRaiseAmountByPot(multiplier) {
   raiseAmount.value = betValue;
 }
 
-// --- NUEVA FUNCIÓN PARA EL BOTÓN ALL-IN ---
 function setRaiseAmountToAllIn() {
   if (!gameStore.activePlayer) return;
-  // Simplemente establece el raiseAmount al valor máximo posible (el stack del jugador)
   raiseAmount.value = maxSliderValue.value;
 }
 
@@ -396,7 +820,7 @@ function handleWheelScroll(event) {
 </script>
 
 <style scoped>
-/* El CSS es idéntico al que me pasaste */
+/* --- ESTILOS ESCRITORIO --- */
 .action-panel-wrapper {
   --btn-red: #f95f41;
   --btn-red-hover: #e04a2f;
@@ -410,6 +834,12 @@ function handleWheelScroll(event) {
   --btn-grey-hover: #2D3748;
   --slider-color-active: #FAB76B;
   --slider-color-inactive: #1A202C;
+  
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+
   background-color: #2d3748;
   border-radius: 12px;
   padding: 20px;
@@ -417,6 +847,7 @@ function handleWheelScroll(event) {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border: 3px solid var(--border-color);
   color: white;
+  transition: all 0.3s ease;
 }
 .actions-grid {
   display: grid;
@@ -503,13 +934,10 @@ function handleWheelScroll(event) {
   cursor: pointer;
 }
 .btn-fold { background-color: var(--btn-red); }
-.btn-fold:hover { background-color: var(--btn-red-hover); }
 .btn-call { background-color: var(--btn-green); }
-.btn-call:hover { background-color: var(--btn-green-hover); }
 .btn-raise { background-color: var(--btn-orange); }
-.btn-raise:hover { background-color: var(--btn-orange-hover); }
 .btn-allin { background-color: var(--btn-purple) !important; }
-.btn-allin:hover { background-color: var(--btn-purple-hover) !important; }
+
 button:disabled {
   background-color: #718096 !important;
   cursor: not-allowed;
@@ -546,26 +974,48 @@ button:disabled {
   cursor: pointer;
   margin-top: -8px;
 }
-.grid-slider::-moz-range-track {
-  width: 100%;
-  height: 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  border: 1px solid #000;
-  background: linear-gradient(to right, 
-    var(--slider-color-active) var(--slider-fill-percentage), 
-    var(--slider-color-inactive) var(--slider-fill-percentage)
-  );
+
+/* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .action-panel-wrapper {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    height: auto;
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    border-width: 2px;
+    min-height: 0;
+  }
+
+  .actions-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto 1fr auto auto;
+    gap: 8px;
+    height: 100%;
+    grid-template-areas:
+      "turn-info  turn-info"
+      "fold       call"
+      "raise      input"
+      "slider     slider"
+      "quick-bets quick-bets"
+      "color-select bbs-toggle";
+  }
+
+  .grid-turn-info { font-size: 0.9rem; }
+  .grid-fold, .grid-call, .grid-raise { height: 45px; font-size: 0.9rem; }
+  .grid-input { height: 45px; font-size: 1.1rem; width: 100%; }
+  .all-in-indicator { font-size: 0.9rem; bottom: -14px; }
+  .grid-slider { margin: 5px 0; }
+  .grid-quick-bets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .grid-quick-bets button { padding: 6px; font-size: 0.7rem; }
+  .grid-quick-bets .btn-allin { grid-column: 1 / -1; }
+  .grid-color-select, .grid-bbs-toggle { height: 35px; font-size: 0.8rem; padding: 0 8px; }
 }
-.grid-slider::-moz-range-thumb {
-  border: 1px solid #000;
-  height: 30px;
-  width: 20px;
-  border-radius: 4px;
-  background: #E2E8F0;
-  cursor: pointer;
-}
-</style>
+</style>```
 
 ----------------------------------------------------------
 
@@ -623,6 +1073,7 @@ function selectCard(card) {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background-color: rgba(0, 0, 0, 0.8);
   display: flex; justify-content: center; align-items: center; z-index: 2000;
+  padding: 1rem;
 }
 .card-picker-content {
   background-color: #1a202c;
@@ -657,7 +1108,6 @@ function selectCard(card) {
   font-size: 1.2rem;
   line-height: 1;
 }
-/* 4-Color Deck */
 .card.black { background-color: #2d3748; }
 .card.red { background-color: #c53030; }
 .card.green { background-color: #2f855a; }
@@ -678,6 +1128,25 @@ function selectCard(card) {
   margin-top: 1rem;
   padding: 10px;
   font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .card-picker-content {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .suit-row {
+    gap: 0.25rem;
+  }
+  .card {
+    width: clamp(28px, 6vw, 40px); /* Ancho fluido */
+    height: clamp(40px, 8.4vw, 56px); /* Alto fluido */
+    font-size: clamp(1rem, 3vw, 1.5rem); /* Fuente fluida */
+    border-radius: 4px;
+  }
+  .suit-icon {
+    font-size: clamp(0.7rem, 2vw, 1rem);
+  }
 }
 </style>
 
@@ -867,13 +1336,14 @@ const selectedPosition = ref(null);
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 1rem;
 }
 .modal-content {
   background-color: #2d3748;
   padding: 2rem;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  width: 90%;
+  width: 100%;
   max-width: 500px;
   text-align: center;
 }
@@ -903,6 +1373,20 @@ h3 {
   padding: 15px;
   font-size: 1.2rem;
   font-weight: bold;
+}
+
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 1.5rem;
+  }
+  .positions-grid button {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+  .confirm-btn {
+    padding: 12px;
+    font-size: 1.1rem;
+  }
 }
 </style>
 
@@ -1043,7 +1527,6 @@ h3 {
 
 --- INICIO DEL ARCHIVO: src/components/EndSessionModal.vue ---
 
-<!-- src/components/EndSessionModal.vue -->
 <template>
   <div class="modal-overlay" @click.self="cancel">
     <div class="modal-content">
@@ -1071,8 +1554,10 @@ h3 {
       </div>
 
       <div class="modal-actions">
-        <button class="btn-cancel" @click="cancel">Cancelar</button>
-        <button class="btn-confirm" @click="confirm" :disabled="finalStack === null || finalStack < 0">Confirmar y Guardar</button>
+        <button class="btn-cancel" @click="cancel" :disabled="isSaving">Cancelar</button>
+        <button class="btn-confirm" @click="confirm" :disabled="finalStack === null || finalStack < 0 || isSaving">
+          {{ isSaving ? 'Guardando...' : 'Confirmar y Guardar' }}
+        </button>
       </div>
     </div>
   </div>
@@ -1081,6 +1566,13 @@ h3 {
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
+
+const props = defineProps({
+  isSaving: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 const emit = defineEmits(['confirm', 'cancel']);
 const sessionStore = useSessionStore();
@@ -1105,6 +1597,7 @@ function confirm() {
 }
 
 function cancel() {
+  if (props.isSaving) return;
   emit('cancel');
 }
 
@@ -1114,7 +1607,50 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.8);display:flex;justify-content:center;align-items:center;z-index:2000}.modal-content{background-color:#2d3748;padding:2rem;border-radius:12px;border:1px solid var(--border-color);width:90%;max-width:450px;text-align:center}h3{margin-top:0;font-size:1.8rem}.summary{text-align:left;margin:1.5rem 0;font-size:1.1rem}.summary-item{display:flex;justify-content:space-between;padding:.5rem 0}.total-investment{font-weight:700;border-top:1px solid var(--border-color);margin-top:.5rem;padding-top:.5rem}.final-stack-input{margin:1.5rem 0}.final-stack-input label{display:block;margin-bottom:.5rem;font-weight:700}.input-group{display:flex;align-items:center;background-color:#1a202c;border-radius:6px;border:1px solid var(--border-color)}.input-group span{padding:0 15px;font-size:1.2rem;color:#a0aec0}.input-group input{flex-grow:1;background:0 0;border:none;font-size:1.5rem;padding:15px;color:#fff;outline:0}.result-display{margin:1.5rem 0;padding:1rem;border-radius:8px}.result-display h4{margin:0 0 .5rem}.result-display p{margin:0;font-size:2.5rem;font-weight:700}.result-display.profit{background-color:rgba(47,133,90,.3);color:#68d391}.result-display.loss{background-color:rgba(197,48,48,.3);color:#fc8181}.result-display.even{background-color:rgba(74,85,104,.3);color:#a0aec0}.modal-actions{display:flex;gap:1rem;margin-top:2rem}.modal-actions button{flex-grow:1;padding:15px;font-size:1.1rem;font-weight:700}.btn-cancel{background-color:#718096}.btn-confirm{background-color:#48bb78}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.8);display:flex;justify-content:center;align-items:center;z-index:2000; padding: 1rem;}
+.modal-content{background-color:#2d3748;padding:2rem;border-radius:12px;border:1px solid var(--border-color);width:100%;max-width:450px;text-align:center}
+h3{margin-top:0;font-size:1.8rem}
+.summary{text-align:left;margin:1.5rem 0;font-size:1.1rem}
+.summary-item{display:flex;justify-content:space-between;padding:.5rem 0}
+.total-investment{font-weight:700;border-top:1px solid var(--border-color);margin-top:.5rem;padding-top:.5rem}
+.final-stack-input{margin:1.5rem 0}
+.final-stack-input label{display:block;margin-bottom:.5rem;font-weight:700}
+.input-group{display:flex;align-items:center;background-color:#1a202c;border-radius:6px;border:1px solid var(--border-color)}
+.input-group span{padding:0 15px;font-size:1.2rem;color:#a0aec0}
+.input-group input{flex-grow:1;background:0 0;border:none;font-size:1.5rem;padding:15px;color:#fff;outline:0}
+.result-display{margin:1.5rem 0;padding:1rem;border-radius:8px}
+.result-display h4{margin:0 0 .5rem}
+.result-display p{margin:0;font-size:2.5rem;font-weight:700}
+.result-display.profit{background-color:rgba(47,133,90,.3);color:#68d391}
+.result-display.loss{background-color:rgba(197,48,48,.3);color:#fc8181}
+.result-display.even{background-color:rgba(74,85,104,.3);color:#a0aec0}
+.modal-actions{display:flex;gap:1rem;margin-top:2rem}
+.modal-actions button{flex-grow:1;padding:15px;font-size:1.1rem;font-weight:700}
+.btn-cancel{background-color:#718096}
+.btn-confirm{background-color:#48bb78}
+
+@media (max-width: 480px) {
+  .modal-content {
+    padding: 1.5rem;
+  }
+  h3 {
+    font-size: 1.5rem;
+  }
+  .summary {
+    font-size: 1rem;
+  }
+  .input-group input {
+    font-size: 1.2rem;
+    padding: 12px;
+  }
+  .result-display p {
+    font-size: 2rem;
+  }
+  .modal-actions button {
+    padding: 12px;
+    font-size: 1rem;
+  }
+}
 </style>
 
 --------------------------------------------------------------
@@ -1307,7 +1843,7 @@ function handleCardClick(playerId, cardIndex) {
 }
 
 function handleClickOutside(event) {
-  if (gameStore.openNotesPanelPlayerId === props.player.id && notesPanelRef.value && !notesPanelRef.value.contains(event.target) && editBtnRef.value && !editBtnRef.value.contains(event.target)) {
+  if (isNotesPanelOpen.value && notesPanelRef.value && !notesPanelRef.value.contains(event.target) && editBtnRef.value && !editBtnRef.value.contains(event.target)) {
     gameStore.closeNotesPanel();
   }
 }
@@ -1350,21 +1886,28 @@ const PREDEFINED_LAYOUTS = {
   8: calculateEquidistantPositions(8, 500, 260),
   9: calculateEquidistantPositions(9, 500, 280),
 };
+
 const seatCoordinates = computed(() => {
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
   if (PREDEFINED_LAYOUTS[props.playerCount]) {
     return PREDEFINED_LAYOUTS[props.playerCount][visualIndex];
-  } else {
-    const angleRad = (Math.PI * 2 / props.playerCount) * visualIndex + Math.PI / 2;
-    const radiusX = 450;
-    const radiusY = 220;
-    return { x: Math.cos(angleRad) * radiusX, y: Math.sin(angleRad) * radiusY };
   }
+  return { x: 0, y: 0 };
 });
+
 const seatStyle = computed(() => {
   const { x, y } = seatCoordinates.value;
-  return { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))` };
+  // Convertimos los píxeles (basados en 1000x480) a porcentajes
+  const xPercent = (x / 1000) * 100;
+  const yPercent = (y / 480) * 100;
+  
+  return {
+    top: '50%',
+    left: '50%',
+    transform: `translate(calc(-50% + ${xPercent}%), calc(-50% + ${yPercent}%))`
+  };
 });
+
 const dealerButtonStyle = computed(() => {
   return {
     bottom: '-40px',
@@ -1377,21 +1920,15 @@ const betBoxStyle = computed(() => {
   const threshold = 150;
 
   if (Math.abs(y) > threshold) {
-    // Top/bottom players: position bets on the players
     if (y > 0) {
-      // Top player: position bet on player
       return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
     } else {
-      // Bottom player: position bet on player
       return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
     }
   } else {
-    // Left/right players: position bets on the players
     if (x < 0) {
-      // Left player: position bet on player
       return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
     } else {
-      // Right player: position bet on player
       return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
     }
   }
@@ -1402,15 +1939,14 @@ const notesPanelStyle = computed(() => {
 </script>
 
 <style scoped>
-/* --- ESTILOS COMPLETAMENTE RENOVADOS --- */
+/* --- ESTILOS BASE (ESCRITORIO) --- */
 .player-container {
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 5;
-  width: 150px;
-  /* CAMBIO: La altura ahora es fija y tiene en cuenta el nuevo tamaño de las cartas */
-  height: 200px; /* Increased height to create space above for community cards */
+  width: 15%; 
+  height: 40%;
 }
 
 .player-seat {
@@ -1441,20 +1977,20 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  /* Moved closer to the player panel */
   top: 38px;
   left: 55%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  gap: 5px;
+  gap: 5%;
   width: 100%;
   z-index: 9;
 }
 
 .card-placeholder {
-  width: var(--player-card-width);
-  height: var(--player-card-height);
+  width: 45%; 
+  height: auto;
+  aspect-ratio: 100 / 140; 
   cursor: pointer;
   position: relative;
 }
@@ -1710,9 +2246,46 @@ const notesPanelStyle = computed(() => {
   opacity: 1;
 }
 
-/* Responsive design se mantiene igual */
+/* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .player-container {
+    width: 18%; /* Hacemos los jugadores un poco más grandes en relación a la mesa */
+    height: 45%;
+  }
+  .player-seat {
+    height: 50px; /* Reducimos la altura del panel de info */
+  }
+  .player-info-panel {
+    padding: 4px;
+    border-radius: 6px;
+  }
+  .player-name {
+    font-size: 0.8em;
+    gap: 4px;
+    margin-bottom: 2px;
+  }
+  .player-stack {
+    font-size: 0.9em;
+  }
+  .player-cards {
+    top: 5px; /* Acercamos las cartas al panel de info */
+  }
+  .dealer-button {
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+    bottom: -30px;
+  }
+  .bet-box {
+    /* Reducimos el tamaño de la info de apuesta */
+    transform: scale(0.8) translateY(-50%);
+  }
+  /* Ocultamos elementos de edición para simplificar la UI */
+  .edit-notes-btn, .notes-display-wrapper {
+    display: none;
+  }
+}
 </style>
-
 
 -----------------------------------------------------
 
@@ -2188,6 +2761,29 @@ function goToHandConfig() {
 
 ---------------------------------------------------------
 
+--- INICIO DEL ARCHIVO: src/components/RotateDeviceOverlay.vue ---
+
+<template>
+  <div class="rotate-overlay">
+    <div class="rotate-content">
+      <svg class="rotate-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-2.691V5.25a2.25 2.25 0 00-2.25-2.25h-4.5a2.25 2.25 0 00-2.25 2.25v4.5A2.25 2.25 0 006.75 12h4.5a2.25 2.25 0 002.25-2.25v-2.25" />
+      </svg>
+      <p>Por favor, gira tu dispositivo a modo horizontal para usar el editor de manos.</p>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.rotate-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; align-items: center; text-align: center; z-index: 9999; }
+.rotate-content { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; padding: 2rem; }
+.rotate-icon { width: 80px; height: 80px; animation: rotate-animation 2s infinite ease-in-out; }
+p { font-size: 1.2rem; font-weight: bold; max-width: 300px; }
+@keyframes rotate-animation { 0% { transform: rotate(0deg); } 50% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+</style>
+
+------------------------------------------------------------------
+
 --- INICIO DEL ARCHIVO: src/components/SessionChart.vue ---
 
 <template>
@@ -2245,22 +2841,25 @@ const filteredSessions = computed(() => {
   }
 
   return allSessions.filter(session => {
-    const parts = session.date.split('/');
-    const sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    // La fecha de la DB ya es un objeto Date o un string compatible
+    const sessionDate = new Date(session.fecha);
     return sessionDate >= cutoffDate;
   });
 });
 
 const sessionsInChronologicalOrder = computed(() => {
-  return [...filteredSessions.value].reverse();
+  // Ordenamos de la más antigua a la más nueva para la gráfica de líneas
+  return [...filteredSessions.value].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 });
 
 const lineChartData = computed(() => {
   const sessions = sessionsInChronologicalOrder.value;
-  const labels = sessions.map(s => s.date);
+  // Usamos 'fecha' y lo formateamos para las etiquetas
+  const labels = sessions.map(s => new Date(s.fecha + 'T12:00:00').toLocaleDateString());
   let cumulativeProfit = 0;
   const dataPoints = sessions.map(s => {
-    cumulativeProfit += s.result || 0; 
+    // *** CAMBIO CLAVE: Usamos 'resultado' y lo convertimos a número ***
+    cumulativeProfit += parseFloat(s.resultado) || 0; 
     return cumulativeProfit;
   });
 
@@ -2300,8 +2899,10 @@ const lineChartData = computed(() => {
 
 const barChartData = computed(() => {
   const sessions = sessionsInChronologicalOrder.value;
-  const labels = sessions.map(s => s.date);
-  const dataPoints = sessions.map(s => s.result || 0);
+  // Usamos 'fecha' y lo formateamos para las etiquetas
+  const labels = sessions.map(s => new Date(s.fecha + 'T12:00:00').toLocaleDateString());
+  // *** CAMBIO CLAVE: Usamos 'resultado' y lo convertimos a número ***
+  const dataPoints = sessions.map(s => parseFloat(s.resultado) || 0);
 
   return {
     labels,
@@ -2334,7 +2935,8 @@ const chartOptions = {
             const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
             if (session) {
               label = 'Resultado de la Sesión: ';
-              value = session.result;
+              // *** CAMBIO CLAVE: Usamos 'resultado' ***
+              value = parseFloat(session.resultado);
             }
           } 
           else {
@@ -2348,26 +2950,23 @@ const chartOptions = {
           }
           return label;
         },
-        // --- FUNCIÓN AÑADIDA PARA EL COLOR DEL TEXTO ---
         labelColor: function(context) {
           let value = 0;
-          // Si es el gráfico de líneas, obtenemos el resultado de la sesión individual
           if (context.dataset.label === t('charts.cumulativeProfit')) {
-            // El índice de la sesión es dataIndex - 1 porque el gráfico tiene un punto extra de "Inicio"
             if (context.dataIndex > 0) {
               const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
               if (session) {
-                value = session.result;
+                // *** CAMBIO CLAVE: Usamos 'resultado' ***
+                value = parseFloat(session.resultado);
               }
             }
           } 
-          // Si es el gráfico de barras, el valor ya es el resultado de la sesión
           else {
             value = context.parsed.y;
           }
 
           return {
-            borderColor: value >= 0 ? '#68d391' : '#fc8181', // Verde para positivo, Rojo para negativo
+            borderColor: value >= 0 ? '#68d391' : '#fc8181',
             backgroundColor: value >= 0 ? '#68d391' : '#fc8181',
           };
         }
@@ -2378,7 +2977,6 @@ const chartOptions = {
       padding: 10,
       borderColor: 'rgba(74, 85, 104, 0.8)',
       borderWidth: 1,
-      // Habilitar que el color de la etiqueta (label) cambie
       usePointStyle: true, 
       boxPadding: 4
     },
@@ -2647,14 +3245,20 @@ export default i18n;
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
-import i18n from './i18n' // <-- IMPORTAR
+import i18n from './i18n'
 import './styles.css'
+import { useAuthStore } from './store/useAuthStore'
 
 const app = createApp(App)
 const pinia = createPinia()
-
 app.use(pinia)
-app.use(i18n) // <-- USAR
+
+// Obtenemos el store de autenticación e iniciamos el listener.
+// La app NO esperará, se montará inmediatamente.
+const authStore = useAuthStore()
+authStore.listenToAuthState() // Usaremos un nuevo listener simple
+
+app.use(i18n)
 app.mount('#app')
 
 ---------------------------------------
@@ -2663,7 +3267,8 @@ app.mount('#app')
 
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { v4 as uuidv4 } from 'uuid'
+// Importamos nuestras nuevas funciones de API
+import { apiFetchHands, apiAddHand, apiDeleteHand } from '@/api';
 
 const deepCopy = (obj) => JSON.parse(JSON.stringify(obj));
 
@@ -2699,8 +3304,14 @@ export const useGameStore = defineStore('game', () => {
   const pots = ref([]);
   const history = ref([]);
   const currentActionIndex = ref(-1);
-  const savedHands = ref(JSON.parse(localStorage.getItem('pokerReplayerHands')) || []);
+  // Reemplazamos localStorage con un ref vacío
+  const savedHands = ref([]);
   const displayInBBs = ref(false);
+
+  // Pagination state
+  const hasMore = ref(true);
+  const currentOffset = ref(0);
+  const pageSize = ref(20);
   
   const replaySpeed = ref(1);
   const isReplaying = ref(false);
@@ -2737,6 +3348,86 @@ export const useGameStore = defineStore('game', () => {
     });
     return cards;
   });
+
+  // --- ACCIONES NUEVAS Y MODIFICADAS ---
+
+  async function fetchHands(date = null, incremental = false) {
+    console.log('[DEBUG] gameStore.fetchHands: Starting with date:', date, 'incremental:', incremental, 'currentOffset:', currentOffset.value);
+    const limit = pageSize.value;
+    const offset = incremental ? currentOffset.value : 0;
+    console.log('[DEBUG] gameStore.fetchHands: Calling apiFetchHands with limit:', limit, 'offset:', offset);
+    const result = await apiFetchHands(date, limit, offset);
+    console.log('[DEBUG] gameStore.fetchHands: apiFetchHands completed, result count:', result?.length || 0);
+    if (incremental) {
+      savedHands.value = [...savedHands.value, ...result];
+      console.log('[DEBUG] gameStore.fetchHands: Appended to savedHands, new total:', savedHands.value.length);
+    } else {
+      savedHands.value = result;
+      currentOffset.value = 0;
+      console.log('[DEBUG] gameStore.fetchHands: Replaced savedHands, count:', savedHands.value.length, 'offset reset to 0');
+    }
+    currentOffset.value += result.length;
+    hasMore.value = result.length === limit;
+    console.log('[DEBUG] gameStore.fetchHands: Updated currentOffset to:', currentOffset.value, 'hasMore:', hasMore.value);
+  }
+
+  async function loadMoreHands(date = null) {
+    if (!hasMore.value) return;
+    await fetchHands(date, true);
+  }
+
+  async function saveCurrentHand() {
+    if (history.value.length === 0) return;
+    const handToSave = {
+      // id y fecha los genera la BD, ya no los necesitamos aquí
+      fecha: new Date().toISOString(),
+      posicion_heroe: heroPosition.value,
+      cantidad_jugadores: players.value.length,
+      historial: deepCopy(history.value), // El historial se guarda en JSONB
+      ciega_pequena: smallBlind.value,
+      ciega_grande: bigBlind.value,
+      moneda: currency.value,
+      regla_especial: specialRule.value,
+      bomb_pot_bb: bombPotBB.value,
+    };
+    try {
+      const newHand = await apiAddHand(handToSave);
+      savedHands.value.unshift(newHand); // Añadimos la mano devuelta a nuestro estado local
+    } catch (error) {
+      console.error("Error al guardar la mano:", error);
+      // Opcional: mostrar un error al usuario
+    }
+  }
+  
+  async function deleteHand(handId) {
+    try {
+      await apiDeleteHand(handId);
+      savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
+    } catch(error) {
+       console.error("Error al borrar la mano:", error);
+    }
+  }
+
+  // loadHand no necesita ser async, porque opera con datos ya cargados
+  function loadHand(handData) {
+    pauseReplay();
+    const initialState = handData.historial[0]; // El historial viene del campo JSONB
+    players.value = deepCopy(initialState.players);
+    board.value = deepCopy(initialState.board);
+    pots.value = deepCopy(initialState.pots);
+    heroPosition.value = handData.posicion_heroe;
+    smallBlind.value = handData.ciega_pequena;
+    bigBlind.value = handData.ciega_grande;
+    currency.value = handData.moneda;
+    specialRule.value = handData.regla_especial || 'Ninguno';
+    bombPotBB.value = handData.bomb_pot_bb || 2;
+    history.value = deepCopy(handData.historial);
+    currentActionIndex.value = 0;
+    gamePhase.value = 'replay';
+    isPreActionPhase.value = false;
+  }
+  
+  // --- RESTO DE FUNCIONES (sin cambios en su mayoría) ---
 
   function toggleDisplayMode() { displayInBBs.value = !displayInBBs.value; }
   
@@ -2776,6 +3467,8 @@ export const useGameStore = defineStore('game', () => {
     pots.value = deepCopy(stateToRestore.pots);
   }
   function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null) {
+    // ... (El resto de la lógica de setupNewHand, performAction, etc., es interna y no cambia)
+    // ... (ya que solo manipula el estado de la mano actual, no la lista de manos guardadas)
     pauseReplay();
     players.value = [];
     heroPosition.value = newHeroPosition;
@@ -2812,7 +3505,6 @@ export const useGameStore = defineStore('game', () => {
         isStraddle: false,
         isMississippi: false,
         isBombPot: false,
-        // --- PROPIEDADES NUEVAS AÑADIDAS ---
         notes: '',
         tag: null,
       });
@@ -2832,9 +3524,7 @@ export const useGameStore = defineStore('game', () => {
       lastRaiserIndex.value = players.value[bbIndex].id;
     }
 
-    // Handle Bomb Pot first (replaces blinds)
     if (specialRule.value === 'Bomb Pot') {
-      // All players post the bomb pot amount as initial bet
       const bombAmount = bigBlind.value * bombPotBB.value;
       players.value.forEach(player => {
         postBet(player.id, bombAmount, true);
@@ -2843,12 +3533,10 @@ export const useGameStore = defineStore('game', () => {
       currentBet.value = bombAmount;
       minRaise.value = bombAmount * 2;
       lastRaiseAmount.value = bombAmount;
-      // Action starts from the player to the left of BB (normal action)
       activePlayerIndex.value = players.value[(bbIndex + 1) % numPlayers].id;
       lastRaiserIndex.value = activePlayerIndex.value;
       recordState(`Bomb Pot: Todos los jugadores ponen ${bombPotBB.value} BB inicialmente.`);
     } else {
-      // Normal blinds
       players.value[sbIndex].isSB = true;
       postBet(players.value[sbIndex].id, smallBlind.value, true);
       players.value[bbIndex].isBB = true;
@@ -2858,7 +3546,6 @@ export const useGameStore = defineStore('game', () => {
       lastRaiseAmount.value = bigBlind.value;
       recordState("Inicio de mano. Ciegas puestas.");
 
-      // Handle Straddle
       if (specialRule.value === 'Straddle' && numPlayers > 2) {
         const straddleIndex = (bbIndex + 1) % numPlayers;
         players.value[straddleIndex].isStraddle = true;
@@ -2868,11 +3555,9 @@ export const useGameStore = defineStore('game', () => {
         lastRaiseAmount.value = bigBlind.value * 2;
         lastRaiserIndex.value = players.value[straddleIndex].id;
         recordState(`Straddle puesto por ${players.value[straddleIndex].name}.`);
-        // Adjust active player for straddle
         activePlayerIndex.value = players.value[(straddleIndex + 1) % numPlayers].id;
       }
 
-      // Handle Mississippi
       if (specialRule.value === 'Mississippi') {
         const buttonIndex = players.value.findIndex(p => p.isDealer);
         players.value[buttonIndex].isMississippi = true;
@@ -2882,7 +3567,6 @@ export const useGameStore = defineStore('game', () => {
         lastRaiseAmount.value = bigBlind.value * 2;
         lastRaiserIndex.value = players.value[buttonIndex].id;
         recordState(`Mississippi puesto por ${players.value[buttonIndex].name}.`);
-        // Action starts from next to BB, already set
       }
     }
   }
@@ -2949,18 +3633,14 @@ export const useGameStore = defineStore('game', () => {
       endHand(playersInHand[0]);
       return;
     }
-
     const playersAbleToAct = playersInHand.filter(p => !p.isAllIn);
-    
     const roundIsOver = playersAbleToAct.every(p => {
       return p.hasActedThisRound && p.betThisRound === currentBet.value;
     });
-
     if (roundIsOver) {
       const isPreflopBbCheck = gamePhase.value === 'preflop' &&
         activePlayer.value.isBB &&
         currentBet.value === bigBlind.value;
-      
       if (isPreflopBbCheck || playersAbleToAct.length < 2) {
         advanceRound();
       } else {
@@ -3195,44 +3875,7 @@ export const useGameStore = defineStore('game', () => {
       recordState(`Se desasigna la carta ${cardToUnassign}.`);
     }
   }
-  function saveCurrentHand() {
-    if (history.value.length === 0) return;
-    const handToSave = {
-      id: uuidv4(),
-      date: new Date().toLocaleString(),
-      heroPosition: heroPosition.value,
-      numPlayers: players.value.length,
-      history: deepCopy(history.value),
-      smallBlind: smallBlind.value,
-      bigBlind: bigBlind.value,
-      currency: currency.value,
-      specialRule: specialRule.value,
-      bombPotBB: bombPotBB.value,
-    };
-    savedHands.value.push(handToSave);
-    localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
-  }
-  function loadHand(handData) {
-    pauseReplay();
-    const initialState = handData.history[0];
-    players.value = deepCopy(initialState.players);
-    board.value = deepCopy(initialState.board);
-    pots.value = deepCopy(initialState.pots);
-    heroPosition.value = handData.heroPosition;
-    smallBlind.value = handData.smallBlind;
-    bigBlind.value = handData.bigBlind;
-    currency.value = handData.currency;
-    specialRule.value = handData.specialRule || 'Ninguno';
-    bombPotBB.value = handData.bombPotBB || 2;
-    history.value = deepCopy(handData.history);
-    currentActionIndex.value = 0;
-    gamePhase.value = 'replay';
-    isPreActionPhase.value = false;
-  }
-  function deleteHand(handId) {
-    savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
-    localStorage.setItem('pokerReplayerHands', JSON.stringify(savedHands.value));
-  }
+
   function getPositions(numPlayers) {
     if (numPlayers === 2) { return ['BTN / SB', 'BB']; }
     if (numPlayers === 3) { return ['BTN', 'SB', 'BB']; }
@@ -3269,7 +3912,6 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  // --- NUEVAS ACCIONES PARA NOTAS Y TAGS ---
   function updatePlayerNotes(playerId, newNotes) {
     const player = players.value.find(p => p.id === playerId);
     if (player) {
@@ -3283,7 +3925,6 @@ export const useGameStore = defineStore('game', () => {
   function updatePlayerTag(playerId, newTag) {
     const player = players.value.find(p => p.id === playerId);
     if (player) {
-      // Si se hace clic en el mismo tag, se deselecciona
       player.tag = player.tag === newTag ? null : newTag;
     }
     if (isPreActionPhase.value && history.value.length > 0) {
@@ -3303,7 +3944,6 @@ export const useGameStore = defineStore('game', () => {
     openNotesPanelPlayerId.value = null;
   }
 
-
   return {
     players, heroPosition, smallBlind, bigBlind, currency, specialRule, bombPotBB, board, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
@@ -3317,10 +3957,107 @@ export const useGameStore = defineStore('game', () => {
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
     updatePlayerNotes, updatePlayerTag, toggleNotesPanel, closeNotesPanel,
+    fetchHands, loadMoreHands, hasMore, currentOffset, pageSize,
   }
 });
 
 ---------------------------------------------
+
+--- INICIO DEL ARCHIVO: src/store/useAuthStore.js ---
+
+import { defineStore } from 'pinia';
+import { ref, watch } from 'vue';
+import { supabase } from '@/supabase';
+import { useGameStore } from './game';
+import { useSessionStore } from './useSessionStore';
+import { useTripStore } from './useTripStore';
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref(null);
+  const session = ref(null);
+  const profile = ref(null);
+  const isInitialized = ref(false);
+
+  async function fetchUserProfile() {
+    if (!user.value) return;
+    try {
+      const { data, error } = await supabase
+        .from('perfiles')
+        .select('*')
+        .eq('id', user.value.id)
+        .single();
+      if (error) throw error;
+      profile.value = data;
+    } catch (error) {
+      console.error('Error fetching user profile:', error.message);
+    }
+  }
+
+  // Listener simple que SÓLO gestiona el estado de autenticación.
+  function listenToAuthState() {
+    supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      session.value = newSession;
+      user.value = newSession?.user ?? null;
+      isInitialized.value = true;
+    });
+  }
+
+  // WATCHER: El corazón de la nueva solución.
+  // Reacciona cuando el usuario cambia (login/logout).
+  watch(user, async (newUser, oldUser) => {
+    if (newUser) {
+      // Si hay un nuevo usuario (login), cargamos su perfil y todos sus datos.
+      await fetchUserProfile();
+      const gameStore = useGameStore();
+      const sessionStore = useSessionStore();
+      const tripStore = useTripStore();
+      await Promise.all([
+        gameStore.fetchHands(),
+        sessionStore.fetchSessions(),
+        tripStore.fetchTrips()
+      ]);
+    } else if (oldUser && !newUser) {
+      // Si el usuario desaparece (logout), limpiamos los stores.
+      profile.value = null;
+      useGameStore().savedHands = [];
+      useSessionStore().savedSessions = [];
+      useTripStore().savedTrips = [];
+    }
+  });
+
+  async function signIn(email, password) {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  }
+
+  async function signUp(email, password, username) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { nombre_usuario: username } }
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async function signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  }
+
+  return {
+    user,
+    session,
+    profile,
+    isInitialized,
+    listenToAuthState, // Reemplaza a initializeAuth
+    signIn,
+    signUp,
+    signOut,
+  };
+});
+
+-----------------------------------------------------
 
 --- INICIO DEL ARCHIVO: src/store/useChartsStore.js ---
 
@@ -3356,6 +4093,9 @@ export const useChartsStore = defineStore('charts', () => {
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/supabase';
+import { useAuthStore } from './useAuthStore';
+import { apiFetchSessions, apiAddSession, apiDeleteSession } from '@/api'; // Importamos la API
 
 export const useSessionStore = defineStore('session', () => {
   // --- STATE ---
@@ -3373,17 +4113,14 @@ export const useSessionStore = defineStore('session', () => {
   const location = ref('');
   const currency = ref('$');
   const initialStack = ref(200);
-  const savedSessions = ref(JSON.parse(localStorage.getItem('pokerSavedSessions')) || []);
+  const savedSessions = ref([]);
   
-  // --- NUEVO ESTADO PARA EL FILTRO DEL SUMARIO ---
   const summaryDateFilter = ref('all');
 
-  // --- NUEVA ACCIÓN PARA CAMBIAR EL FILTRO ---
   function setSummaryDateFilter(newFilter) {
     summaryDateFilter.value = newFilter;
   }
 
-  // --- NUEVA COMPUTADA PARA FILTRAR SESIONES SEGÚN EL FILTRO SELECCIONADO ---
   const filteredSessionsForSummary = computed(() => {
     const filter = summaryDateFilter.value;
     if (filter === 'all') {
@@ -3393,7 +4130,6 @@ export const useSessionStore = defineStore('session', () => {
     const now = new Date();
     const cutoffDate = new Date();
     
-    // El día de hoy a las 00:00 para que 'today' y 'last7days' funcionen correctamente
     cutoffDate.setHours(0, 0, 0, 0); 
 
     switch (filter) {
@@ -3405,21 +4141,18 @@ export const useSessionStore = defineStore('session', () => {
     }
 
     return savedSessions.value.filter(session => {
-      // Usamos la misma lógica de parseo de fechas que en otras vistas
-      const dateParts = session.date.split('/');
-      const sessionDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+      const sessionDate = new Date(session.fecha);
       return sessionDate >= cutoffDate;
     });
   });
 
-  // --- TODAS LAS COMPUTADAS SIGUIENTES AHORA USAN 'filteredSessionsForSummary' ---
   const totalNetProfit = computed(() => {
-    return filteredSessionsForSummary.value.reduce((total, session) => total + (session.result || 0), 0);
+    return filteredSessionsForSummary.value.reduce((total, session) => total + (parseFloat(session.resultado) || 0), 0);
   });
 
   const totalInvestment = computed(() => {
     return filteredSessionsForSummary.value.reduce((total, session) => {
-      return total + (session.initialStack || 0) + (session.totalRebuys || 0);
+      return total + (parseFloat(session.stack_inicial) || 0) + (parseFloat(session.total_recompras) || 0);
     }, 0);
   });
   
@@ -3429,32 +4162,32 @@ export const useSessionStore = defineStore('session', () => {
   });
 
   const winningDays = computed(() => {
-    return filteredSessionsForSummary.value.filter(session => session.result > 0).length;
+    return filteredSessionsForSummary.value.filter(session => session.resultado > 0).length;
   });
 
   const losingDays = computed(() => {
-    return filteredSessionsForSummary.value.filter(session => session.result < 0).length;
+    return filteredSessionsForSummary.value.filter(session => session.resultado < 0).length;
   });
 
   const bestDay = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const results = filteredSessionsForSummary.value.map(session => session.result || 0);
+    const results = filteredSessionsForSummary.value.map(session => parseFloat(session.resultado) || 0);
     return Math.max(...results);
   });
 
   const worstDay = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const results = filteredSessionsForSummary.value.map(session => session.result || 0);
+    const results = filteredSessionsForSummary.value.map(session => parseFloat(session.resultado) || 0);
     return Math.min(...results);
   });
 
   const winningStreak = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const chronologicalSessions = [...filteredSessionsForSummary.value].reverse();
+    const chronologicalSessions = [...filteredSessionsForSummary.value].sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
     let maxStreak = 0;
     let currentStreak = 0;
     for (const session of chronologicalSessions) {
-      if (session.result > 0) {
+      if (session.resultado > 0) {
         currentStreak++;
       } else {
         maxStreak = Math.max(maxStreak, currentStreak);
@@ -3467,20 +4200,20 @@ export const useSessionStore = defineStore('session', () => {
 
   const averageBuyIn = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const totalInvest = filteredSessionsForSummary.value.reduce((total, session) => total + (session.initialStack || 0) + (session.totalRebuys || 0), 0);
+    const totalInvest = filteredSessionsForSummary.value.reduce((total, session) => total + (parseFloat(session.stack_inicial) || 0) + (parseFloat(session.total_recompras) || 0), 0);
     return totalInvest / filteredSessionsForSummary.value.length;
   });
   
   const averageCashOut = computed(() => {
     if (filteredSessionsForSummary.value.length === 0) return 0;
-    const totalCashOut = filteredSessionsForSummary.value.reduce((total, session) => total + (session.finalStack || 0), 0);
+    const totalCashOut = filteredSessionsForSummary.value.reduce((total, session) => total + (parseFloat(session.stack_final) || 0), 0);
     return totalCashOut / filteredSessionsForSummary.value.length;
   });
 
   const sessionCount = computed(() => filteredSessionsForSummary.value.length);
 
   const totalHoursPlayed = computed(() => {
-    const totalSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.duration || 0), 0);
+    const totalSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.duracion_segundos || 0), 0);
     return totalSeconds / 3600;
   });
   
@@ -3491,8 +4224,8 @@ export const useSessionStore = defineStore('session', () => {
 
   const averageBreakDuration = computed(() => {
     if (sessionCount.value === 0) return 0;
-    const totalBreakSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.totalBreakTime || 0), 0);
-    const sessionsWithBreaks = filteredSessionsForSummary.value.filter(s => s.totalBreakTime > 0).length;
+    const totalBreakSeconds = filteredSessionsForSummary.value.reduce((total, session) => total + (session.tiempo_descanso_segundos || 0), 0);
+    const sessionsWithBreaks = filteredSessionsForSummary.value.filter(s => s.tiempo_descanso_segundos > 0).length;
     if (sessionsWithBreaks === 0) return 0;
     return (totalBreakSeconds / sessionsWithBreaks) / 60;
   });
@@ -3504,16 +4237,19 @@ export const useSessionStore = defineStore('session', () => {
 
   const averageRebuys = computed(() => {
     if (sessionCount.value === 0) return 0;
-    const totalRebuysAmount = filteredSessionsForSummary.value.reduce((sum, session) => sum + (session.totalRebuys || 0), 0);
+    const totalRebuysAmount = filteredSessionsForSummary.value.reduce((sum, session) => sum + (parseFloat(session.total_recompras) || 0), 0);
     return totalRebuysAmount / sessionCount.value;
   });
 
   const totalAllExpenses = computed(() => {
-    return filteredSessionsForSummary.value.reduce((sum, session) => sum + (session.totalExpenses || 0), 0);
+    return filteredSessionsForSummary.value.reduce((sum, session) => sum + (parseFloat(session.total_gastos) || 0), 0);
   });
 
-  // --- ACTIONS --- (Sin cambios aquí)
-  
+  async function fetchSessions() {
+    // La lógica ahora llama a la API centralizada
+    savedSessions.value = await apiFetchSessions();
+  }
+
   function startSession() {
     elapsedTime.value = 0;
     totalBreakTime.value = 0;
@@ -3560,52 +4296,73 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
   
-  function stopAndSaveSession(finalStack) {
-    if (isOnBreak.value) {
-      totalBreakTime.value += breakElapsedTime.value;
+  // *** ÚNICO BLOQUE MODIFICADO ***
+  async function stopAndSaveSession(finalStack) {
+    try {
+      if (isOnBreak.value) {
+        totalBreakTime.value += breakElapsedTime.value;
+      }
+
+      const ensureFloat = (value) => {
+          const num = parseFloat(value);
+          return isNaN(num) ? 0.0 : num;
+      };
+
+      const currentInvestment = ensureFloat(initialStack.value) + ensureFloat(totalRebuys.value);
+      const result = ensureFloat(finalStack) - currentInvestment - ensureFloat(totalExpenses.value);
+
+      const sessionData = {
+        fecha: new Date().toISOString().split('T')[0],
+        duracion_segundos: ensureFloat(elapsedTime.value),
+        tiempo_descanso_segundos: ensureFloat(totalBreakTime.value),
+        cantidad_jugadores: playerCount.value || 2,
+        ciegas: blinds.value || 'N/A',
+        ubicacion: location.value || null,
+        moneda: currency.value || '$',
+        stack_inicial: ensureFloat(initialStack.value),
+        total_recompras: ensureFloat(totalRebuys.value),
+        total_gastos: ensureFloat(totalExpenses.value),
+        stack_final: ensureFloat(finalStack),
+        resultado: result,
+      };
+      
+      // 1. Guardamos en la BBDD a través de la API
+      await apiAddSession(sessionData);
+      
+      // 2. Volvemos a cargar TODAS las sesiones para asegurar consistencia
+      await fetchSessions();
+
+    } catch (error) {
+      console.error('Error en el store al guardar sesión:', error);
+      throw error; // Propaga el error para que la vista lo maneje
+    } finally {
+      // Este bloque se ejecuta siempre, haya error o no.
+      isActive.value = false;
+      isOnBreak.value = false;
+      clearInterval(sessionTimerInterval);
+      clearInterval(breakTimerInterval);
+      sessionTimerInterval = null;
+      breakTimerInterval = null;
+      elapsedTime.value = 0;
+      breakElapsedTime.value = 0;
     }
-
-    const currentInvestment = initialStack.value + totalRebuys.value;
-    const result = finalStack - currentInvestment - totalExpenses.value;
-
-    const sessionSummary = {
-      id: uuidv4(),
-      date: new Date().toLocaleDateString(),
-      duration: elapsedTime.value,
-      totalBreakTime: totalBreakTime.value,
-      playerCount: playerCount.value,
-      blinds: blinds.value,
-      location: location.value,
-      currency: currency.value,
-      initialStack: initialStack.value,
-      totalRebuys: totalRebuys.value,
-      totalExpenses: totalExpenses.value,
-      finalStack: finalStack,
-      result: result,
-    };
-
-    savedSessions.value.unshift(sessionSummary);
-    localStorage.setItem('pokerSavedSessions', JSON.stringify(savedSessions.value));
-
-    isActive.value = false;
-    isOnBreak.value = false;
-    clearInterval(sessionTimerInterval);
-    clearInterval(breakTimerInterval);
-    sessionTimerInterval = null;
-    breakTimerInterval = null;
-    elapsedTime.value = 0;
-    breakElapsedTime.value = 0;
   }
   
-  function deleteSession(sessionId) {
-    savedSessions.value = savedSessions.value.filter(session => session.id !== sessionId);
-    localStorage.setItem('pokerSavedSessions', JSON.stringify(savedSessions.value));
+  async function deleteSession(sessionId) {
+    try {
+      // Llama a la API para borrar
+      await apiDeleteSession(sessionId);
+      // Vuelve a cargar para mantener la consistencia
+      await fetchSessions();
+    } catch (error) {
+      console.error('Error deleting session:', error.message);
+    }
   }
 
   return {
     isActive, elapsedTime, isOnBreak, breakElapsedTime, playerCount, blinds, 
     location, currency, initialStack, savedSessions, totalRebuys, totalExpenses,
-    summaryDateFilter, // <-- Exportar estado del filtro
+    summaryDateFilter,
     totalNetProfit,
     averageBuyIn,
     averageCashOut,
@@ -3624,7 +4381,8 @@ export const useSessionStore = defineStore('session', () => {
     totalAllExpenses,
     startSession, startBreak, endBreak, stopAndSaveSession, deleteSession,
     addRebuy, addExpense,
-    setSummaryDateFilter, // <-- Exportar acción del filtro
+    setSummaryDateFilter,
+    fetchSessions,
   };
 });
 
@@ -3662,11 +4420,12 @@ export const useSettingsStore = defineStore('settings', () => {
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
+import { apiFetchTrips, apiAddOrUpdateTrip, apiDeleteTrip } from '@/api';
 
 export const useTripStore = defineStore('trip', () => {
   // --- STATE ---
-  const savedTrips = ref(JSON.parse(localStorage.getItem('pokerSavedTrips')) || []);
-  const currentTripId = ref(null); // Para saber si estamos editando un viaje existente
+  const savedTrips = ref([]);
+  const currentTripId = ref(null); 
 
   // --- STATE DE PLANIFICACIÓN ---
   const playerCount = ref(4);
@@ -3764,10 +4523,20 @@ export const useTripStore = defineStore('trip', () => {
     return tripTotalHours.value > 0 ? tripTotalProfit.value / tripTotalHours.value : 0;
   });
 
-  // --- ACTIONS ---
+  // --- ACTIONS (Refactorizadas para usar API) ---
   
-  function saveCurrentTrip() {
+  async function fetchTrips() {
+    try {
+        savedTrips.value = await apiFetchTrips();
+    } catch (error) {
+        console.error("Error al cargar los viajes:", error);
+        savedTrips.value = [];
+    }
+  }
+
+  async function saveCurrentTrip() {
     const tripData = {
+      id: currentTripId.value,
       city: city.value,
       casino: casino.value,
       players: players.value,
@@ -3778,39 +4547,45 @@ export const useTripStore = defineStore('trip', () => {
       dailyResults: dailyResults.value,
     };
 
-    if (currentTripId.value) { // Actualizar un viaje existente
-      const index = savedTrips.value.findIndex(t => t.id === currentTripId.value);
-      if (index !== -1) {
-        savedTrips.value[index] = { ...savedTrips.value[index], ...tripData };
+    try {
+      const savedTripId = await apiAddOrUpdateTrip(tripData);
+      if (!currentTripId.value) {
+        currentTripId.value = savedTripId;
       }
-    } else { // Guardar un viaje nuevo
-      const newTrip = { id: uuidv4(), date: new Date().toLocaleDateString(), ...tripData };
-      currentTripId.value = newTrip.id;
-      savedTrips.value.unshift(newTrip);
+      await fetchTrips(); // Recargamos la lista completa para reflejar los cambios
+      alert('¡Viaje guardado con éxito!');
+    } catch (error) {
+      alert(`Error al guardar el viaje: ${error.message}`);
     }
-    localStorage.setItem('pokerSavedTrips', JSON.stringify(savedTrips.value));
-    alert('¡Viaje guardado con éxito!'); // Feedback para el usuario
   }
   
   function loadTrip(tripId) {
     const tripToLoad = savedTrips.value.find(t => t.id === tripId);
-    if (!tripToLoad) return;
+    if (!tripToLoad) {
+        console.error("No se encontró el viaje para cargar con ID:", tripId);
+        return;
+    }
     
+    // Mapeo de nombres de columna de la DB a estado local
     currentTripId.value = tripToLoad.id;
-    playerCount.value = tripToLoad.players.length;
-    city.value = tripToLoad.city;
+    playerCount.value = tripToLoad.players ? tripToLoad.players.length : 0;
+    city.value = tripToLoad.ciudad;
     casino.value = tripToLoad.casino;
     players.value = tripToLoad.players;
-    currency.value = tripToLoad.currency;
-    repartoType.value = tripToLoad.repartoType;
-    isTripActive.value = tripToLoad.isTripActive;
+    currency.value = tripToLoad.moneda;
+    repartoType.value = tripToLoad.tipo_reparto;
+    isTripActive.value = tripToLoad.activo;
     tripDays.value = tripToLoad.tripDays;
     dailyResults.value = tripToLoad.dailyResults;
   }
 
-  function deleteTrip(tripId) {
-    savedTrips.value = savedTrips.value.filter(t => t.id !== tripId);
-    localStorage.setItem('pokerSavedTrips', JSON.stringify(savedTrips.value));
+  async function deleteTrip(tripId) {
+    try {
+        await apiDeleteTrip(tripId);
+        savedTrips.value = savedTrips.value.filter(t => t.id !== tripId);
+    } catch(error) {
+        alert(`Error al borrar el viaje: ${error.message}`);
+    }
   }
   
   function resetCurrentTrip() {
@@ -3896,7 +4671,7 @@ export const useTripStore = defineStore('trip', () => {
     isTripActive, tripDays, dailyResults,
     collectiveBankroll, tripTotalProfit, totalParticipation, playerFinalShares,
     playerTotalHours, tripTotalHours, playerAverageWinRates, tripAverageWinRate, playerTotals,
-    saveCurrentTrip, loadTrip, deleteTrip, resetCurrentTrip,
+    fetchTrips, saveCurrentTrip, loadTrip, deleteTrip, resetCurrentTrip,
     setPlayerCount, startTrip, addTripDay, updatePlayerDailyData, updatePlayerBankroll,
   };
 });
@@ -3916,10 +4691,8 @@ export const useTripStore = defineStore('trip', () => {
   --card-bg: #ffffff;
 
   /* --- TAMAÑOS DE CARTAS --- */
-  /* CAMBIO: Cartas del board igualadas a las del jugador */
   --board-card-width: 70px;
   --board-card-height: 98px;
-  /* Cartas de los jugadores */
   --player-card-width: 70px;
   --player-card-height: 98px;
 }
@@ -3931,6 +4704,8 @@ body {
   background-color: var(--bg-color);
   color: var(--text-color);
   overscroll-behavior: none;
+  /* Espacio en la parte inferior para la nueva barra de navegación fija */
+  padding-bottom: 80px; 
 }
 
 #app {
@@ -3939,36 +4714,185 @@ body {
   text-align: center;
 }
 
+/* Tipografía fluida para los títulos principales de cada vista */
+h2 {
+  font-size: clamp(1.5rem, 4vw + 1rem, 2.2rem);
+}
+
 button {
   background-color: var(--primary-color);
   color: white;
   border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.2s;
+  font-weight: bold;
+  transition: background-color 0.2s, transform 0.1s;
+  /* Altura mínima para ser un buen "touch target" en móviles */
+  min-height: 44px;
 }
 
-button:hover {
-  background-color: #2b6cb0;
+/* Solo aplicar :hover en dispositivos con un puntero (ratón), no en táctiles */
+@media (hover: hover) and (pointer: fine) {
+  button:hover {
+    background-color: #2b6cb0;
+  }
+}
+
+/* Feedback visual al pulsar el botón */
+button:active {
+  transform: scale(0.98);
 }
 
 button:disabled {
   background-color: #4a5568;
   cursor: not-allowed;
+  transform: none;
 }
 
 input,
 select {
-  padding: 8px;
-  border-radius: 5px;
+  padding: 0.75rem;
+  border-radius: 8px;
   border: 1px solid var(--border-color);
   background-color: #2d3748;
   color: var(--text-color);
+  font-size: 1rem;
 }
 
 ------------------------------------------
+
+--- INICIO DEL ARCHIVO: src/supabase.js ---
+
+import { createClient } from '@supabase/supabase-js'
+
+// Obtén estos valores de tu panel de Supabase: Project Settings > API
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+-------------------------------------------
+
+--- INICIO DEL ARCHIVO: src/views/AuthView.vue ---
+
+<template>
+  <div class="auth-container">
+    <div class="auth-panel">
+      <h2>{{ isLogin ? 'Iniciar Sesión' : 'Crear Cuenta' }}</h2>
+      <form @submit.prevent="handleSubmit">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" v-model="email" required>
+        </div>
+        <div v-if="!isLogin" class="form-group">
+          <label for="username">Nombre de Usuario</label>
+          <input type="text" id="username" v-model="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" v-model="password" required>
+        </div>
+        <div v-if="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+        <button type="submit" class="auth-btn">{{ isLogin ? 'Entrar' : 'Registrarse' }}</button>
+      </form>
+      <div class="toggle-form">
+        <a href="#" @click.prevent="isLogin = !isLogin">
+          {{ isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Inicia sesión' }}
+        </a>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { useAuthStore } from '@/store/useAuthStore';
+
+const authStore = useAuthStore();
+const isLogin = ref(true);
+const email = ref('');
+const password = ref('');
+const username = ref('');
+const errorMessage = ref('');
+
+async function handleSubmit() {
+  errorMessage.value = '';
+  try {
+    if (isLogin.value) {
+      await authStore.signIn(email.value, password.value);
+    } else {
+      await authStore.signUp(email.value, password.value, username.value);
+      alert('¡Registro exitoso! Revisa tu email para confirmar tu cuenta.');
+    }
+  } catch (error) {
+    errorMessage.value = error.message;
+  }
+}
+</script>
+
+<style scoped>
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+.auth-panel {
+  width: 100%;
+  max-width: 400px;
+  background-color: #2d3748;
+  padding: 2.5rem;
+  border-radius: 12px;
+}
+h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+.form-group {
+  margin-bottom: 1.5rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+.form-group input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.error-message {
+  color: #fc8181;
+  background-color: rgba(197, 48, 48, .3);
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.auth-btn {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.toggle-form {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+.toggle-form a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+.toggle-form a:hover {
+  text-decoration: underline;
+}
+</style>
+
+--------------------------------------------------
 
 --- INICIO DEL ARCHIVO: src/views/ChartsView.vue ---
 
@@ -3978,7 +4902,6 @@ select {
       <h2>{{ $t('charts.title') }}</h2>
       
       <div class="controls-wrapper">
-        <!-- Selector de rango de tiempo -->
         <div class="filter-controls">
           <label for="time-range">Mostrar:</label>
           <select id="time-range" v-model="chartsStore.timeRange">
@@ -3991,13 +4914,10 @@ select {
           </select>
         </div>
 
-        <!-- ===== BOTÓN NUEVO PARA CAMBIAR TIPO DE GRÁFICO ===== -->
         <button @click="chartsStore.toggleChartType()" class="toggle-chart-btn" :title="`Cambiar a gráfico de ${chartsStore.chartType === 'line' ? 'barras' : 'líneas'}`">
-          <!-- Icono de gráfico de barras (se muestra si el gráfico activo es el de líneas) -->
           <svg v-if="chartsStore.chartType === 'line'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
           </svg>
-          <!-- Icono de gráfico de líneas (se muestra si el gráfico activo es el de barras) -->
           <svg v-else xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-3.75-2.25M21 12l-3.75 2.25" />
           </svg>
@@ -4005,7 +4925,10 @@ select {
       </div>
     </div>
     
-    <div v-if="sessionStore.savedSessions.length < 2" class="no-data-message">
+    <div v-if="isLoading" class="loading-message">
+        Cargando datos para la gráfica...
+    </div>
+    <div v-else-if="sessionStore.savedSessions.length < 2" class="no-data-message">
       {{ $t('charts.noData') }}
     </div>
     <div v-else class="chart-wrapper">
@@ -4015,12 +4938,20 @@ select {
 </template>
 
 <script setup>
+import { ref, onActivated } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
 import { useChartsStore } from '../store/useChartsStore';
 import SessionChart from '../components/SessionChart.vue';
 
 const sessionStore = useSessionStore();
 const chartsStore = useChartsStore();
+const isLoading = ref(true);
+
+onActivated(async () => {
+    isLoading.value = true;
+    await sessionStore.fetchSessions();
+    isLoading.value = false;
+});
 </script>
 
 <style scoped>
@@ -4082,7 +5013,7 @@ h2 {
   height: 24px;
   color: white;
 }
-.no-data-message {
+.loading-message, .no-data-message {
   text-align: center;
   font-size: 1.2rem;
   color: #a0aec0;
@@ -4419,7 +5350,6 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
         </div>
       </div>
       
-      <!-- SELECTOR DE MONEDA ACTUALIZADO CON 30 OPCIONES -->
       <div class="config-item">
         <label for="currency-select">Moneda:</label>
         <select id="currency-select" v-model="selectedCurrency">
@@ -4429,7 +5359,6 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
         </select>
       </div>
 
-      <!-- SELECTOR DE REGLA ESPECIAL -->
       <div class="config-item">
         <label for="special-rule-select">Regla Especial:</label>
         <select id="special-rule-select" v-model="selectedSpecialRule">
@@ -4440,7 +5369,6 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
         </select>
       </div>
 
-      <!-- SELECTOR DE BOMB POT BB (solo visible cuando Bomb Pot está seleccionado) -->
       <div v-if="selectedSpecialRule === 'Bomb Pot'" class="config-item">
         <label for="bomb-pot-bb-select">Bomb Pot BB:</label>
         <select id="bomb-pot-bb-select" v-model="selectedBombPotBB">
@@ -4454,15 +5382,20 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
       <button @click="loadHandClicked">Iniciar Mano</button>
     </div>
 
-    <PokerTable v-else />
+    <!-- Contenedor del Editor de Manos (se oculta en móvil vertical) -->
+    <div v-else class="hand-editor-content">
+      <PokerTable />
+      <CardPicker v-if="gameStore.isCardPickerOpen" />
+    </div>
+    
+    <!-- Overlay que pide girar el dispositivo (se muestra en móvil vertical) -->
+    <RotateDeviceOverlay class="rotate-device-prompt" />
 
     <ConfigurationModal
       v-if="showPositionModal"
       :positions="availablePositions"
       @confirm="handlePositionSelected"
     />
-
-    <CardPicker v-if="gameStore.isCardPickerOpen" />
   </div>
 </template>
 
@@ -4472,6 +5405,8 @@ import { useGameStore } from '../store/game';
 import PokerTable from '../components/PokerTable.vue';
 import ConfigurationModal from '../components/ConfigurationModal.vue';
 import CardPicker from '../components/CardPicker.vue';
+// Importamos el componente de overlay para la rotación
+import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 
 const gameStore = useGameStore();
 const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
@@ -4479,11 +5414,10 @@ const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
 const selectedPlayers = ref(6);
 const sbInput = ref(1);
 const bbInput = ref(2);
-const selectedCurrency = ref('$'); // Moneda por defecto
-const selectedSpecialRule = ref('Ninguno'); // Regla especial por defecto
-const selectedBombPotBB = ref(2); // Valor por defecto para Bomb Pot
+const selectedCurrency = ref('$');
+const selectedSpecialRule = ref('Ninguno');
+const selectedBombPotBB = ref(2);
 
-// --- LISTA AMPLIADA DE LAS 30 MONEDAS MÁS USADAS ---
 const currencies = ref([
   { symbol: '$', name: 'USD - Dólar estadounidense' },
   { symbol: '€', name: 'EUR - Euro' },
@@ -4609,7 +5543,6 @@ select, input[type="number"] {
   box-sizing: border-box;
   border-radius: 8px;
 }
-/* Aumentamos el ancho del selector de moneda para que quepa el texto */
 #currency-select {
   width: 350px;
   text-align: left;
@@ -4630,6 +5563,58 @@ button {
   font-weight: bold;
   border-radius: 8px;
   margin-top: 10px;
+}
+
+/* --- LÓGICA DE VISIBILIDAD PARA EL EDITOR DE MANOS --- */
+
+/* Por defecto, el prompt de rotación está oculto */
+.rotate-device-prompt {
+  display: none;
+}
+
+/* Media query para dispositivos táctiles (la mayoría de móviles y tablets) */
+@media (hover: none) and (pointer: coarse) {
+  /* Si el dispositivo está en vertical (portrait)... */
+  @media (orientation: portrait) {
+    /* ...mostramos el prompt de rotación... */
+    .rotate-device-prompt {
+      display: flex;
+    }
+    /* ...y ocultamos el contenido del editor. */
+    .hand-editor-content {
+      display: none;
+    }
+  }
+}
+
+/* --- ESTILOS RESPONSIVOS PARA EL PANEL DE CONFIGURACIÓN --- */
+@media screen and (max-width: 640px) {
+  .configuration-panel {
+    padding: 2rem;
+    margin: 2rem 1rem;
+    gap: 20px;
+  }
+  h2 {
+    font-size: 2rem;
+  }
+  .config-item {
+    width: 100%;
+  }
+  select, input[type="number"] {
+    width: 100%;
+    max-width: 350px;
+  }
+  .blinds-container {
+    flex-direction: column;
+    width: 100%;
+  }
+  .blinds-container .config-item,
+  .blinds-container input {
+    width: 100%;
+  }
+  button {
+    width: 100%;
+  }
 }
 </style>
 
@@ -4730,17 +5715,25 @@ button {
         </template>
       </div>
     </div>
-    <EndSessionModal v-if="showEndSessionModal" @confirm="handleConfirmEndSession" @cancel="showEndSessionModal = false" />
+    <EndSessionModal 
+      v-if="showEndSessionModal" 
+      @confirm="handleConfirmEndSession" 
+      @cancel="showEndSessionModal = false"
+      :is-saving="isSaving" 
+    />
   </div>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
+import { useAuthStore } from '../store/useAuthStore';
 import EndSessionModal from '../components/EndSessionModal.vue';
 
 const sessionStore = useSessionStore();
+const authStore = useAuthStore();
 const showEndSessionModal = ref(false);
+const isSaving = ref(false);
 
 const rebuyAmount = ref(null);
 const tipAmount = ref(null);
@@ -4764,9 +5757,17 @@ function handleAddExpense() {
     expenseAmount.value = null;
   }
 }
-function handleConfirmEndSession(finalStack) {
-  sessionStore.stopAndSaveSession(finalStack);
-  showEndSessionModal.value = false;
+
+async function handleConfirmEndSession(finalStack) {
+  isSaving.value = true;
+  try {
+    await sessionStore.stopAndSaveSession(finalStack);
+    showEndSessionModal.value = false;
+  } catch (error) {
+    alert(`Error al guardar la sesión: ${error.message}`);
+  } finally {
+    isSaving.value = false;
+  }
 }
 
 const formattedTime = computed(() => {
@@ -4782,18 +5783,18 @@ const formattedTime = computed(() => {
 .live-session-container {
   display: flex;
   justify-content: center;
-  padding: 3rem 1rem; /* Aumentamos padding vertical */
+  padding: 2rem 1rem;
 }
 .session-panel {
   width: 100%;
-  max-width: 950px; /* Ancho máximo aumentado */
+  max-width: 950px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-areas:
     "timer timer"
     "actions config"
     "controls controls";
-  gap: 2rem; /* Espacio entre paneles aumentado */
+  gap: 2rem;
 }
 
 /* --- Widgets --- */
@@ -4801,16 +5802,16 @@ const formattedTime = computed(() => {
   background-color: #2d3748;
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  padding: 2rem; /* Padding aumentado */
+  padding: 2rem;
 }
 .widget-header {
   display: flex;
   align-items: center;
-  gap: 12px; /* Espacio de header aumentado */
-  font-size: 1rem; /* Tamaño de letra de header aumentado */
+  gap: 12px;
+  font-size: 1rem;
   font-weight: bold;
   color: #a0aec0;
-  margin-bottom: 1.5rem; /* Margen inferior aumentado */
+  margin-bottom: 1.5rem;
   letter-spacing: 1px;
 }
 .timer-widget { grid-area: timer; }
@@ -4819,10 +5820,11 @@ const formattedTime = computed(() => {
 
 /* --- Timer Widget --- */
 .status-indicator {
-  width: 12px; /* Indicador más grande */
+  width: 12px;
   height: 12px;
   border-radius: 50%;
   background-color: #718096;
+  /* CORRECTION: Changed colon to a space */
   transition: background-color 0.3s ease;
 }
 .timer-widget:not(.on-break) .status-indicator {
@@ -4834,12 +5836,12 @@ const formattedTime = computed(() => {
 }
 @keyframes pulse {
   0% { box-shadow: 0 0 0 0 rgba(104, 211, 145, 0.7); }
-  70% { box-shadow: 0 0 0 12px rgba(104, 211, 145, 0); } /* Sombra de pulso más grande */
+  70% { box-shadow: 0 0 0 12px rgba(104, 211, 145, 0); }
   100% { box-shadow: 0 0 0 0 rgba(104, 211, 145, 0); }
 }
 .timer-display {
   font-family: 'Courier New', Courier, monospace;
-  font-size: clamp(3.5rem, 10vw, 6rem); /* Reloj mucho más grande */
+  font-size: clamp(3.5rem, 10vw, 6rem);
   font-weight: 700;
   color: #fff;
   text-align: center;
@@ -4852,21 +5854,21 @@ const formattedTime = computed(() => {
 .live-actions {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Espacio entre acciones aumentado */
+  gap: 1.5rem;
 }
 .action-group {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 1rem; /* Espacio entre input y botón aumentado */
+  gap: 1rem;
 }
 .action-group input {
-  padding: 15px; /* Inputs más grandes */
-  font-size: 1.1rem; /* Texto de input más grande */
+  padding: 15px;
+  font-size: 1.1rem;
   text-align: center;
 }
 .action-group button {
-  padding: 15px; /* Botones de acción más grandes */
-  font-size: 1rem; /* Texto de botón de acción más grande */
+  padding: 15px;
+  font-size: 1rem;
   background-color: #4A5568;
 }
 
@@ -4878,17 +5880,17 @@ const formattedTime = computed(() => {
 .config-fieldset:disabled { opacity: 0.6; }
 .config-grid {
   display: grid; grid-template-columns: 1fr 1fr; 
-  gap: 1.5rem; /* Espacio entre items de config aumentado */
+  gap: 1.5rem;
 }
 .config-item { display: flex; flex-direction: column; gap: 10px; }
 .config-item label { 
   font-weight: bold; 
-  font-size: 1.1rem; /* Labels más grandes */
+  font-size: 1.1rem;
   color: #a0aec0; 
 }
 .config-item input, .config-item select { 
-  font-size: 1.1rem; /* Inputs de config más grandes */
-  padding: 15px; /* Padding de inputs aumentado */
+  font-size: 1.1rem;
+  padding: 15px;
 }
 
 /* --- Main Controls --- */
@@ -4896,30 +5898,27 @@ const formattedTime = computed(() => {
   grid-area: controls;
   display: flex;
   justify-content: center;
-  gap: 1.5rem; /* Espacio entre botones principales aumentado */
+  gap: 1.5rem;
   margin-top: 1rem;
 }
 .main-controls button {
   display: flex; align-items: center; justify-content: center; gap: 12px;
-  font-size: 1.3rem; /* Texto de botones principales más grande */
+  font-size: 1.3rem;
   font-weight: bold; 
-  padding: 18px 30px; /* Botones principales más grandes */
-  border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
-  flex-grow: 1; max-width: 300px; /* Ancho máximo de botones aumentado */
+  padding: 18px 30px;
+  border-radius: 8px;
+  flex-grow: 1; max-width: 300px;
 }
 .main-controls button svg { 
-  width: 28px; /* Iconos más grandes */
+  width: 28px;
   height: 28px; 
 }
 .btn-play { background-color: #38a169; color: white; }
-.btn-play:hover { background-color: #2f855a; }
 .btn-pause { background-color: #dd6b20; color: white; }
-.btn-pause:hover { background-color: #c05621; }
 .btn-stop { background-color: #c53030; color: white; }
-.btn-stop:hover { background-color: #9b2c2c; }
 
 /* --- Media Queries for Responsiveness --- */
-@media (max-width: 768px) {
+@media (max-width: 820px) {
   .session-panel {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -4927,6 +5926,16 @@ const formattedTime = computed(() => {
       "actions"
       "config"
       "controls";
+    gap: 1.5rem;
+  }
+  .main-controls {
+    flex-direction: column;
+  }
+  .main-controls button {
+    max-width: none;
+  }
+  .config-grid {
+    grid-template-columns: 1fr; /* Apila los inputs de configuración */
   }
 }
 </style>
@@ -4939,12 +5948,9 @@ const formattedTime = computed(() => {
   <div class="saved-hands-container">
     <h2>Manos Guardadas</h2>
 
-    <!-- SECCIÓN DE FILTROS AÑADIDA -->
     <div class="filters-container">
       <div class="filter-group">
-        <label for="date-filter">Filtrar por Fecha:</label>
-        <input id="date-filter" type="date" v-model="selectedDate">
-        <button v-if="selectedDate" @click="selectedDate = ''" class="clear-btn">Limpiar</button>
+        <button v-if="selectedDate" @click="selectedDate = null" class="clear-btn">Mostrar Todas las Manos</button>
       </div>
       <div class="filter-group">
         <button @click="toggleHandStrengthSort" class="sort-btn">
@@ -4953,58 +5959,104 @@ const formattedTime = computed(() => {
       </div>
     </div>
 
-    <div v-if="filteredAndSortedHands.length === 0" class="no-hands">
-      No se encontraron manos que coincidan con los filtros.
+    <div v-if="isLoading" class="loading-message">
+      Cargando manos...
     </div>
-    <ul v-else class="hands-list">
-      <!-- El v-for ahora usa la nueva propiedad computada -->
-      <li v-for="hand in filteredAndSortedHands" :key="hand.id">
-        <div class="hand-info">
-          <span><strong>Fecha:</strong> {{ hand.date }}</span>
-          <span><strong>Hero:</strong> {{ hand.heroPosition }}</span>
-          <span><strong>Jugadores:</strong> {{ hand.numPlayers }}</span>
-        </div>
+    <div v-else-if="selectedDate && filteredAndSortedHands.length === 0" class="no-hands">
+      No se encontraron manos para la fecha seleccionada.
+    </div>
+    <div v-else-if="!selectedDate && groupedHands.length === 0" class="no-hands">
+      No se encontraron manos.
+    </div>
+    <div v-else-if="selectedDate" class="hands-container">
+      <ul class="hands-list">
+        <li v-for="hand in filteredAndSortedHands" :key="hand.id">
+          <div class="hand-info">
+            <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
+            <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
+            <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
+          </div>
 
-        <div class="hand-preview">
-          <!-- Se añade la clase 'hero-hand-preview' para aplicar el estilo -->
-          <div class="card-group hero-hand-preview">
-            <span class="group-label">Hero</span>
-            <div class="cards-display">
-              <template v-if="getHeroFromHand(hand)?.cards">
-                <PlayingCard v-for="(card, index) in getHeroFromHand(hand).cards" :key="`hero-${card}-${index}`" :cardId="card" />
-              </template>
+          <div class="hand-preview">
+            <div class="card-group hero-hand-preview">
+              <span class="group-label">Hero</span>
+              <div class="cards-display">
+                <template v-if="getHeroFromHand(hand)?.cards">
+                  <PlayingCard v-for="(card, index) in getHeroFromHand(hand).cards" :key="`hero-${card}-${index}`" :cardId="card" />
+                </template>
+              </div>
+            </div>
+            <div class="card-group">
+              <span class="group-label">Board</span>
+              <div class="cards-display">
+                <template v-if="getBoardFromHand(hand).length > 0">
+                  <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
+                </template>
+              </div>
             </div>
           </div>
-          <div class="card-group">
-            <span class="group-label">Board</span>
-            <div class="cards-display">
-              <template v-if="getBoardFromHand(hand).length > 0">
-                <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
-              </template>
-            </div>
+
+          <div class="hand-actions">
+            <button @click="loadHandForReplay(hand)">Cargar Replay</button>
+            <button class="delete-btn" @click="confirmDelete(hand.id)">Eliminar</button>
           </div>
-        </div>
+        </li>
+      </ul>
+    </div>
+    <div v-else class="grouped-hands-container">
+      <div v-for="group in groupedHands" :key="group.date" class="date-group">
+        <h3 @click="selectedDate = group.date" class="date-header">{{ new Date(group.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}</h3>
+        <ul class="hands-list">
+          <li v-for="hand in group.hands" :key="hand.id">
+            <div class="hand-info">
+              <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
+              <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
+              <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
+            </div>
 
-        <div class="hand-actions">
-          <button @click="loadHandForReplay(hand)">Cargar Replay</button>
-          <button class="delete-btn" @click="confirmDelete(hand.id)">Eliminar</button>
-        </div>
-      </li>
-    </ul>
+            <div class="hand-preview">
+              <div class="card-group hero-hand-preview">
+                <span class="group-label">Hero</span>
+                <div class="cards-display">
+                  <template v-if="getHeroFromHand(hand)?.cards">
+                    <PlayingCard v-for="(card, index) in getHeroFromHand(hand).cards" :key="`hero-${card}-${index}`" :cardId="card" />
+                  </template>
+                </div>
+              </div>
+              <div class="card-group">
+                <span class="group-label">Board</span>
+                <div class="cards-display">
+                  <template v-if="getBoardFromHand(hand).length > 0">
+                    <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
+                  </template>
+                </div>
+              </div>
+            </div>
 
-    <!-- Confirmation Modal -->
+            <div class="hand-actions">
+              <button @click="loadHandForReplay(hand)">Cargar Replay</button>
+              <button class="delete-btn" @click="confirmDelete(hand.id)">Eliminar</button>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div v-if="gameStore.hasMore && !selectedDate" class="load-more-container">
+      <button @click="gameStore.loadMoreHands(selectedDate)">Cargar Más</button>
+    </div>
+
     <div v-if="showModal" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <h3>Confirmar Eliminación</h3>
         <p>¿Está seguro de que desea eliminar esta mano?</p>
         <div class="modal-actions">
           <button class="cancel-btn" @click="closeModal">No</button>
-          <button class="confirm-btn" @click="deleteHand">Sí</button>
+          <button class="confirm-btn" @click="deleteAndClose">Sí</button>
         </div>
       </div>
     </div>
 
-    <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
       <div class="toast-icon">✓</div>
       <div class="toast-message">Mano eliminada con éxito</div>
@@ -5015,23 +6067,23 @@ const formattedTime = computed(() => {
 <script setup>
 import { ref, computed } from 'vue';
 import { useGameStore } from '../store/game'
+import { useAuthStore } from '../store/useAuthStore'
 import PlayingCard from '../components/PlayingCard.vue';
 
 const gameStore = useGameStore();
+const authStore = useAuthStore();
 const emit = defineEmits(['switch-view']);
 
-const selectedDate = ref('');
+const isLoading = computed(() => !authStore.isInitialized);
+
+const selectedDate = ref(null);
 const sortKey = ref('date');
 
-// --- ESTADO PARA EL MODAL Y TOAST ---
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedHandId = ref(null);
 
-// --- LÓGICA DE RANKING DE MANOS CORREGIDA ---
-const HAND_STRENGTH_MAP = {
-  'AA': 1, 'KK': 2, 'QQ': 3, 'AKs': 4, 'JJ': 5, 'AQs': 6, 'KQs': 7, 'AJs': 8, 'KJs': 9, 'TT': 10, 'AKo': 11, 'ATs': 12, 'QJs': 13, 'KTs': 14, 'QTs': 15, 'JTs': 16, '99': 17, 'AQo': 18, 'A9s': 19, 'K9s': 20, 'Q9s': 21, 'J9s': 22, 'T9s': 23, 'A8s': 24, '88': 25, 'K8s': 26, 'Q8s': 27, 'J8s': 28, 'AJo': 29, 'A5s': 30, 'T8s': 31, '98s': 32, 'A7s': 33, 'A4s': 34, 'K7s': 35, '77': 36, 'A3s': 37, 'Q7s': 38, 'A6s': 39, 'KJo': 40, 'A2s': 41, 'K6s': 42, '87s': 43, 'T7s': 44, 'K5s': 45, '66': 46, 'ATo': 47, 'J7s': 48, 'Q6s': 49, 'K4s': 50, '97s': 51, '76s': 52, 'K3s': 53, 'Q5s': 54, '55': 55, 'K2s': 56, 'J6s': 57, 'T6s': 58, 'Q4s': 59, '86s': 60, 'Q3s': 61, '65s': 62, 'KTo': 63, 'A9o': 64, 'Q2s': 65, '44': 66, 'J5s': 67, '96s': 68, 'J4s': 69, '75s': 70, 'QJo': 71, 'A8o': 72, 'T5s': 73, 'J3s': 74, '54s': 75, '85s': 76, 'K9o': 77, 'Q9o': 78, '33': 79, 'J2s': 80, '64s': 81, 'T4s': 82, 'J9o': 83, 'T9o': 84, 'A7o': 85, 'K8o': 86, '95s': 87, '22': 88, '74s': 89, 'T3s': 90, '53s': 91, 'Q8o': 92, 'A5o': 93, '84s': 94, 'A4o': 95, 'K7o': 96, 'J8o': 97, 'T2s': 98, 'A6o': 99, '98o': 100, '43s': 101, 'A3o': 102, 'K6o': 103, '63s': 104, 'T8o': 105, 'A2o': 106, 'Q7o': 107, 'J7o': 108, 'K5o': 109, '87o': 110, '52s': 111, 'K4o': 112, 'T7o': 113, '76o': 114, 'Q6o': 115, '94s': 116, 'K3o': 117, 'J6o': 118, '83s': 119, 'K2o': 120, 'Q5o': 121, '97o': 122, '73s': 123, '42s': 124, 'T6o': 125, '65o': 126, 'Q4o': 127, 'J5o': 128, '86o': 129, 'Q3o': 130, 'J4o': 131, '96o': 132, '75o': 133, 'T5o': 134, 'Q2o': 135, '62s': 136, 'J3o': 137, '82s': 138, '54o': 139, '85o': 140, 'J2o': 141, '93s': 142, 'T4o': 143, '64o': 144, '95o': 145, '72s': 146, 'T3o': 147, '74o': 148, '53o': 149, '84o': 150, 'T2o': 151, '43o': 152, '92s': 153, '63o': 154, '83o': 155, '73o': 156, '52o': 157, '94o': 158, '42o': 159, '82o': 160, '62o': 161, '93o': 162, '72o': 163, '92o': 164
-};
+const HAND_STRENGTH_MAP = { 'AA': 1, 'KK': 2, 'QQ': 3, 'AKs': 4, 'JJ': 5, 'AQs': 6, 'KQs': 7, 'AJs': 8, 'KJs': 9, 'TT': 10, 'AKo': 11, 'ATs': 12, 'QJs': 13, 'KTs': 14, 'QTs': 15, 'JTs': 16, '99': 17, 'AQo': 18, 'A9s': 19, 'K9s': 20, 'Q9s': 21, 'J9s': 22, 'T9s': 23, 'A8s': 24, '88': 25, 'K8s': 26, 'Q8s': 27, 'J8s': 28, 'AJo': 29, 'A5s': 30, 'T8s': 31, '98s': 32, 'A7s': 33, 'A4s': 34, 'K7s': 35, '77': 36, 'A3s': 37, 'Q7s': 38, 'A6s': 39, 'KJo': 40, 'A2s': 41, 'K6s': 42, '87s': 43, 'T7s': 44, 'K5s': 45, '66': 46, 'ATo': 47, 'J7s': 48, 'Q6s': 49, 'K4s': 50, '97s': 51, '76s': 52, 'K3s': 53, 'Q5s': 54, '55': 55, 'K2s': 56, 'J6s': 57, 'T6s': 58, 'Q4s': 59, '86s': 60, 'Q3s': 61, '65s': 62, 'KTo': 63, 'A9o': 64, 'Q2s': 65, '44': 66, 'J5s': 67, '96s': 68, 'J4s': 69, '75s': 70, 'QJo': 71, 'A8o': 72, 'T5s': 73, 'J3s': 74, '54s': 75, '85s': 76, 'K9o': 77, 'Q9o': 78, '33': 79, 'J2s': 80, '64s': 81, 'T4s': 82, 'J9o': 83, 'T9o': 84, 'A7o': 85, 'K8o': 86, '95s': 87, '22': 88, '74s': 89, 'T3s': 90, '53s': 91, 'Q8o': 92, 'A5o': 93, '84s': 94, 'A4o': 95, 'K7o': 96, 'J8o': 97, 'T2s': 98, 'A6o': 99, '98o': 100, '43s': 101, 'A3o': 102, 'K6o': 103, '63s': 104, 'T8o': 105, 'A2o': 106, 'Q7o': 107, 'J7o': 108, 'K5o': 109, '87o': 110, '52s': 111, 'K4o': 112, 'T7o': 113, '76o': 114, 'Q6o': 115, '94s': 116, 'K3o': 117, 'J6o': 118, '83s': 119, 'K2o': 120, 'Q5o': 121, '97o': 122, '73s': 123, '42s': 124, 'T6o': 125, '65o': 126, 'Q4o': 127, 'J5o': 128, '86o': 129, 'Q3o': 130, 'J4o': 131, '96o': 132, '75o': 133, 'T5o': 134, 'Q2o': 135, '62s': 136, 'J3o': 137, '82s': 138, '54o': 139, '85o': 140, 'J2o': 141, '93s': 142, 'T4o': 143, '64o': 144, '95o': 145, '72s': 146, 'T3o': 147, '74o': 148, '53o': 149, '84o': 150, 'T2o': 151, '43o': 152, '92s': 153, '63o': 154, '83o': 155, '73o': 156, '52o': 157, '94o': 158, '42o': 159, '82o': 160, '62o': 161, '93o': 162, '72o': 163, '92o': 164, };
 const RANK_ORDER = 'AKQJT98765432';
 
 function getHandRank(cards) {
@@ -5048,82 +6100,41 @@ function getHandRank(cards) {
   return HAND_STRENGTH_MAP[handKey] || 999;
 }
 
+const groupedHands = computed(() => {
+  const groups = {};
+  gameStore.savedHands.forEach(hand => {
+    const date = hand.fecha.split('T')[0];
+    if (!groups[date]) groups[date] = [];
+    groups[date].push(hand);
+  });
+  const sortedDates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
+  return sortedDates.map(date => ({ date, hands: groups[date] }));
+});
+
 const filteredAndSortedHands = computed(() => {
   let hands = [...gameStore.savedHands];
-
   if (selectedDate.value) {
-    hands = hands.filter(hand => {
-      const dateString = hand.date.split(',')[0];
-      const parts = dateString.split('/');
-      const year = parts[2];
-      const month = parts[1].padStart(2, '0');
-      const day = parts[0].padStart(2, '0');
-      const handDateYYYYMMDD = `${year}-${month}-${day}`;
-      
-      return handDateYYYYMMDD === selectedDate.value;
-    });
+    hands = hands.filter(hand => hand.fecha.split('T')[0] === selectedDate.value);
   }
-
   if (sortKey.value === 'strength') {
-    hands.sort((a, b) => {
-      const heroA = getHeroFromHand(a);
-      const heroB = getHeroFromHand(b);
-      const rankA = getHandRank(heroA?.cards);
-      const rankB = getHandRank(heroB?.cards);
-      return rankA - rankB;
-    });
+    hands.sort((a, b) => getHandRank(getHeroFromHand(a)?.cards) - getHandRank(getHeroFromHand(b)?.cards));
   } else {
-    // --- ÚNICO CAMBIO REALIZADO AQUÍ ---
-    // Orden por defecto: las más nuevas primero.
-    // Se asegura de parsear correctamente el formato DD/MM/YYYY para la comparación.
-    hands.sort((a, b) => {
-        const dateA = new Date(a.date.replace(/(\d+)\/(\d+)\/(\d+)/, '$2/$1/$3'));
-        const dateB = new Date(b.date.replace(/(\d+)\/(\d+)\/(\d+)/, '$2/$1/$3'));
-        return dateB - dateA;
-    });
+    hands.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   }
-
   return hands;
 });
 
-function toggleHandStrengthSort() {
-  sortKey.value = sortKey.value === 'strength' ? 'date' : 'strength';
-}
-
-function loadHandForReplay(hand) {
-  gameStore.loadHand(hand);
-  emit('switch-view', 'CurrentHandView');
-}
-
-function getHeroFromHand(hand) {
-  if (!hand.history || hand.history.length === 0) return null;
-  const finalState = hand.history[hand.history.length - 1];
-  return finalState.players.find(p => p.name === 'Hero');
-}
-
-function getBoardFromHand(hand) {
-  if (!hand.history || hand.history.length === 0) return [];
-  const finalState = hand.history[hand.history.length - 1];
-  return finalState.board.filter(card => card);
-}
-
-function confirmDelete(handId) {
-  selectedHandId.value = handId;
-  showModal.value = true;
-}
-
-function closeModal() {
-  showModal.value = false;
-  selectedHandId.value = null;
-}
-
-function deleteHand() {
+function toggleHandStrengthSort() { sortKey.value = sortKey.value === 'strength' ? 'date' : 'strength'; }
+function loadHandForReplay(hand) { gameStore.loadHand(hand); emit('switch-view', 'CurrentHandView'); }
+function getHeroFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return null; const finalState = hand.historial[hand.historial.length - 1]; return finalState.players.find(p => p.name === 'Hero'); }
+function getBoardFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board.filter(card => card); }
+function confirmDelete(handId) { selectedHandId.value = handId; showModal.value = true; }
+function closeModal() { showModal.value = false; selectedHandId.value = null; }
+async function deleteAndClose() {
   if (selectedHandId.value) {
-    gameStore.deleteHand(selectedHandId.value);
+    await gameStore.deleteHand(selectedHandId.value);
     showToast.value = true;
-    setTimeout(() => {
-      showToast.value = false;
-    }, 3000);
+    setTimeout(() => { showToast.value = false; }, 3000);
     closeModal();
   }
 }
@@ -5131,11 +6142,11 @@ function deleteHand() {
 
 <style scoped>
 .saved-hands-container {
-  padding: 2rem;
+  padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
 }
-.no-hands {
+.loading-message, .no-hands {
   margin-top: 2rem;
   text-align: center;
   color: #a0aec0;
@@ -5157,9 +6168,8 @@ function deleteHand() {
   justify-content: space-between;
   align-items: center;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
-
-/* --- NUEVOS ESTILOS PARA LOS FILTROS --- */
 .filters-container {
   background-color: #2d3748;
   padding: 1rem 1.5rem;
@@ -5191,21 +6201,77 @@ function deleteHand() {
 .clear-btn {
   background-color: #718096;
 }
-
-/* --- (Estilos existentes sin cambios) --- */
-.hand-info { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; flex-basis: 200px; flex-shrink: 0; }
-.hand-actions { display: flex; gap: 0.5rem; }
-.hand-preview { display: flex; flex-grow: 1; justify-content: flex-start; align-items: center; gap: 2rem; }
-.card-group { display: flex; align-items: center; gap: 10px; }
-.group-label { font-weight: bold; font-size: 1.1rem; color: #a0aec0; }
-.cards-display { display: flex; gap: 5px; }
-.cards-display :deep(.playing-card) { width: 45px; height: 63px; border-radius: 4px; }
-.cards-display :deep(.rank) { font-size: 1.5rem; }
-.cards-display :deep(.suit-icon) { font-size: 1rem; }
-.delete-btn { background-color: #c53030; }
-.delete-btn:hover { background-color: #9b2c2c; }
-
-/* Modal Styles */
+.date-header {
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #4A5568;
+}
+.date-header:hover {
+  color: #e2e8f0;
+}
+.grouped-hands-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+.date-group {
+  border: 1px solid #4A5568;
+  border-radius: 8px;
+  padding: 1rem;
+}
+.hand-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex-basis: 200px;
+  flex-shrink: 0;
+}
+.hand-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.hand-preview {
+  display: flex;
+  flex-grow: 1;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 2rem;
+}
+.card-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.group-label {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #a0aec0;
+}
+.cards-display {
+  display: flex;
+  gap: 5px;
+}
+.cards-display :deep(.playing-card) {
+  width: 45px;
+  height: 63px;
+  border-radius: 4px;
+}
+.cards-display :deep(.rank) {
+  font-size: 1.5rem;
+}
+.cards-display :deep(.suit-icon) {
+  font-size: 1rem;
+}
+.delete-btn {
+  background-color: #c53030;
+}
+.delete-btn:hover {
+  background-color: #9b2c2c;
+}
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -5218,7 +6284,6 @@ function deleteHand() {
   align-items: center;
   z-index: 1000;
 }
-
 .modal-content {
   background-color: #2d3748;
   border-radius: 12px;
@@ -5228,25 +6293,21 @@ function deleteHand() {
   text-align: center;
   border: 1px solid var(--border-color);
 }
-
 .modal-content h3 {
   margin: 0 0 1rem 0;
   font-size: 1.5rem;
   color: white;
 }
-
 .modal-content p {
   margin: 0 0 2rem 0;
   color: #a0aec0;
   font-size: 1.1rem;
 }
-
 .modal-actions {
   display: flex;
   gap: 1rem;
   justify-content: center;
 }
-
 .cancel-btn, .confirm-btn {
   padding: 10px 20px;
   border: none;
@@ -5255,26 +6316,20 @@ function deleteHand() {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
 .cancel-btn {
   background-color: #4A5568;
   color: white;
 }
-
 .cancel-btn:hover {
   background-color: #2D3748;
 }
-
 .confirm-btn {
   background-color: #c53030;
   color: white;
 }
-
 .confirm-btn:hover {
   background-color: #9b2c2c;
 }
-
-/* Toast Styles */
 .toast {
   position: fixed;
   top: 20px;
@@ -5288,22 +6343,18 @@ function deleteHand() {
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
 }
-
 .success-toast {
   background-color: #38a169;
   color: white;
 }
-
 .toast-icon {
   font-size: 1.5rem;
   font-weight: bold;
 }
-
 .toast-message {
   font-size: 1rem;
   font-weight: bold;
 }
-
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -5314,23 +6365,59 @@ function deleteHand() {
     opacity: 1;
   }
 }
-
-/* --- ESTILOS ADITIVOS PARA EL HALO DEL HERO EN LA LISTA --- */
 .hero-hand-preview {
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid #68d391; /* Color de borde verde */
+  border: 1px solid #68d391;
   animation: hero-glow-list 2s infinite ease-in-out;
 }
-
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+.load-more-container button {
+  padding: 10px 20px;
+  background-color: #4A5568;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.load-more-container button:hover {
+  background-color: #2D3748;
+}
 @keyframes hero-glow-list {
   0%, 100% {
-    background-color: rgba(104, 211, 145, 0.05); /* Fondo verde muy sutil */
-    box-shadow: 0 0 5px rgba(104, 211, 145, 0.5); /* Sombra verde */
+    background-color: rgba(104, 211, 145, 0.05);
+    box-shadow: 0 0 5px rgba(104, 211, 145, 0.5);
   }
   50% {
-    background-color: rgba(104, 211, 145, 0.15); /* Fondo verde más intenso */
-    box-shadow: 0 0 12px rgba(104, 211, 145, 0.8); /* Sombra verde más intensa */
+    background-color: rgba(104, 211, 145, 0.15);
+    box-shadow: 0 0 12px rgba(104, 211, 145, 0.8);
+  }
+}
+
+@media (max-width: 768px) {
+  .hands-list li {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .hand-info {
+    flex-direction: row;
+    justify-content: space-between;
+    flex-basis: auto;
+    width: 100%;
+    font-size: 0.9rem;
+  }
+  .hand-preview {
+    justify-content: space-around;
+    width: 100%;
+  }
+  .hand-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }
 </style>
@@ -5343,7 +6430,6 @@ function deleteHand() {
   <div class="saved-sessions-container">
     <h2>Sesiones Guardadas</h2>
 
-    <!-- SECCIÓN DE FILTROS AÑADIDA -->
     <div class="filters-container">
       <label for="date-range-filter">Mostrar Sesiones de:</label>
       <select id="date-range-filter" v-model="selectedFilter">
@@ -5357,35 +6443,41 @@ function deleteHand() {
       </select>
     </div>
 
+    <!-- ESTADO DE CARGA -->
+    <div v-if="isLoading" class="loading-message">
+      Cargando sesiones...
+    </div>
+    
     <!-- MENSAJE Y LISTA AHORA USAN LA PROPIEDAD COMPUTADA 'filteredSessions' -->
-    <div v-if="filteredSessions.length === 0" class="no-sessions">
+    <div v-else-if="filteredSessions.length === 0" class="no-sessions">
       No tienes sesiones guardadas que coincidan con el filtro seleccionado.
     </div>
     <ul v-else class="sessions-list">
       <li v-for="session in filteredSessions" :key="session.id">
         
         <div class="session-header">
-          <span class="location">{{ session.location || 'Partida Privada' }}</span>
-          <span class="date">{{ session.date }}</span>
+          <span class="location">{{ session.ubicacion || 'Partida Privada' }}</span>
+          <!-- Formateamos la fecha que viene de la base de datos -->
+          <span class="date">{{ new Date(session.fecha + 'T12:00:00').toLocaleDateString() }}</span>
         </div>
         
-        <div class="session-result" :class="getResultClass(session.result)">
+        <div class="session-result" :class="getResultClass(session.resultado)">
           <span>Resultado</span>
           <span class="result-amount">
-            {{ formatResult(session.result, session.currency) }}
+            {{ formatResult(session.resultado, session.moneda) }}
           </span>
         </div>
 
         <div class="session-details">
           <div class="session-stats">
-            <div class="stat-item"><strong>Duración:</strong> <span>{{ formatDuration(session.duration) }}</span></div>
-            <div class="stat-item"><strong>Descansos:</strong> <span>{{ formatDuration(session.totalBreakTime) }}</span></div>
-            <div class="stat-item"><strong>Ciegas:</strong> <span>{{ session.blinds }}</span></div>
-            <div class="stat-item"><strong>Jugadores:</strong> <span>{{ session.playerCount }}</span></div>
-            <div class="stat-item"><strong>Buy-in:</strong> <span>{{ session.currency }}{{ session.initialStack }}</span></div>
-            <div class="stat-item"><strong>Recargas:</strong> <span>{{ session.currency }}{{ session.totalRebuys || 0 }}</span></div>
-            <div class="stat-item"><strong>Gastos:</strong> <span>-{{ session.currency }}{{ session.totalExpenses || 0 }}</span></div>
-            <div class="stat-item"><strong>Stack Final:</strong> <span>{{ session.currency }}{{ session.finalStack !== undefined ? session.finalStack : 'N/A' }}</span></div>
+            <div class="stat-item"><strong>Duración:</strong> <span>{{ formatDuration(session.duracion_segundos) }}</span></div>
+            <div class="stat-item"><strong>Descansos:</strong> <span>{{ formatDuration(session.tiempo_descanso_segundos) }}</span></div>
+            <div class="stat-item"><strong>Ciegas:</strong> <span>{{ session.ciegas }}</span></div>
+            <div class="stat-item"><strong>Jugadores:</strong> <span>{{ session.cantidad_jugadores }}</span></div>
+            <div class="stat-item"><strong>Buy-in:</strong> <span>{{ session.moneda }}{{ session.stack_inicial }}</span></div>
+            <div class="stat-item"><strong>Recargas:</strong> <span>{{ session.moneda }}{{ session.total_recompras || 0 }}</span></div>
+            <div class="stat-item"><strong>Gastos:</strong> <span>-{{ session.moneda }}{{ session.total_gastos || 0 }}</span></div>
+            <div class="stat-item"><strong>Stack Final:</strong> <span>{{ session.moneda }}{{ session.stack_final !== undefined ? session.stack_final : 'N/A' }}</span></div>
           </div>
         </div>
 
@@ -5407,7 +6499,7 @@ function deleteHand() {
          <p>¿Estás seguro de que deseas eliminar esta sesión?</p>
          <div class="modal-actions">
            <button class="cancel-btn" @click="closeModal">No</button>
-           <button class="confirm-btn" @click="deleteSession">Sí</button>
+           <button class="confirm-btn" @click="deleteAndClose">Sí</button>
          </div>
        </div>
      </div>
@@ -5433,25 +6525,27 @@ function deleteHand() {
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'; // <-- IMPORTAR ref Y computed
+import { ref, computed, onMounted } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
 
 const sessionStore = useSessionStore();
-
-// --- NUEVO ESTADO LOCAL PARA EL FILTRO ---
+const isLoading = ref(true);
 const selectedFilter = ref('all');
-
-// --- ESTADO PARA EL MODAL Y TOAST ---
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedSessionId = ref(null);
 
-// --- ESTADO PARA EL MODAL DE NOTAS ---
 const showNotesModal = ref(false);
 const sessionNotes = ref('');
 const notesSessionId = ref(null);
 
-// --- NUEVA PROPIEDAD COMPUTADA PARA FILTRAR LAS SESIONES ---
+// Cargar sesiones al montar el componente
+onMounted(async () => {
+  isLoading.value = true;
+  await sessionStore.fetchSessions();
+  isLoading.value = false;
+});
+
 const filteredSessions = computed(() => {
   const filter = selectedFilter.value;
   const allSessions = sessionStore.savedSessions;
@@ -5463,7 +6557,6 @@ const filteredSessions = computed(() => {
   const now = new Date();
   const cutoffDate = new Date();
 
-  // Establecer la fecha de corte según el filtro seleccionado
   switch (filter) {
     case 'today':
       cutoffDate.setHours(0, 0, 0, 0);
@@ -5486,9 +6579,8 @@ const filteredSessions = computed(() => {
   }
 
   return allSessions.filter(session => {
-    // Parsea la fecha en formato DD/MM/YYYY para que sea comparable
-    const parts = session.date.split('/');
-    const sessionDate = new Date(parts[2], parts[1] - 1, parts[0]);
+    // La fecha de la DB (YYYY-MM-DD) se convierte a objeto Date para comparar
+    const sessionDate = new Date(session.fecha);
     return sessionDate >= cutoffDate;
   });
 });
@@ -5505,18 +6597,20 @@ function formatDuration(totalSeconds) {
 }
 
 function getResultClass(result) {
-  if (typeof result !== 'number') return 'even';
-  if (result > 0) return 'profit';
-  if (result < 0) return 'loss';
+  const numResult = parseFloat(result);
+  if (isNaN(numResult)) return 'even';
+  if (numResult > 0) return 'profit';
+  if (numResult < 0) return 'loss';
   return 'even';
 }
 
 function formatResult(result, currency) {
-  if (typeof result !== 'number') {
+  const numResult = parseFloat(result);
+  if (isNaN(numResult)) {
     return 'N/A';
   }
-  const prefix = result >= 0 ? '+' : '';
-  return `${prefix}${currency}${result.toFixed(2)}`;
+  const prefix = numResult >= 0 ? '+' : '';
+  return `${prefix}${currency}${numResult.toFixed(2)}`;
 }
 
 function confirmDelete(sessionId) {
@@ -5529,9 +6623,9 @@ function closeModal() {
   selectedSessionId.value = null;
 }
 
-function deleteSession() {
+async function deleteAndClose() {
   if (selectedSessionId.value) {
-    sessionStore.deleteSession(selectedSessionId.value);
+    await sessionStore.deleteSession(selectedSessionId.value);
     showToast.value = true;
     setTimeout(() => {
       showToast.value = false;
@@ -5562,11 +6656,15 @@ function saveNotes() {
 
 <style scoped>
 .saved-sessions-container {
-  padding: 2rem;
+  padding: 1rem; /* Padding base para móvil */
   max-width: 700px;
   margin: 0 auto;
 }
-.no-sessions {
+h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.loading-message, .no-sessions {
   margin-top: 1rem;
   color: #a0aec0;
   font-size: 1.2rem;
@@ -5580,8 +6678,6 @@ function saveNotes() {
   flex-direction: column;
   gap: 2rem;
 }
-
-/* --- NUEVOS ESTILOS PARA LA BARRA DE FILTROS --- */
 .filters-container {
   background-color: #2d3748;
   padding: 1rem 1.5rem;
@@ -5605,158 +6701,141 @@ function saveNotes() {
   border-radius: 6px;
   color: white;
 }
-
-/* --- (Estilos existentes sin cambios) --- */
-.sessions-list li { background-color: #2d3748; padding: 1.5rem 2rem; border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 1.5rem; }
-.session-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #4a5568; padding-bottom: 1rem; }
-.location { font-size: 1.8rem; font-weight: 700; }
-.date { font-size: 1rem; color: #a0aec0; flex-shrink: 0; margin-left: 1rem; }
-.session-result { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.5rem; border-radius: 8px; text-align: center; }
-.session-result span:first-child { font-size: 1.1rem; opacity: .8; margin-bottom: .5rem; text-transform: uppercase; letter-spacing: 1px; }
-.result-amount { font-size: 2.8rem; font-weight: 700; }
+.sessions-list li {
+  background-color: #2d3748;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1px solid #4a5568;
+  padding-bottom: 1rem;
+}
+.location {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.date {
+  font-size: 1rem;
+  color: #a0aec0;
+  flex-shrink: 0;
+  margin-left: 1rem;
+}
+.session-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+.session-result span:first-child {
+  font-size: 1.1rem;
+  opacity: .8;
+  margin-bottom: .5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.result-amount {
+  font-size: 2.8rem;
+  font-weight: 700;
+}
 .profit { background-color: rgba(47, 133, 90, .3); color: #68d391; }
 .loss { background-color: rgba(197, 48, 48, .3); color: #fc8181; }
 .even { background-color: rgba(74, 85, 104, .3); color: #a0aec0; }
-.session-stats { display: grid; grid-template-columns: 1fr; gap: 1rem; }
-.stat-item { display: flex; justify-content: space-between; align-items: center; font-size: 1.3rem; padding: 0.5rem 0; border-bottom: 1px solid #3c485e; }
-.stat-item:last-child { border-bottom: none; }
-.stat-item strong { color: #a0aec0; margin-right: 1rem; }
-.stat-item span { font-weight: bold; }
-.session-actions { display: flex; justify-content: space-between; margin-top: 1rem; }
-.notes-btn { background-color: #48bb78; padding: 12px; font-size: 1.1rem; border: none; border-radius: 6px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.notes-btn:hover { background-color: #38a169; }
-.notes-btn svg { width: 20px; height: 20px; }
-.delete-btn { background-color: #c53030; padding: 12px 25px; font-size: 1.1rem; width: 100%; max-width: 300px; }
-.delete-btn:hover { background-color: #9b2c2c; }
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+.session-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 columnas por defecto */
+  gap: 0.5rem 1.5rem;
+}
+.stat-item {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  z-index: 1000;
+  font-size: 1.1rem; /* Tamaño de fuente base */
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #3c485e;
 }
-
-.modal-content {
-  background-color: #2d3748;
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  border: 1px solid var(--border-color);
+.stat-item:last-child {
+  border-bottom: none;
 }
-
-.modal-content h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-  color: white;
-}
-
-.modal-content p {
-  margin: 0 0 2rem 0;
+.stat-item strong {
   color: #a0aec0;
+  margin-right: 1rem;
+}
+.stat-item span {
+  font-weight: bold;
+}
+.session-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+}
+.notes-btn {
+  background-color: #48bb78;
+  padding: 12px;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.notes-btn:hover { background-color: #38a169; }
+.notes-btn svg {
+  width: 20px;
+  height: 20px;
+}
+.delete-btn {
+  background-color: #c53030;
+  padding: 12px 25px;
   font-size: 1.1rem;
 }
+.delete-btn:hover { background-color: #9b2c2c; }
 
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
+/* (Resto del CSS para modales y toast sin cambios) */
+.modal-overlay,.toast{position:fixed;z-index:1000}.modal-overlay{top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.5);display:flex;justify-content:center;align-items:center}.modal-content{background-color:#2d3748;border-radius:12px;padding:2rem;max-width:400px;width:90%;text-align:center;border:1px solid var(--border-color)}.modal-content h3{margin:0 0 1rem;font-size:1.5rem;color:#fff}.modal-content p{margin:0 0 2rem;color:#a0aec0;font-size:1.1rem}.modal-actions{display:flex;gap:1rem;justify-content:center}.cancel-btn,.confirm-btn{padding:10px 20px;border:none;border-radius:6px;font-size:1rem;cursor:pointer;transition:background-color .2s ease}.cancel-btn{background-color:#4A5568;color:#fff}.confirm-btn{background-color:#c53030;color:#fff}.notes-modal textarea{width:100%;padding:10px;border:1px solid var(--border-color);border-radius:6px;background-color:#1a202c;color:#fff;font-family:inherit;font-size:1rem;resize:vertical;margin-bottom:1rem}.notes-modal .confirm-btn{background-color:#48bb78}.toast{top:20px;right:20px;display:flex;align-items:center;gap:10px;padding:15px 20px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.3);animation:slideIn .3s ease-out}.success-toast{background-color:#38a169;color:#fff}.toast-icon{font-size:1.5rem;font-weight:700}.toast-message{font-size:1rem;font-weight:700}@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
-.cancel-btn, .confirm-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.cancel-btn {
-  background-color: #4A5568;
-  color: white;
-}
-
-.cancel-btn:hover {
-  background-color: #2D3748;
-}
-
-.confirm-btn {
-  background-color: #c53030;
-  color: white;
-}
-
-.confirm-btn:hover {
-  background-color: #9b2c2c;
-}
-
-.notes-modal textarea {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background-color: #1a202c;
-  color: white;
-  font-family: inherit;
-  font-size: 1rem;
-  resize: vertical;
-  margin-bottom: 1rem;
-}
-
-.notes-modal .confirm-btn {
-  background-color: #48bb78;
-}
-
-.notes-modal .confirm-btn:hover {
-  background-color: #38a169;
-}
-
-/* Toast Styles */
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-}
-
-.success-toast {
-  background-color: #38a169;
-  color: white;
-}
-
-.toast-icon {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.toast-message {
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+@media (max-width: 640px) {
+  .saved-sessions-container {
+    padding: 1rem 0.5rem;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+  .sessions-list li {
+    padding: 1rem;
+  }
+  .location {
+    font-size: 1.2rem;
+  }
+  .date {
+    font-size: 0.8rem;
+  }
+  .result-amount {
+    font-size: 2.2rem;
+  }
+  .session-stats {
+    grid-template-columns: 1fr; /* Cambia a 1 columna */
+    gap: 0.25rem;
+  }
+  .stat-item {
+    font-size: 1rem; /* Reduce fuente en móvil */
+    padding: 0.4rem 0;
+  }
+  .session-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch; /* Estira los elementos para que ocupen el ancho */
+  }
+  .session-actions button {
+    width: 100%;
+    justify-content: center;
   }
 }
 </style>
@@ -5768,15 +6847,19 @@ function saveNotes() {
 <template>
   <div class="saved-trips-container">
     <h2>Viajes Guardados</h2>
-    <div v-if="tripStore.savedTrips.length === 0" class="no-trips">
+
+    <div v-if="isLoading" class="loading-message">
+      Cargando viajes...
+    </div>
+    <div v-else-if="tripStore.savedTrips.length === 0" class="no-trips">
       No tienes viajes guardados todavía.
     </div>
     <ul v-else class="trips-list">
       <li v-for="trip in tripStore.savedTrips" :key="trip.id">
         <div class="trip-header">
           <div class="trip-info">
-            <span class="trip-destination">{{ trip.city || 'Viaje sin ciudad' }}, {{ trip.casino || 'Sin casino' }}</span>
-            <span class="trip-date">Guardado el: {{ trip.date }}</span>
+            <span class="trip-destination">{{ trip.ciudad || 'Viaje sin ciudad' }}, {{ trip.casino || 'Sin casino' }}</span>
+            <span class="trip-date">Guardado el: {{ new Date(trip.fecha_creacion).toLocaleDateString() }}</span>
           </div>
           <div class="trip-actions">
             <button @click="loadTripForEditing(trip.id)">Cargar y Editar</button>
@@ -5796,11 +6879,11 @@ function saveNotes() {
           <div class="stat-item">
             <label>Beneficio Total</label>
             <span class="value" :class="getResultClass(calculateTripProfit(trip))">
-              {{ calculateTripProfit(trip).toFixed(2) }} {{ trip.currency }}
+              {{ calculateTripProfit(trip).toFixed(2) }} {{ trip.moneda }}
             </span>
           </div>
           <div class="stat-item">
-            <label>Media {{ trip.currency }}/h</label>
+            <label>Media {{ trip.moneda }}/h</label>
             <span class="value" :class="getResultClass(calculateTripWinRate(trip))">
               {{ calculateTripWinRate(trip).toFixed(2) }}
             </span>
@@ -5816,7 +6899,7 @@ function saveNotes() {
         <p>¿Está seguro de que desea eliminar este viaje?</p>
         <div class="modal-actions">
           <button class="cancel-btn" @click="closeModal">No</button>
-          <button class="confirm-btn" @click="deleteTrip">Sí</button>
+          <button class="confirm-btn" @click="deleteAndClose">Sí</button>
         </div>
       </div>
     </div>
@@ -5830,17 +6913,36 @@ function saveNotes() {
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onActivated } from 'vue';
 import { useTripStore } from '../store/useTripStore';
 
 const tripStore = useTripStore();
-
 const emit = defineEmits(['switch-view']);
 
-// --- ESTADO PARA EL MODAL Y TOAST ---
+const isLoading = ref(true);
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedTripId = ref(null);
+
+const loadTrips = async () => {
+  isLoading.value = true;
+  await tripStore.fetchTrips();
+  isLoading.value = false;
+};
+
+onMounted(loadTrips);
+
+// ========================================================================
+// === BLOQUE DE CÓDIGO ADITIVO Y AISLADO PARA SOLUCIONAR EL BUG ==========
+// ========================================================================
+// El hook `onActivated` se ejecuta cada vez que el componente es mostrado
+// al navegar internamente (cuando el componente ya estaba "montado").
+// Esto asegura que los datos se recarguen siempre que el usuario
+// vuelva a esta vista.
+onActivated(loadTrips);
+// ========================================================================
+// ========================================================================
+
 function loadTripForEditing(tripId) {
   tripStore.loadTrip(tripId);
   emit('switch-view', 'CommunityView');
@@ -5849,7 +6951,7 @@ function loadTripForEditing(tripId) {
 function calculateTripProfit(trip) {
   if (!trip.dailyResults) return 0;
   return Object.values(trip.dailyResults).reduce((total, dayResults) => {
-    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (playerData.result || 0), 0);
+    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (parseFloat(playerData.result) || 0), 0);
     return total + dayTotal;
   }, 0);
 }
@@ -5857,7 +6959,7 @@ function calculateTripProfit(trip) {
 function calculateTripHours(trip) {
   if (!trip.dailyResults) return 0;
   return Object.values(trip.dailyResults).reduce((total, dayResults) => {
-    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (playerData.hours || 0), 0);
+    const dayTotal = Object.values(dayResults).reduce((daySum, playerData) => daySum + (parseFloat(playerData.hours) || 0), 0);
     return total + dayTotal;
   }, 0);
 }
@@ -5865,10 +6967,7 @@ function calculateTripHours(trip) {
 function calculateTripWinRate(trip) {
   const totalProfit = calculateTripProfit(trip);
   const totalHours = calculateTripHours(trip);
-  if (totalHours === 0) {
-    return 0;
-  }
-  return totalProfit / totalHours;
+  return totalHours === 0 ? 0 : totalProfit / totalHours;
 }
 
 function getResultClass(result) {
@@ -5887,13 +6986,11 @@ function closeModal() {
   selectedTripId.value = null;
 }
 
-function deleteTrip() {
+async function deleteAndClose() {
   if (selectedTripId.value) {
-    tripStore.deleteTrip(selectedTripId.value);
+    await tripStore.deleteTrip(selectedTripId.value);
     showToast.value = true;
-    setTimeout(() => {
-      showToast.value = false;
-    }, 3000);
+    setTimeout(() => { showToast.value = false; }, 3000);
     closeModal();
   }
 }
@@ -5909,7 +7006,7 @@ h2 {
   text-align: center;
   margin-bottom: 2rem;
 }
-.no-trips {
+.loading-message, .no-trips {
   margin-top: 1rem;
   color: #a0aec0;
   text-align: center;
@@ -6104,6 +7201,30 @@ h2 {
     opacity: 1;
   }
 }
+
+@media (max-width: 640px) {
+  .saved-trips-container {
+    padding: 1rem 0.5rem;
+  }
+  .trip-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .trip-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .trip-destination {
+    font-size: 1.2rem;
+  }
+  .trip-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat-item .value {
+    font-size: 1.2rem;
+  }
+}
 </style>
 
 --------------------------------------------------------
@@ -6186,7 +7307,6 @@ h2 {
   <div class="summary-container">
     <h2>{{ $t('summary.title') }}</h2>
 
-    <!-- FILTRO DE FECHA AÑADIDO -->
     <div class="filters-container">
       <label for="summary-date-filter">Mostrar datos de:</label>
       <select 
@@ -6203,7 +7323,10 @@ h2 {
       </select>
     </div>
 
-    <div v-if="sessionStore.sessionCount === 0" class="no-data-message">
+    <div v-if="isLoading" class="loading-message">
+      Cargando datos del sumario...
+    </div>
+    <div v-else-if="sessionStore.sessionCount === 0" class="no-data-message">
       No hay sesiones guardadas para el período seleccionado.
     </div>
     <template v-else>
@@ -6292,34 +7415,42 @@ h2 {
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onActivated } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
 import { useGameStore } from '../store/game';
 
 const sessionStore = useSessionStore();
 const gameStore = useGameStore();
+const isLoading = ref(true);
+
+onActivated(async () => {
+    isLoading.value = true;
+    await Promise.all([
+        sessionStore.fetchSessions(),
+        gameStore.fetchHands()
+    ]);
+    isLoading.value = false;
+});
 
 const bbPer100 = computed(() => {
   const totalHands = gameStore.savedHands.length;
-  if (totalHands === 0) {
-    return 0;
-  }
+  if (totalHands === 0) return 0;
   
   const totalProfit = sessionStore.totalNetProfit;
+  
+  const handsWithBlinds = gameStore.savedHands.filter(hand => hand.ciega_grande > 0);
+  if (handsWithBlinds.length === 0) return 0;
+  
+  const totalBigBlindValue = handsWithBlinds.reduce((sum, hand) => sum + hand.ciega_grande, 0);
+  const averageBigBlind = totalBigBlindValue / handsWithBlinds.length;
 
-  const totalBigBlindValue = gameStore.savedHands.reduce((sum, hand) => sum + (hand.bigBlind || 0), 0);
-  const averageBigBlind = totalBigBlindValue / totalHands;
-
-  if (averageBigBlind === 0) {
-    return 0;
-  }
+  if (averageBigBlind === 0) return 0;
   
   const profitInBB = totalProfit / averageBigBlind;
   const winRate = (profitInBB / totalHands) * 100;
   
   return winRate;
 });
-
 
 function formatCurrency(value, showSign = true) {
   if (typeof value !== 'number') return `${sessionStore.currency}0.00`;
@@ -6349,8 +7480,6 @@ h2 {
   margin-bottom: 2rem;
   font-size: 2rem;
 }
-
-/* --- ESTILOS PARA EL FILTRO --- */
 .filters-container {
   background-color: #2d3748;
   padding: 1rem 1.5rem;
@@ -6374,8 +7503,7 @@ h2 {
   border-radius: 6px;
   color: white;
 }
-
-.no-data-message {
+.loading-message, .no-data-message {
   text-align: center;
   font-size: 1.2rem;
   color: #a0aec0;
@@ -6383,7 +7511,6 @@ h2 {
   padding: 2rem;
   border-radius: 12px;
 }
-
 .stats-grid {
   display: flex;
   flex-direction: column;
@@ -6442,7 +7569,6 @@ h2 {
 .profit-text { color: #68d391; }
 .loss-text { color: #fc8181; }
 .even-text { color: #e2e8f0; }
-
 @media (min-width: 768px) {
   .summary-container { padding: 2rem; }
   .stats-grid {

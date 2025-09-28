@@ -149,56 +149,44 @@ onUnmounted(() => {
 });
 
 const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.player.id);
-function calculateEquidistantPositions(playerCount, radiusX = 450, radiusY = 220) {
-  const positions = [];
-  const angleStep = (Math.PI * 2) / playerCount;
-  for (let i = 0; i < playerCount; i++) {
-    const angleRad = angleStep * i + Math.PI / 2; // Start from top
-    const x = Math.cos(angleRad) * radiusX;
-    let y = Math.sin(angleRad) * radiusY;
-    // Adjust top and bottom players to be closer to table edges
-    const angleDeg = (angleRad * 180) / Math.PI;
-    if (angleDeg > 60 && angleDeg < 120) { // Top area
-      y *= 1.1; // Move higher
-    } else if (angleDeg > 240 && angleDeg < 300) { // Bottom area
-      y *= 1.1; // Move lower
-    }
-    positions.push({ x: Math.round(x), y: Math.round(y) });
-  }
-  return positions;
-}
 
+// --- LÓGICA DE POSICIONAMIENTO DE ASIENTOS (MODIFICADA PARA RESPONSIVE) ---
+// Las coordenadas ahora son porcentajes del radio de la mesa (ej: x: 50 es el borde derecho).
+// La posición [0] es siempre la inferior central (la vista del Héroe).
 const PREDEFINED_LAYOUTS = {
-  2: [ { x: 0, y: 280 }, { x: 0, y: -280 } ],
-  3: [ { x: 0, y: 240 }, { x: -520, y: -120 }, { x: 520, y: -120 } ],
-  4: [ { x: 0, y: 280 }, { x: -420, y: 0 }, { x: 0, y: -280 }, { x: 420, y: 0 } ],
-  5: [ { x: 0, y: 240 }, { x: -520, y: 100 }, { x: -400, y: -240 }, { x: 400, y: -240 }, { x: 520, y: 100 } ],
-  6: [ { x: 0, y: 240 }, { x: -520, y: 120 }, { x: -520, y: -140 }, { x: 0, y: -280 }, { x: 520, y: -140 }, { x: 520, y: 120 } ],
-  7: calculateEquidistantPositions(7, 500, 240),
-  8: calculateEquidistantPositions(8, 500, 260),
-  9: calculateEquidistantPositions(9, 500, 280),
+  2: [ { x: 0, y: 45 }, { x: 0, y: -45 } ],
+  3: [ { x: 0, y: 50 }, { x: -50, y: -25 }, { x: 50, y: -25 } ],
+  4: [ { x: 0, y: 50 }, { x: -50, y: 0 }, { x: 0, y: -50 }, { x: 50, y: 0 } ],
+  5: [ { x: 0, y: 50 }, { x: -45, y: 25 }, { x: -35, y: -40 }, { x: 35, y: -40 }, { x: 45, y: 25 } ],
+  6: [ { x: 0, y: 50 }, { x: -48, y: 20 }, { x: -48, y: -20 }, { x: 0, y: -50 }, { x: 48, y: -20 }, { x: 48, y: 20 } ],
+  7: [ { x: 0, y: 50 }, { x: -40, y: 35 }, { x: -50, y: -5 }, { x: -25, y: -50 }, { x: 25, y: -50 }, { x: 50, y: -5 }, { x: 40, y: 35 } ],
+  8: [ { x: 0, y: 50 }, { x: -38, y: 38 }, { x: -50, y: 0 }, { x: -38, y: -38 }, { x: 0, y: -50 }, { x: 38, y: -38 }, { x: 50, y: 0 }, { x: 38, y: 38 } ],
+  9: [ { x: 0, y: 50 }, { x: -35, y: 40 }, { x: -50, y: 15 }, { x: -45, y: -20 }, { x: -20, y: -50 }, { x: 20, y: -50 }, { x: 45, y: -20 }, { x: 50, y: 15 }, { x: 35, y: 40 } ],
 };
 
 const seatCoordinates = computed(() => {
+  // El visualIndex [0] es siempre el Héroe en la parte inferior.
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
   if (PREDEFINED_LAYOUTS[props.playerCount]) {
     return PREDEFINED_LAYOUTS[props.playerCount][visualIndex];
   }
+  // Fallback para 10+ jugadores (aunque la UI actual no lo permite, es bueno tenerlo)
   return { x: 0, y: 0 };
 });
 
+// --- ESTILO DE ASIENTO (MODIFICADO PARA RESPONSIVE) ---
 const seatStyle = computed(() => {
-  const { x, y } = seatCoordinates.value;
-  // Convertimos los píxeles (basados en 1000x480) a porcentajes
-  const xPercent = (x / 1000) * 100;
-  const yPercent = (y / 480) * 100;
-  
+  const { x, y } = seatCoordinates.value; // x e y ya son porcentajes
   return {
-    top: '50%',
-    left: '50%',
-    transform: `translate(calc(-50% + ${xPercent}%), calc(-50% + ${yPercent}%))`
+    // Posiciona el centro del contenedor del jugador en las coordenadas calculadas
+    top: `calc(50% + ${y}%)`,
+    left: `calc(50% + ${x}%)`,
+    // Luego, usa transform para mover el elemento por la mitad de su propio tamaño
+    // para que quede perfectamente centrado en ese punto.
+    transform: 'translate(-50%, -50%)',
   };
 });
+
 
 const dealerButtonStyle = computed(() => {
   return {
@@ -209,20 +197,17 @@ const dealerButtonStyle = computed(() => {
 });
 const betBoxStyle = computed(() => {
   const { x, y } = seatCoordinates.value;
-  const threshold = 150;
+  const thresholdY = 30; // Umbral en porcentaje para decidir si está arriba/abajo
+  const thresholdX = 35; // Umbral en porcentaje para decidir si está a los lados
 
-  if (Math.abs(y) > threshold) {
-    if (y > 0) {
-      return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-    } else {
-      return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-    }
-  } else {
-    if (x < 0) {
-      return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
-    } else {
-      return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
-    }
+  if (y > thresholdY) { // Asientos inferiores
+    return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
+  } else if (y < -thresholdY) { // Asientos superiores
+    return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
+  } else if (x < -thresholdX) { // Asientos de la izquierda
+    return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
+  } else { // Asientos de la derecha
+    return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
   }
 });
 const notesPanelStyle = computed(() => {
@@ -234,18 +219,18 @@ const notesPanelStyle = computed(() => {
 /* --- ESTILOS BASE (ESCRITORIO) --- */
 .player-container {
   position: absolute;
-  top: 50%;
-  left: 50%;
   z-index: 5;
-  width: 15%; 
-  height: 40%;
+  /* El tamaño del jugador es un porcentaje del tamaño de la mesa, haciéndolo responsive */
+  width: 18%; 
+  max-width: 150px; /* Evita que sea demasiado grande en pantallas enormes */
+  height: 50%;
 }
 
 .player-seat {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 100%;
+  width: 110%;
   height: 60px;
   background: none;
   border: none;
@@ -269,18 +254,18 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  top: 38px;
-  left: 55%;
+  top: 30px;
+  left: 62%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 5%;
   width: 100%;
-  z-index: 9;
+  z-index: 1;
 }
 
 .card-placeholder {
-  width: 45%; 
+  width: 70%; 
   height: auto;
   aspect-ratio: 100 / 140; 
   cursor: pointer;
@@ -289,7 +274,8 @@ const notesPanelStyle = computed(() => {
 
 .player-name {
   font-weight: 700;
-  font-size: 1.1em;
+  /* Usamos clamp para un tamaño de fuente fluido */
+  font-size: clamp(0.7rem, 1.2vw, 1.1em);
   color: #E2E8F0;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   white-space: nowrap;
@@ -304,7 +290,7 @@ const notesPanelStyle = computed(() => {
 
 .player-stack {
   font-family: 'Roboto Mono', monospace;
-  font-size: 1.2em;
+  font-size: clamp(0.8rem, 1.4vw, 1.2em);
   font-weight: 700;
   color: #FFFFFF;
   background-color: rgba(0,0,0,0.3);
@@ -314,7 +300,7 @@ const notesPanelStyle = computed(() => {
 
 .active .player-info-panel {
   border-color: #f6e05e;
-  box-shadow: 0 0 15px rgba(246, 224, 94, 0.5), 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 30px rgba(246, 224, 94, 0.5), 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
 .faded {
@@ -541,39 +527,32 @@ const notesPanelStyle = computed(() => {
 /* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
 @media screen and (max-width: 900px) and (orientation: landscape) {
   .player-container {
-    width: 18%; /* Hacemos los jugadores un poco más grandes en relación a la mesa */
+    width: 20%; /* Aumentamos el ancho relativo para que no se vea tan pequeño */
     height: 45%;
+    max-width: 120px; /* Limitamos el ancho máximo en píxeles */
   }
   .player-seat {
-    height: 50px; /* Reducimos la altura del panel de info */
+    height: 45px; /* Reducimos aún más la altura del panel */
   }
   .player-info-panel {
-    padding: 4px;
+    padding: 2px; /* Menos padding */
     border-radius: 6px;
   }
-  .player-name {
-    font-size: 0.8em;
-    gap: 4px;
-    margin-bottom: 2px;
-  }
-  .player-stack {
-    font-size: 0.9em;
-  }
   .player-cards {
-    top: 5px; /* Acercamos las cartas al panel de info */
+    top: -55%; /* Subimos las cartas para que se solapen con el panel */
+    gap: 2%;
   }
   .dealer-button {
-    width: 20px;
-    height: 20px;
-    font-size: 0.8rem;
-    bottom: -30px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    bottom: -25px; /* Acercamos el botón de dealer */
   }
   .bet-box {
-    /* Reducimos el tamaño de la info de apuesta */
-    transform: scale(0.8) translateY(-50%);
+    transform: scale(0.75) translateY(-50%); /* Hacemos más pequeña la info de apuesta */
   }
-  /* Ocultamos elementos de edición para simplificar la UI */
-  .edit-notes-btn, .notes-display-wrapper {
+  /* Ocultamos elementos no esenciales para maximizar el espacio */
+  .edit-notes-btn, .notes-display-wrapper, .player-tag, .player-position-static {
     display: none;
   }
 }

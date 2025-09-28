@@ -2,15 +2,12 @@
   <div class="action-panel-wrapper">
     
     <div class="actions-grid">
-      <!-- Fila 1 -->
       <div class="grid-turn-info">{{ $t('actionPanel.turnOf') }} <strong>{{ gameStore.activePlayer?.name }}</strong></div>
       <button @click="gameStore.performAction('fold')" class="grid-fold btn-fold">{{ $t('actionPanel.fold') }}</button>
       <button @click="handleCheckCall" :disabled="isCallDisabled" class="grid-call btn-call">{{ checkOrCallLabel.toUpperCase() }}</button>
       
-      <!-- Fila 2 -->
       <button @click="handleBetRaise" :disabled="isRaiseDisabled" class="grid-raise btn-raise">{{ betOrRaiseLabel.toUpperCase() }}</button>
       
-      <!-- Input ahora usa 'displayRaiseAmount' para ser dinámico -->
       <input type="number" v-model="displayRaiseAmount" class="grid-input" />
       <div v-if="isAllIn" class="all-in-indicator">▲</div>
       
@@ -25,7 +22,6 @@
         :style="sliderStyle" 
       />
 
-      <!-- Fila 3 -->
       <div class="grid-quick-bets">
         <button @click="setRaiseAmountByPot(0.25)">25%</button>
         <button @click="setRaiseAmountByPot(0.33)">33%</button>
@@ -33,11 +29,9 @@
         <button @click="setRaiseAmountByPot(0.75)">75%</button>
         <button @click="setRaiseAmountByPot(1)">{{ $t('actionPanel.pot') }}</button>
         <button @click="setRaiseAmountByPot(1.5)">150%</button>
-        <!-- BOTÓN ALL-IN MODIFICADO -->
         <button @click="setRaiseAmountToAllIn" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
       </div>
 
-      <!-- Controles de la mesa -->
       <select class="grid-color-select" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
         <option value="#28563a">Verde</option>
         <option value="#3a4c8a">Azul</option>
@@ -162,7 +156,7 @@ function setRaiseAmountToAllIn() {
 
 
 function handleWheelScroll(event) {
-  event.preventDefault();
+  // event.preventDefault(); // <-- ELIMINADO PARA SOLUCIONAR EL [VIOLATION]
   const step = gameStore.bigBlind;
   let newValue;
   if (event.deltaY < 0) {
@@ -177,199 +171,103 @@ function handleWheelScroll(event) {
 </script>
 
 <style scoped>
-/* --- ESTILOS ESCRITORIO --- */
 .action-panel-wrapper {
   --btn-red: #f95f41;
-  --btn-red-hover: #e04a2f;
   --btn-green: #70b75b;
-  --btn-green-hover: #59b33f;
   --btn-orange: #e39e49;
-  --btn-orange-hover: #de8f32;
   --btn-purple: #a955cd;
-  --btn-purple-hover: #9c51bb;
   --btn-grey: #4A5568;
-  --btn-grey-hover: #2D3748;
   --slider-color-active: #FAB76B;
   --slider-color-inactive: #1A202C;
   
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-
   background-color: #2d3748;
   border-radius: 12px;
-  padding: 20px;
-  width: 900px;
+  padding: clamp(10px, 1.5vw, 20px);
+  width: 90%;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 3px solid var(--border-color);
+  border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
   color: white;
-  transition: all 0.3s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
 }
+
 .actions-grid {
+  width: 100%;
   display: grid;
-  grid-template-columns: 180px 120px 1fr 120px 120px;
-  grid-template-rows: auto auto auto;
-  gap: 15px;
+  gap: clamp(8px, 1.2vw, 15px);
   align-items: center;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: auto auto auto;
   grid-template-areas:
     "fold       call       turn-info  color-select bbs-toggle"
     "raise      input      slider     slider       slider"
     "quick-bets quick-bets quick-bets quick-bets   quick-bets";
 }
-.grid-turn-info { grid-area: turn-info; text-align: center; font-size: 1.4rem; }
+
+.grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(1rem, 2.5vmin, 1.4rem); }
 .grid-fold { grid-area: fold; }
 .grid-call { grid-area: call; }
 .grid-raise { grid-area: raise; }
 .grid-input { grid-area: input; }
-.grid-slider { grid-area: slider; margin-right: 20px; }
+.grid-slider { grid-area: slider; }
 .grid-quick-bets { grid-area: quick-bets; }
 .grid-color-select { grid-area: color-select; }
 .grid-bbs-toggle { grid-area: bbs-toggle; }
-.grid-fold, .grid-call, .grid-raise {
-  height: 65px;
-  font-size: 1.3rem;
+
+.grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle {
+  height: clamp(40px, 8vmin, 65px);
+  font-size: clamp(0.8rem, 2.2vmin, 1.3rem);
   font-weight: bold;
-  border: 1px solid #000;
   border-radius: 8px;
   color: white;
   cursor: pointer;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 1px solid #000;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  line-height: 1.2;
-  padding: 2px;
+  justify-content: center;
+  min-width: 0;
 }
-.grid-input {
-  height: 65px;
-  border-radius: 8px;
-  border: 1px solid #000;
-  background-color: #1A202C;
-  color: white;
-  font-size: 2rem;
-  text-align: center;
-  width: 84%;
-  position: relative;
-}
-.all-in-indicator {
-  position: absolute;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #f95f41;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-.grid-quick-bets {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
+
+.grid-input { background-color: #1A202C; text-align: center; width: 100%; }
+.all-in-indicator { display: none; }
+
+.grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; }
 .grid-quick-bets button {
-  flex-grow: 1;
-  padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #000;
+  padding: clamp(6px, 1.5vmin, 12px);
+  font-size: clamp(0.7rem, 1.8vmin, 1rem);
   border-radius: 6px;
   background-color: var(--btn-grey);
   color: white;
   cursor: pointer;
-}
-.grid-quick-bets button:hover {
-  background-color: var(--btn-grey-hover);
-}
-.grid-color-select, .grid-bbs-toggle {
-  height: 65px;
-  padding: 0 15px;
-  font-size: 1.2rem;
-  font-weight: bold;
   border: 1px solid #000;
-  border-radius: 8px;
-  background-color: #718096;
-  color: white;
-  cursor: pointer;
 }
+
+.grid-color-select, .grid-bbs-toggle { background-color: #718096; }
 .btn-fold { background-color: var(--btn-red); }
 .btn-call { background-color: var(--btn-green); }
 .btn-raise { background-color: var(--btn-orange); }
-.btn-allin { background-color: var(--btn-purple) !important; }
+.btn-allin { background-color: var(--btn-purple) !important; grid-column: 1 / -1; }
+button:disabled, .grid-slider:disabled { background-color: #718096 !important; cursor: not-allowed; opacity: 0.6; }
 
-button:disabled {
-  background-color: #718096 !important;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-.grid-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 98%;
-  height: 16px;
-  background: transparent;
-  outline: none;
-  border-radius: 8px;
-}
-.grid-slider::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  border: 1px solid #000;
-  background: linear-gradient(to right, 
-    var(--slider-color-active) var(--slider-fill-percentage), 
-    var(--slider-color-inactive) var(--slider-fill-percentage)
-  );
-}
-.grid-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  border: 1px solid #000;
-  height: 30px;
-  width: 20px;
-  border-radius: 4px;
-  background: #E2E8F0;
-  cursor: pointer;
-  margin-top: -8px;
-}
+.grid-slider { -webkit-appearance: none; appearance: none; width: 90%; height: clamp(12px, 2.2vmin, 16px); background: transparent; outline: none; border-radius: 8px; }
+.grid-slider::-webkit-slider-runnable-track { width: 100%; height: 100%; cursor: pointer; border-radius: 8px; border: 1px solid #000; background: linear-gradient(to right, var(--slider-color-active) var(--slider-fill-percentage), var(--slider-color-inactive) var(--slider-fill-percentage)); }
+.grid-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; border: 1px solid #000; height: calc(clamp(12px, 2.2vmin, 16px) + 14px); width: clamp(15px, 2.5vmin, 20px); border-radius: 4px; background: #E2E8F0; cursor: pointer; margin-top: calc(clamp(12px, 2.2vmin, 16px) / -2 + -7px); }
 
-/* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
-@media screen and (max-width: 900px) and (orientation: landscape) {
-  .action-panel-wrapper {
-    position: relative;
-    left: auto;
-    bottom: auto;
-    transform: none;
-    width: 100%;
-    height: auto;
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 10px;
-    border-width: 2px;
-    min-height: 0;
-  }
-
+/* Media query para compactar el layout en contenedores más estrechos que el diseño ideal */
+@media (max-width: 900px) {
   .actions-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto 1fr auto auto;
-    gap: 8px;
-    height: 100%;
+    grid-template-rows: auto auto auto auto 1fr auto;
     grid-template-areas:
       "turn-info  turn-info"
       "fold       call"
       "raise      input"
       "slider     slider"
       "quick-bets quick-bets"
-      "color-select bbs-toggle";
+      "bbs-toggle color-select";
   }
-
-  .grid-turn-info { font-size: 0.9rem; }
-  .grid-fold, .grid-call, .grid-raise { height: 45px; font-size: 0.9rem; }
-  .grid-input { height: 45px; font-size: 1.1rem; width: 100%; }
-  .all-in-indicator { font-size: 0.9rem; bottom: -14px; }
-  .grid-slider { margin: 5px 0; }
-  .grid-quick-bets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-  .grid-quick-bets button { padding: 6px; font-size: 0.7rem; }
-  .grid-quick-bets .btn-allin { grid-column: 1 / -1; }
-  .grid-color-select, .grid-bbs-toggle { height: 35px; font-size: 0.8rem; padding: 0 8px; }
 }
-</style>```
+</style>
