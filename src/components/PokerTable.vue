@@ -105,7 +105,7 @@ const heroIndex = computed(() => {
   box-shadow: inset 0 0 clamp(15px, 2.5vmin, 30px) rgba(0, 0, 0, 0.6);
   transition: background-color 0.3s ease;
   right: -60px;
-  top: -10px;
+  top: 10px;
 }
 
 .center-content {
