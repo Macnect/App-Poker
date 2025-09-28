@@ -76,7 +76,7 @@ const stackDetails = computed(() => {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  height: 60px;
+  height: 30px;
   width: 45px;
   /* La perspectiva es clave para el efecto 3D */
   perspective: 500px;
@@ -91,11 +91,11 @@ const stackDetails = computed(() => {
 
 .chip {
   position: absolute;
-  width: 30px;
-  height: 30px;
+  width: 15px;
+  height: 25px;
   border-radius: 50%;
   box-sizing: border-box;
-  left: 5.5px; /* Centrado en el contenedor de 45px */
+  left: 15px; /* Centrado en el contenedor de 45px */
   
   /* --- EFECTO 3D Y REALISMO --- */
 
