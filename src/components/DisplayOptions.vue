@@ -98,7 +98,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 15px;
   align-items: center;
-  padding: 15px;
+  padding: 8px;
   background-color: #2d3748;
   border-radius: 12px;
   border: 1px solid var(--border-color);
@@ -106,20 +106,20 @@ onUnmounted(() => {
 
 h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: white;
 }
 
 .options-row {
   display: flex;
-  gap: 15px;
+  gap: 5px;
   align-items: center;
 }
 
 .option-item {
-  height: 50px;
-  width: 80px;
+  height: 45px;
+  width: 70px;
   padding: 0 15px;
   font-size: 1.2rem;
   font-weight: bold;
