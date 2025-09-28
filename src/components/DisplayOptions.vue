@@ -1,5 +1,5 @@
 <template>
-  <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: isDraggable ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
+  <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: (isDragging ? 'grabbing' : 'grab') }">
     <h3>Opciones mesa</h3>
     <div class="options-row">
       <select class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
@@ -35,10 +35,8 @@ const panelRef = ref(null);
 const isDragging = ref(false);
 const dragOffset = ref({ x: 0, y: 0 });
 const panelPosition = ref({ x: 0, y: 0 });
-const isDraggable = ref(true);
 
 function startDrag(event) {
-  if (!isDraggable.value) return;
   isDragging.value = true;
   const rect = panelRef.value.getBoundingClientRect();
   dragOffset.value = {
@@ -59,7 +57,6 @@ function drag(event) {
 
 function stopDrag() {
   isDragging.value = false;
-  isDraggable.value = false;
   localStorage.setItem('displayOptionsPosition', JSON.stringify(panelPosition.value));
   document.removeEventListener('mousemove', drag);
   document.removeEventListener('mouseup', stopDrag);
@@ -69,15 +66,12 @@ onMounted(() => {
   const savedPosition = localStorage.getItem('displayOptionsPosition');
   if (savedPosition) {
     panelPosition.value = JSON.parse(savedPosition);
-    isDraggable.value = false;
-  } else {
     // Set initial position
     const rect = panelRef.value.getBoundingClientRect();
     panelPosition.value = {
-      x: window.innerWidth / 2 - rect.width / 2,
-      y: window.innerHeight - 300
+      x: window.innerWidth / 1.25 - rect.width / 2,
+      y: window.innerHeight - 400
     };
-    isDraggable.value = true;
   }
 });
 
