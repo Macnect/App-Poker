@@ -18,7 +18,7 @@
       </div>
     </div>
 
-    <!-- Barra de Navegación Inferior -->
+    <!-- Barra de Navegación Inferior (SIN MODIFICAR) -->
     <nav>
       <button @click="switchToView('CurrentHandView')" :class="{ active: currentView === 'CurrentHandView' }">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25 1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" /></svg>
@@ -42,6 +42,13 @@
       </button>
     </nav>
 
+    <!-- BOTÓN "NUEVA MANO" AÑADIDO (AISLADO) -->
+    <button @click="startNewHand()" class="fab-new-hand" :title="$t('nav.newHand')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    </button>
+
   </div>
   <AuthView v-else />
   <RotateDeviceOverlay v-if="isLandscape" />
@@ -51,6 +58,7 @@
 import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
+import { useGameStore } from './store/game';
 import RotateDeviceOverlay from './components/RotateDeviceOverlay.vue';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
@@ -64,6 +72,7 @@ import SavedTripsView from './views/SavedTripsView.vue';
 import AuthView from './views/AuthView.vue';
 
 const authStore = useAuthStore();
+const gameStore = useGameStore();
 const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
@@ -93,6 +102,11 @@ function switchToView(viewName) {
 
   currentView.value = viewName;
   showMoreMenu.value = false;
+}
+
+function startNewHand() {
+  gameStore.resetHand();
+  switchToView('CurrentHandView');
 }
 
 function navigateTo(viewName) {
@@ -206,5 +220,40 @@ nav button.active {
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+/* ESTILOS PARA EL BOTÓN FLOTANTE (FAB) AÑADIDOS */
+.fab-new-hand {
+  position: fixed;
+  bottom: 35px; /* (Altura nav 70px / 2) */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 64px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  border: 4px solid #1a202c; /* Borde del color del fondo para efecto "incrustado" */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001; /* Debe estar por encima de la barra de navegación */
+  color: white;
+  transition: background-color 0.2s, transform 0.2s ease-out;
+}
+
+.fab-new-hand svg {
+  width: 32px;
+  height: 32px;
+}
+
+.fab-new-hand:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fab-new-hand:hover {
+    background-color: #2b6cb0; /* Color primario más oscuro en hover */
+  }
 }
 </style>
