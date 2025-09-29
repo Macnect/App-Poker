@@ -200,10 +200,10 @@ onUnmounted(() => {
 .configuration-panel {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 30px; padding: 3.5rem;
-  max-width: 500px; margin: 5rem auto;
+  max-width: 500px; margin: 1rem auto;
   background-color: #2d3748; border-radius: 12px;
 }
-h2 { font-size: 2.5rem; margin-bottom: -40px; }
+h2 { font-size: 2.5rem; margin-bottom: -90px; }
 .config-item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 label { font-weight: bold; font-size: 1.2rem; }
 select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; text-align: center; box-sizing: border-box; border-radius: 8px; }
