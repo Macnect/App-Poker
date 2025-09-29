@@ -243,45 +243,46 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
 .profit { color: #68d391; }
 .loss { color: #fc8181; }
 .even { color: #e2e8f0; }
+.toast { position: fixed; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); z-index: 1000; animation: slideIn 0.3s ease-out; }
+.success-toast { background-color: #38a169; color: white; }
+.toast-icon { font-size: 1.5rem; font-weight: bold; }
+.toast-message { font-size: 1rem; font-weight: bold; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-/* Toast Styles */
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-}
-
-.success-toast {
-  background-color: #38a169;
-  color: white;
-}
-
-.toast-icon {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.toast-message {
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+/* ========================================================== */
+/* ===> NUEVO BLOQUE DE CÓDIGO PARA ADAPTAR A MÓVILES <=== */
+/* ========================================================== */
+@media (max-width: 640px) {
+  .trip-planner-container {
+    padding: 1rem;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+  .planner-panel, .tracking-panel {
+    padding: 1.5rem;
+  }
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .form-grid {
+    /* El grid ya pasa a una columna por el minmax(), pero reducimos el gap */
+    gap: 1.5rem;
+  }
+  .config-item label {
+    font-size: 1rem; /* Reducimos el tamaño de la etiqueta */
+  }
+  .config-item input, .config-item select {
+    padding: 12px; /* Reducimos el padding de los inputs */
+    font-size: 1rem; /* Reducimos la fuente de los inputs */
+  }
+  .player-entry {
+    /* Apilamos el nombre y la aportación en vertical */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* Hacemos que ocupen todo el ancho */
+    gap: 8px;
+  }
+  .player-participation-input {
+    width: 100px; /* Aseguramos un ancho mínimo para el input de dinero */
   }
 }
 </style>
