@@ -58,7 +58,11 @@
 import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
+<<<<<<< HEAD
 import { useGameStore } from './store/game'; // <-- ADICIÓN
+=======
+import { useGameStore } from './store/game';
+>>>>>>> 32a3796646431347606b09dc00384be7472f103d
 import RotateDeviceOverlay from './components/RotateDeviceOverlay.vue';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
@@ -72,7 +76,11 @@ import SavedTripsView from './views/SavedTripsView.vue';
 import AuthView from './views/AuthView.vue';
 
 const authStore = useAuthStore();
+<<<<<<< HEAD
 const gameStore = useGameStore(); // <-- ADICIÓN
+=======
+const gameStore = useGameStore();
+>>>>>>> 32a3796646431347606b09dc00384be7472f103d
 const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
@@ -104,7 +112,10 @@ function switchToView(viewName) {
   showMoreMenu.value = false;
 }
 
+<<<<<<< HEAD
 // FUNCIÓN PARA LA NUEVA MANO AÑADIDA
+=======
+>>>>>>> 32a3796646431347606b09dc00384be7472f103d
 function startNewHand() {
   gameStore.resetHand();
   switchToView('CurrentHandView');
