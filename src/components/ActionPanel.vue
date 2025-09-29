@@ -225,18 +225,18 @@ function handleWheelScroll(event) {
  
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
   height: clamp(50px, 8vmin, 65px);
-  font-size: clamp(0.7rem, 2.2vmin, 1.3rem);
+  font-size: clamp(0.3rem, 2.2vmin, 1.3rem);
   font-weight: bold;
   border-radius: 8px;
   color: white;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 0 22px;
+  padding: 1 22px;
   border: 1px solid #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 0;
+  min-width: 0.5%;
 }
 
 .grid-input { background-color: #1A202C; text-align: center; width: 100%; }
