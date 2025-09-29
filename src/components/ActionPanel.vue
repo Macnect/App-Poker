@@ -185,9 +185,9 @@ function handleWheelScroll(event) {
 
   background-color: #2d3748;
   border-radius: 12px;
-  padding: clamp(10px, 1.5vw, 20px);
-  width: 90%;
-  margin-left: 5%;
+  padding: clamp(5px, 1vw, 15px);
+  width: 70%;
+  margin-left: 16%;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
   color: white;
@@ -199,7 +199,7 @@ function handleWheelScroll(event) {
 .actions-grid {
  width: 100%;
  display: grid;
- gap: clamp(8px, 1.2vw, 15px);
+ gap: clamp(0px, 0.8vw, 1px);
  align-items: center;
  grid-template-columns: repeat(6, 1fr); /* Aumentado a 6 columnas */
  grid-template-rows: auto auto auto;
@@ -210,7 +210,7 @@ function handleWheelScroll(event) {
 }
 
 
-.grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(1rem, 2.5vmin, 1.4rem); }
+.grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(0.9rem, 2vmin, 1.2rem); }
 .grid-fold { grid-area: fold; }
 .grid-call { grid-area: call; }
 .grid-raise { grid-area: raise; }
@@ -224,14 +224,14 @@ function handleWheelScroll(event) {
 .grid-next { grid-area: next-action; }
  
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
-  height: clamp(50px, 8vmin, 65px);
-  font-size: clamp(1.5rem, 2.2vmin, 1.3rem);
+  height: clamp(20px, 6vmin, 55px);
+  font-size: clamp(1.2rem, 1.8vmin, 1.1rem);
   font-weight: bold;
   border-radius: 8px;
   color: white;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 1 22px;
+  padding: 1 18px;
   border: 1px solid #000;
   display: flex;
   align-items: center;
@@ -242,10 +242,10 @@ function handleWheelScroll(event) {
 .grid-input { background-color: #1A202C; text-align: center; width: 100%; }
 .all-in-indicator { display: none; }
 
-.grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; }
+.grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(35px, 1fr)); gap: 4px; }
 .grid-quick-bets button {
-  padding: clamp(6px, 1.5vmin, 12px);
-  font-size: clamp(0.8rem, 1.8vmin, 1rem);
+  padding: clamp(4px, 1.2vmin, 10px);
+  font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
   border-radius: 6px;
   background-color: var(--btn-grey);
   color: white;

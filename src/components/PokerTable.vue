@@ -84,7 +84,7 @@ const heroIndex = computed(() => {
 <style scoped>
 .poker-table-container {
   width: 90%;
-  height: 90%;
+  height: 120%;
   display: flex;
   justify-content: center;
   align-items: center;
