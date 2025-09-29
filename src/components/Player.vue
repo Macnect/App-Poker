@@ -206,23 +206,23 @@ const betBoxStyle = computed(() => {
   // Lógica de posicionamiento de fichas por asiento individual
   switch (visualIndex) {
     case 0: // Asiento del Héroe (inferior central)
-      return { top: '10%', left: '130%', transform: 'translateX(-50%)' };
+      return { top: '-13%', left: '60%', transform: 'translateX(-50%)' };
     case 1: // Jugador a la derecha del Héroe
-      return { top: '30%', right: '-40%', transform: 'translateY(-50%)' };
+      return { top: '20%', right: '-60%', transform: 'translateY(-50%)' };
     case 2:
-      return { top: '30%', right: '-20%', transform: 'translateY(-50%)' };
+      return { top: '80%', right: '-70%', transform: 'translateY(-50%)' };
     case 3:
-      return { bottom: '-40%', left: '0%', transform: 'translateX(-50%)' };
+      return { bottom: '-10%', left: '130%', transform: 'translateX(-50%)' };
     case 4: // Jugador en el top
-      return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)' };
+      return { bottom: '-35%', left: '50%', transform: 'translateX(-50%)' };
     case 5: // Jugador en el top
-      return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)' };
+      return { bottom: '-35%', left: '50%', transform: 'translateX(-50%)' };
     case 6: // Asiento a la izquierda (superior)
-      return { top: '30%', left: '-20%', transform: 'translateY(-50%)' };
+      return { top: '95%', left: '-50%', transform: 'translateY(-50%)' };
     case 7: // Asiento a la izquierda (inferior)
-      return { top: '30%', left: '-40%', transform: 'translateY(-50%)' };
+      return { top: '70%', left: '-55%', transform: 'translateY(-50%)' };
     case 8:
-      return { top: '-10%', left: '50%', transform: 'translateX(-50%)' };
+      return { top: '-15%', left: '50%', transform: 'translateX(-50%)' };
     default: // Fallback por si acaso
       return { top: '0', left: '105%' };
   }
