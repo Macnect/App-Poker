@@ -115,14 +115,18 @@
       <div class="toast-icon">✓</div>
       <div class="toast-message">Mano eliminada con éxito</div>
     </div>
+
+    <!-- Overlay que pide girar el dispositivo (se muestra en móvil horizontal) -->
+    <RotateDeviceOverlay v-if="showRotateOverlay" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '../store/game'
 import { useAuthStore } from '../store/useAuthStore'
 import PlayingCard from '../components/PlayingCard.vue';
+import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 
 const gameStore = useGameStore();
 const authStore = useAuthStore();
@@ -136,6 +140,14 @@ const sortKey = ref('date');
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedHandId = ref(null);
+
+const showRotateOverlay = ref(false);
+
+const checkOrientation = () => {
+  const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  showRotateOverlay.value = !isPortrait && isCoarsePointer;
+};
 
 const HAND_STRENGTH_MAP = { 'AA': 1, 'KK': 2, 'QQ': 3, 'AKs': 4, 'JJ': 5, 'AQs': 6, 'KQs': 7, 'AJs': 8, 'KJs': 9, 'TT': 10, 'AKo': 11, 'ATs': 12, 'QJs': 13, 'KTs': 14, 'QTs': 15, 'JTs': 16, '99': 17, 'AQo': 18, 'A9s': 19, 'K9s': 20, 'Q9s': 21, 'J9s': 22, 'T9s': 23, 'A8s': 24, '88': 25, 'K8s': 26, 'Q8s': 27, 'J8s': 28, 'AJo': 29, 'A5s': 30, 'T8s': 31, '98s': 32, 'A7s': 33, 'A4s': 34, 'K7s': 35, '77': 36, 'A3s': 37, 'Q7s': 38, 'A6s': 39, 'KJo': 40, 'A2s': 41, 'K6s': 42, '87s': 43, 'T7s': 44, 'K5s': 45, '66': 46, 'ATo': 47, 'J7s': 48, 'Q6s': 49, 'K4s': 50, '97s': 51, '76s': 52, 'K3s': 53, 'Q5s': 54, '55': 55, 'K2s': 56, 'J6s': 57, 'T6s': 58, 'Q4s': 59, '86s': 60, 'Q3s': 61, '65s': 62, 'KTo': 63, 'A9o': 64, 'Q2s': 65, '44': 66, 'J5s': 67, '96s': 68, 'J4s': 69, '75s': 70, 'QJo': 71, 'A8o': 72, 'T5s': 73, 'J3s': 74, '54s': 75, '85s': 76, 'K9o': 77, 'Q9o': 78, '33': 79, 'J2s': 80, '64s': 81, 'T4s': 82, 'J9o': 83, 'T9o': 84, 'A7o': 85, 'K8o': 86, '95s': 87, '22': 88, '74s': 89, 'T3s': 90, '53s': 91, 'Q8o': 92, 'A5o': 93, '84s': 94, 'A4o': 95, 'K7o': 96, 'J8o': 97, 'T2s': 98, 'A6o': 99, '98o': 100, '43s': 101, 'A3o': 102, 'K6o': 103, '63s': 104, 'T8o': 105, 'A2o': 106, 'Q7o': 107, 'J7o': 108, 'K5o': 109, '87o': 110, '52s': 111, 'K4o': 112, 'T7o': 113, '76o': 114, 'Q6o': 115, '94s': 116, 'K3o': 117, 'J6o': 118, '83s': 119, 'K2o': 120, 'Q5o': 121, '97o': 122, '73s': 123, '42s': 124, 'T6o': 125, '65o': 126, 'Q4o': 127, 'J5o': 128, '86o': 129, 'Q3o': 130, 'J4o': 131, '96o': 132, '75o': 133, 'T5o': 134, 'Q2o': 135, '62s': 136, 'J3o': 137, '82s': 138, '54o': 139, '85o': 140, 'J2o': 141, '93s': 142, 'T4o': 143, '64o': 144, '95o': 145, '72s': 146, 'T3o': 147, '74o': 148, '53o': 149, '84o': 150, 'T2o': 151, '43o': 152, '92s': 153, '63o': 154, '83o': 155, '73o': 156, '52o': 157, '94o': 158, '42o': 159, '82o': 160, '62o': 161, '93o': 162, '72o': 163, '92o': 164, };
 const RANK_ORDER = 'AKQJT98765432';
@@ -192,6 +204,15 @@ async function deleteAndClose() {
     closeModal();
   }
 }
+
+onMounted(() => {
+  window.addEventListener('resize', checkOrientation);
+  checkOrientation();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkOrientation);
+});
 </script>
 
 <style scoped>

@@ -93,7 +93,7 @@ const showRotateOverlay = ref(false);
 const checkOrientation = () => {
   const isPortrait = window.matchMedia('(orientation: portrait)').matches;
   const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-  showRotateOverlay.value = handIsActive.value && isPortrait && isCoarsePointer;
+  showRotateOverlay.value = handIsActive.value && !isPortrait && isCoarsePointer;
 };
 
 watch(handIsActive, () => {

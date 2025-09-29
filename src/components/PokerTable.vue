@@ -83,7 +83,7 @@ const heroIndex = computed(() => {
 
 <style scoped>
 .poker-table-container {
-  width: 80%;
+  width: 90%;
   height: 90%;
   display: flex;
   justify-content: center;
@@ -104,7 +104,7 @@ const heroIndex = computed(() => {
   border-width: clamp(8px, 1.2vmin, 15px);
   box-shadow: inset 0 0 clamp(15px, 2.5vmin, 30px) rgba(0, 0, 0, 0.6);
   transition: background-color 0.3s ease;
-  right: -60px;
+  right: -15px;
   top: 10px;
 }
 
@@ -125,7 +125,7 @@ const heroIndex = computed(() => {
   font-weight: bold;
   color: white;
   background-color: rgba(0, 0, 0, 0.4);
-  padding: 0.5em 1em;
+  padding: 0.05em 1em;
   border-radius: 8px;
 }
 
