@@ -138,12 +138,14 @@ poker
 
   </div>
   <AuthView v-else />
+  <RotateDeviceOverlay v-if="isLandscape" />
 </template>
 
 <script setup>
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
+import RotateDeviceOverlay from './components/RotateDeviceOverlay.vue';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
 import LiveSessionView from './views/LiveSessionView.vue';
@@ -159,6 +161,7 @@ const authStore = useAuthStore();
 const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
+const isLandscape = ref(false);
 
 const views = shallowRef({
   CurrentHandView,
@@ -189,6 +192,14 @@ function switchToView(viewName) {
 function navigateTo(viewName) {
   switchToView(viewName);
 }
+
+onMounted(() => {
+  const mediaQuery = window.matchMedia('(orientation: landscape)');
+  isLandscape.value = mediaQuery.matches;
+  mediaQuery.addEventListener('change', (e) => {
+    isLandscape.value = e.matches;
+  });
+});
 </script>
 
 <style scoped>
@@ -869,7 +880,7 @@ function handleWheelScroll(event) {
  
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
   height: clamp(50px, 8vmin, 65px);
-  font-size: clamp(0.3rem, 2.2vmin, 1.3rem);
+  font-size: clamp(1.5rem, 2.2vmin, 1.3rem);
   font-weight: bold;
   border-radius: 8px;
   color: white;
@@ -889,7 +900,7 @@ function handleWheelScroll(event) {
 .grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; }
 .grid-quick-bets button {
   padding: clamp(6px, 1.5vmin, 12px);
-  font-size: clamp(0.7rem, 1.8vmin, 1rem);
+  font-size: clamp(0.8rem, 1.8vmin, 1rem);
   border-radius: 6px;
   background-color: var(--btn-grey);
   color: white;
@@ -1746,6 +1757,7 @@ const gameStore = useGameStore();
 const isNotesPanelOpen = computed(() => gameStore.openNotesPanelPlayerId === props.player.id);
 
 function handleCardClick(playerId, cardIndex) {
+  if (gameStore.gamePhase === 'replay') return;
   const target = { type: 'player', id: playerId, cardIndex: cardIndex };
   if (props.player.cards[cardIndex]) {
     gameStore.unassignCard(target);
@@ -1891,7 +1903,7 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  top: 10px;
+  top: 6px;
   left: 62%;
   transform: translateX(-50%);
   display: flex;
@@ -2261,7 +2273,7 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .player-cards {
-  top: 23px; /* Sube un poco las cartas */
+  top: 15px; /* Sube un poco las cartas */
   left: 60%;
   width: 90%;
   gap: 2%;
@@ -2275,14 +2287,15 @@ const notesPanelStyle = computed(() => {
   width: 26px;
   height: 26px;
   top: -8px;
-  right: -20px;
+  right: -25px;
 }
 
 .is-9-max .dealer-button {
-  width: 22px;
-  height: 22px;
+  width: 15px;
+  height: 15px;
   font-size: 0.9rem;
   bottom: -30px;
+  top: 54px;
 }
 
 @media screen and (max-width: 900px) and (orientation: landscape) {
@@ -2350,12 +2363,12 @@ const suitDetails = computed(() => {
 }
 
 .rank {
-  font-size: 2.5rem;
-  line-height: 1.1;
+  font-size: 1.1rem;
+  line-height: 0.7;
 }
 
 .suit-icon {
-  font-size: 1.5rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -2438,7 +2451,7 @@ function isBoardCardClickable(index) {
 }
 
 function handleBoardCardClick(index) {
-  if (!isBoardCardClickable(index)) return;
+  if (!isBoardCardClickable(index) || gameStore.gamePhase === 'replay') return;
   const target = { type: 'board', id: index };
   if (gameStore.board[index]) {
     gameStore.unassignCard(target);
@@ -2455,7 +2468,7 @@ const heroIndex = computed(() => {
 
 <style scoped>
 .poker-table-container {
-  width: 80%;
+  width: 90%;
   height: 90%;
   display: flex;
   justify-content: center;
@@ -2476,7 +2489,7 @@ const heroIndex = computed(() => {
   border-width: clamp(8px, 1.2vmin, 15px);
   box-shadow: inset 0 0 clamp(15px, 2.5vmin, 30px) rgba(0, 0, 0, 0.6);
   transition: background-color 0.3s ease;
-  right: -60px;
+  right: -15px;
   top: 10px;
 }
 
@@ -2497,7 +2510,7 @@ const heroIndex = computed(() => {
   font-weight: bold;
   color: white;
   background-color: rgba(0, 0, 0, 0.4);
-  padding: 0.5em 1em;
+  padding: 0.05em 1em;
   border-radius: 8px;
 }
 
@@ -2545,7 +2558,7 @@ const heroIndex = computed(() => {
       <svg class="rotate-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.664 0l3.181-3.183m-4.991-2.691V5.25a2.25 2.25 0 00-2.25-2.25h-4.5a2.25 2.25 0 00-2.25 2.25v4.5A2.25 2.25 0 006.75 12h4.5a2.25 2.25 0 002.25-2.25v-2.25" />
       </svg>
-      <p>Por favor, gira tu dispositivo a modo horizontal para usar el editor de manos.</p>
+      <p>Por favor, gira tu dispositivo a modo vertical para usar esta función.</p>
     </div>
   </div>
 </template>
@@ -5136,7 +5149,7 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
   <div class="view-container">
     <!-- Panel de Configuración (visible cuando no hay mano activa) -->
     <div v-if="!handIsActive" class="configuration-panel">
-      <h2>Configuración de la Mano</h2>
+      <h2></h2>
       <div class="config-item">
         <label for="player-count">Número de Jugadores:</label>
         <select id="player-count" v-model.number="selectedPlayers">
@@ -5227,7 +5240,7 @@ const showRotateOverlay = ref(false);
 const checkOrientation = () => {
   const isPortrait = window.matchMedia('(orientation: portrait)').matches;
   const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-  showRotateOverlay.value = handIsActive.value && isPortrait && isCoarsePointer;
+  showRotateOverlay.value = handIsActive.value && !isPortrait && isCoarsePointer;
 };
 
 watch(handIsActive, () => {
@@ -5334,10 +5347,10 @@ onUnmounted(() => {
 .configuration-panel {
   display: flex; flex-direction: column; align-items: center;
   justify-content: center; gap: 30px; padding: 3.5rem;
-  max-width: 500px; margin: 5rem auto;
+  max-width: 500px; margin: 1rem auto;
   background-color: #2d3748; border-radius: 12px;
 }
-h2 { font-size: 2.5rem; margin-bottom: 10px; }
+h2 { font-size: 2.5rem; margin-bottom: -50px; }
 .config-item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 label { font-weight: bold; font-size: 1.2rem; }
 select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; text-align: center; box-sizing: border-box; border-radius: 8px; }
@@ -5345,7 +5358,7 @@ select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; t
 .blinds-container { display: flex; gap: 20px; }
 .blinds-container .config-item { width: auto; }
 .blinds-container input { width: 150px; }
-button { padding: 18px 35px; font-size: 1.4rem; font-weight: bold; border-radius: 8px; margin-top: 10px; }
+button { padding: 8px 35px; font-size: 1.4rem; font-weight: bold; border-radius: 8px; margin-top: 10px; }
 
 /* --- NUEVA LÓGICA DE LAYOUT CON GRID --- */
 .hand-editor-content {
@@ -5853,14 +5866,18 @@ const formattedTime = computed(() => {
       <div class="toast-icon">✓</div>
       <div class="toast-message">Mano eliminada con éxito</div>
     </div>
+
+    <!-- Overlay que pide girar el dispositivo (se muestra en móvil horizontal) -->
+    <RotateDeviceOverlay v-if="showRotateOverlay" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '../store/game'
 import { useAuthStore } from '../store/useAuthStore'
 import PlayingCard from '../components/PlayingCard.vue';
+import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 
 const gameStore = useGameStore();
 const authStore = useAuthStore();
@@ -5874,6 +5891,14 @@ const sortKey = ref('date');
 const showModal = ref(false);
 const showToast = ref(false);
 const selectedHandId = ref(null);
+
+const showRotateOverlay = ref(false);
+
+const checkOrientation = () => {
+  const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  showRotateOverlay.value = !isPortrait && isCoarsePointer;
+};
 
 const HAND_STRENGTH_MAP = { 'AA': 1, 'KK': 2, 'QQ': 3, 'AKs': 4, 'JJ': 5, 'AQs': 6, 'KQs': 7, 'AJs': 8, 'KJs': 9, 'TT': 10, 'AKo': 11, 'ATs': 12, 'QJs': 13, 'KTs': 14, 'QTs': 15, 'JTs': 16, '99': 17, 'AQo': 18, 'A9s': 19, 'K9s': 20, 'Q9s': 21, 'J9s': 22, 'T9s': 23, 'A8s': 24, '88': 25, 'K8s': 26, 'Q8s': 27, 'J8s': 28, 'AJo': 29, 'A5s': 30, 'T8s': 31, '98s': 32, 'A7s': 33, 'A4s': 34, 'K7s': 35, '77': 36, 'A3s': 37, 'Q7s': 38, 'A6s': 39, 'KJo': 40, 'A2s': 41, 'K6s': 42, '87s': 43, 'T7s': 44, 'K5s': 45, '66': 46, 'ATo': 47, 'J7s': 48, 'Q6s': 49, 'K4s': 50, '97s': 51, '76s': 52, 'K3s': 53, 'Q5s': 54, '55': 55, 'K2s': 56, 'J6s': 57, 'T6s': 58, 'Q4s': 59, '86s': 60, 'Q3s': 61, '65s': 62, 'KTo': 63, 'A9o': 64, 'Q2s': 65, '44': 66, 'J5s': 67, '96s': 68, 'J4s': 69, '75s': 70, 'QJo': 71, 'A8o': 72, 'T5s': 73, 'J3s': 74, '54s': 75, '85s': 76, 'K9o': 77, 'Q9o': 78, '33': 79, 'J2s': 80, '64s': 81, 'T4s': 82, 'J9o': 83, 'T9o': 84, 'A7o': 85, 'K8o': 86, '95s': 87, '22': 88, '74s': 89, 'T3s': 90, '53s': 91, 'Q8o': 92, 'A5o': 93, '84s': 94, 'A4o': 95, 'K7o': 96, 'J8o': 97, 'T2s': 98, 'A6o': 99, '98o': 100, '43s': 101, 'A3o': 102, 'K6o': 103, '63s': 104, 'T8o': 105, 'A2o': 106, 'Q7o': 107, 'J7o': 108, 'K5o': 109, '87o': 110, '52s': 111, 'K4o': 112, 'T7o': 113, '76o': 114, 'Q6o': 115, '94s': 116, 'K3o': 117, 'J6o': 118, '83s': 119, 'K2o': 120, 'Q5o': 121, '97o': 122, '73s': 123, '42s': 124, 'T6o': 125, '65o': 126, 'Q4o': 127, 'J5o': 128, '86o': 129, 'Q3o': 130, 'J4o': 131, '96o': 132, '75o': 133, 'T5o': 134, 'Q2o': 135, '62s': 136, 'J3o': 137, '82s': 138, '54o': 139, '85o': 140, 'J2o': 141, '93s': 142, 'T4o': 143, '64o': 144, '95o': 145, '72s': 146, 'T3o': 147, '74o': 148, '53o': 149, '84o': 150, 'T2o': 151, '43o': 152, '92s': 153, '63o': 154, '83o': 155, '73o': 156, '52o': 157, '94o': 158, '42o': 159, '82o': 160, '62o': 161, '93o': 162, '72o': 163, '92o': 164, };
 const RANK_ORDER = 'AKQJT98765432';
@@ -5930,6 +5955,15 @@ async function deleteAndClose() {
     closeModal();
   }
 }
+
+onMounted(() => {
+  window.addEventListener('resize', checkOrientation);
+  checkOrientation();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkOrientation);
+});
 </script>
 
 <style scoped>
@@ -6029,9 +6063,9 @@ async function deleteAndClose() {
 .hand-preview {
   display: flex;
   flex-grow: 1;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 2rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
 }
 .card-group {
   display: flex;
