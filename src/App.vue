@@ -44,12 +44,14 @@
 
   </div>
   <AuthView v-else />
+  <RotateDeviceOverlay v-if="isLandscape" />
 </template>
 
 <script setup>
-import { ref, shallowRef } from 'vue';
+import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
+import RotateDeviceOverlay from './components/RotateDeviceOverlay.vue';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
 import LiveSessionView from './views/LiveSessionView.vue';
@@ -65,6 +67,7 @@ const authStore = useAuthStore();
 const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
+const isLandscape = ref(false);
 
 const views = shallowRef({
   CurrentHandView,
@@ -95,6 +98,14 @@ function switchToView(viewName) {
 function navigateTo(viewName) {
   switchToView(viewName);
 }
+
+onMounted(() => {
+  const mediaQuery = window.matchMedia('(orientation: landscape)');
+  isLandscape.value = mediaQuery.matches;
+  mediaQuery.addEventListener('change', (e) => {
+    isLandscape.value = e.matches;
+  });
+});
 </script>
 
 <style scoped>
