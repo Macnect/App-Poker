@@ -49,8 +49,8 @@ const suitDetails = computed(() => {
 }
 
 .rank {
-  font-size: 1.6rem;
-  line-height: 1.1;
+  font-size: 1.1rem;
+  line-height: 0.7;
 }
 
 .suit-icon {

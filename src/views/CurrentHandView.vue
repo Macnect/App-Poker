@@ -211,7 +211,7 @@ select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; t
 .blinds-container { display: flex; gap: 20px; }
 .blinds-container .config-item { width: auto; }
 .blinds-container input { width: 150px; }
-button { padding: 18px 35px; font-size: 1.4rem; font-weight: bold; border-radius: 8px; margin-top: 10px; }
+button { padding: 8px 35px; font-size: 1.4rem; font-weight: bold; border-radius: 8px; margin-top: 10px; }
 
 /* --- NUEVA LÓGICA DE LAYOUT CON GRID --- */
 .hand-editor-content {
