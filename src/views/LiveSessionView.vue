@@ -200,7 +200,6 @@ const formattedTime = computed(() => {
   height: 12px;
   border-radius: 50%;
   background-color: #718096;
-  /* CORRECTION: Changed colon to a space */
   transition: background-color 0.3s ease;
 }
 .timer-widget:not(.on-break) .status-indicator {
@@ -314,4 +313,21 @@ const formattedTime = computed(() => {
     grid-template-columns: 1fr; /* Apila los inputs de configuración */
   }
 }
+
+/* ================================================== */
+/* ===> NUEVO BLOQUE DE CÓDIGO PARA LA SOLUCIÓN <=== */
+/* ================================================== */
+/* En pantallas muy estrechas (móviles verticales), apilamos las acciones rápidas */
+@media (max-width: 480px) {
+  .action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Un espacio más pequeño entre input y botón */
+  }
+  
+  .action-group button {
+    font-size: 1.1rem; /* Hacemos el texto del botón un poco más grande */
+  }
+}
+
 </style>
