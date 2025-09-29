@@ -655,14 +655,15 @@ const notesPanelStyle = computed(() => {
   width: 26px;
   height: 26px;
   top: -8px;
-  right: -20px;
+  right: -25px;
 }
 
 .is-9-max .dealer-button {
-  width: 22px;
-  height: 22px;
+  width: 15px;
+  height: 15px;
   font-size: 0.9rem;
   bottom: -30px;
+  top: 54px;
 }
 
 @media screen and (max-width: 900px) and (orientation: landscape) {
