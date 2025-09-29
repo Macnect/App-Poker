@@ -126,6 +126,7 @@ const gameStore = useGameStore();
 const isNotesPanelOpen = computed(() => gameStore.openNotesPanelPlayerId === props.player.id);
 
 function handleCardClick(playerId, cardIndex) {
+  if (gameStore.gamePhase === 'replay') return;
   const target = { type: 'player', id: playerId, cardIndex: cardIndex };
   if (props.player.cards[cardIndex]) {
     gameStore.unassignCard(target);

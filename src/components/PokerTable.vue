@@ -66,7 +66,7 @@ function isBoardCardClickable(index) {
 }
 
 function handleBoardCardClick(index) {
-  if (!isBoardCardClickable(index)) return;
+  if (!isBoardCardClickable(index) || gameStore.gamePhase === 'replay') return;
   const target = { type: 'board', id: index };
   if (gameStore.board[index]) {
     gameStore.unassignCard(target);
