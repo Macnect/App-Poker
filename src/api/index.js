@@ -66,14 +66,16 @@ const getCurrentUser = async () => {
 // API para Sesiones de Juego (sesiones_juego)
 // ----------------------------------------------------------------------------
 
-export const apiFetchSessions = async () => {
+export const apiFetchSessions = async (targetUserId = null) => {
   const user = await getCurrentUser();
   if (!user) return [];
+
+  const userIdToFetch = targetUserId || user.id;
 
   const { data, error } = await supabase
     .from('sesiones_juego')
     .select('*')
-    .eq('usuario_id', user.id)
+    .eq('usuario_id', userIdToFetch)
     .order('fecha', { ascending: false });
 
   if (error) {
@@ -118,7 +120,7 @@ export const apiDeleteSession = async (sessionId) => {
 // API para Manos Guardadas (manos_guardadas)
 // ----------------------------------------------------------------------------
 
-export const apiFetchHands = async (date = null, limit = null, offset = 0) => {
+export const apiFetchHands = async (date = null, limit = null, offset = 0, targetUserId = null) => {
   console.log('[DEBUG] apiFetchHands: Starting with params - date:', date, 'limit:', limit, 'offset:', offset);
   const user = await getCurrentUser();
   console.log('[DEBUG] apiFetchHands: User obtained:', user ? `ID: ${user.id}` : 'not authenticated');
@@ -128,10 +130,10 @@ export const apiFetchHands = async (date = null, limit = null, offset = 0) => {
     .from('manos_guardadas')
     .select('*');
 
-  // Re-enable user filter - ensure RLS policy allows select for authenticated users
   if (user) {
-    query = query.eq('usuario_id', user.id);
-    console.log('[DEBUG] apiFetchHands: Added user filter for ID:', user.id);
+    const userIdToFetch = targetUserId || user.id;
+    query = query.eq('usuario_id', userIdToFetch);
+    console.log('[DEBUG] apiFetchHands: Added user filter for ID:', userIdToFetch);
   } else {
     console.log('[DEBUG] apiFetchHands: No user filter applied');
   }
@@ -155,7 +157,6 @@ export const apiFetchHands = async (date = null, limit = null, offset = 0) => {
 
   console.log('[DEBUG] apiFetchHands: Executing query...');
 
-  // Add timeout to prevent hanging
   const timeoutPromise = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
   );
@@ -209,14 +210,37 @@ export const apiDeleteHand = async (handId) => {
 // API para Viajes de Poker (viajes_poker y relacionadas)
 // ----------------------------------------------------------------------------
 
+// ========================================================================
+// ===> INICIO DEL CAMBIO: LÓGICA DE VIAJES COMPARTIDOS                <===
+// ========================================================================
+
+// FUNCIÓN MODIFICADA: Ahora busca los viajes en los que el usuario participa.
 export const apiFetchTrips = async () => {
     const user = await getCurrentUser();
     if (!user) return [];
 
+    // 1. Obtenemos los IDs de los viajes en los que el usuario actual es participante.
+    const { data: participations, error: participationError } = await supabase
+        .from('viaje_participantes')
+        .select('viaje_id')
+        .eq('usuario_id', user.id);
+
+    if (participationError) {
+        console.error("Error fetching trip participations:", participationError);
+        throw participationError;
+    }
+
+    if (!participations || participations.length === 0) {
+        return []; // El usuario no participa en ningún viaje.
+    }
+
+    const tripIds = participations.map(p => p.viaje_id);
+
+    // 2. Obtenemos los datos completos de esos viajes.
     const { data: viajes, error: viajesError } = await supabase
         .from('viajes_poker')
         .select(`*, participantes_viaje(*), resultados_diarios_viaje(*)`)
-        .eq('creador_id', user.id)
+        .in('id', tripIds) // <-- Usamos .in() en lugar de .eq()
         .order('fecha_creacion', { ascending: false });
 
     if (viajesError) {
@@ -224,6 +248,7 @@ export const apiFetchTrips = async () => {
         throw viajesError;
     }
 
+    // El resto de la lógica para procesar los datos es la misma.
     return viajes.map(viaje => {
         const dailyResults = {};
         const tripDays = [];
@@ -252,12 +277,13 @@ export const apiFetchTrips = async () => {
     });
 };
 
-// *** FUNCIÓN COMPLETAMENTE REESCRITA PARA SIMPLIFICAR ***
+// FUNCIÓN MODIFICADA: Al crear un viaje, añade automáticamente al creador como participante.
 export const apiAddOrUpdateTrip = async (tripData) => {
     const user = await getCurrentUser();
     if (!user) throw new Error("Usuario no autenticado");
     
     let tripId = tripData.id;
+    let isNewTrip = !tripId;
 
     // PASO 1: Insertar o actualizar el viaje principal.
     const tripPayload = {
@@ -270,21 +296,28 @@ export const apiAddOrUpdateTrip = async (tripData) => {
         fecha_viaje: new Date().toISOString().split('T')[0],
     };
 
-    if (tripId) { // Es una actualización
+    if (!isNewTrip) {
         tripPayload.id = tripId;
         const { error } = await supabase.from('viajes_poker').update(tripPayload).eq('id', tripId);
         if (error) throw new Error(`Error actualizando el viaje principal: ${error.message}`);
-    } else { // Es una inserción
+    } else {
         const { data, error } = await supabase.from('viajes_poker').insert(tripPayload).select('id').single();
         if (error) throw new Error(`Error creando el viaje principal: ${error.message}`);
         tripId = data.id;
     }
+    
+    // SI ES UN VIAJE NUEVO, AÑADIMOS AL CREADOR A LA TABLA DE PARTICIPANTES
+    if (isNewTrip) {
+        const { error: participationError } = await supabase
+            .from('viaje_participantes')
+            .insert({ viaje_id: tripId, usuario_id: user.id });
+        if (participationError) throw new Error(`Error añadiendo al creador como participante: ${participationError.message}`);
+    }
 
-    // PASO 2: Borrar participantes y resultados antiguos para evitar duplicados.
+    // El resto de la lógica se mantiene igual
     await supabase.from('resultados_diarios_viaje').delete().eq('viaje_id', tripId);
     await supabase.from('participantes_viaje').delete().eq('viaje_id', tripId);
     
-    // PASO 3: Insertar los nuevos participantes.
     const participantsPayload = tripData.players.map(p => ({
         viaje_id: tripId,
         nombre_jugador: p.name,
@@ -299,7 +332,6 @@ export const apiAddOrUpdateTrip = async (tripData) => {
         
     if (participantsError) throw new Error(`Error guardando participantes: ${participantsError.message}`);
 
-    // PASO 4: Insertar los nuevos resultados diarios.
     const resultsPayload = [];
     Object.entries(tripData.dailyResults).forEach(([date, dailyData]) => {
         Object.entries(dailyData).forEach(([frontendPlayerId, resultData]) => {
@@ -323,7 +355,7 @@ export const apiAddOrUpdateTrip = async (tripData) => {
         if (resultsError) throw new Error(`Error guardando resultados diarios: ${resultsError.message}`);
     }
 
-    return tripId; // Devolvemos el ID del viaje guardado/actualizado.
+    return tripId;
 };
 
 export const apiDeleteTrip = async (tripId) => {
@@ -333,3 +365,7 @@ export const apiDeleteTrip = async (tripId) => {
         throw error;
     }
 };
+
+// ========================================================================
+// ===> FIN DEL CAMBIO                                                 <===
+// ========================================================================

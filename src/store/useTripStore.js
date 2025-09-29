@@ -2,11 +2,13 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import { apiFetchTrips, apiAddOrUpdateTrip, apiDeleteTrip } from '@/api';
+import { supabase } from '@/supabase';
 
 export const useTripStore = defineStore('trip', () => {
   // --- STATE ---
   const savedTrips = ref([]);
   const currentTripId = ref(null); 
+  const realtimeChannel = ref(null);
 
   // --- STATE DE PLANIFICACIÓN ---
   const playerCount = ref(4);
@@ -73,14 +75,14 @@ export const useTripStore = defineStore('trip', () => {
     const shares = {};
 
     if (repartoType.value === 'hours') {
-      if (tripTotalHours.value === 0) return shares; // Evitar división por cero
+      if (tripTotalHours.value === 0) return shares;
       players.value.forEach(player => {
         const playerHours = playerTotalHours.value[player.id] || 0;
         const hourPercentage = (playerHours / tripTotalHours.value) * 100;
         const shareAmount = (hourPercentage / 100) * finalBankroll;
         shares[player.id] = isNaN(shareAmount) ? 0 : shareAmount;
       });
-    } else { // Reparto por participación
+    } else {
       players.value.forEach(player => {
         const participationPercent = parseFloat(player.participation) || 0;
         const shareAmount = (participationPercent / 100) * finalBankroll;
@@ -104,7 +106,7 @@ export const useTripStore = defineStore('trip', () => {
     return tripTotalHours.value > 0 ? tripTotalProfit.value / tripTotalHours.value : 0;
   });
 
-  // --- ACTIONS (Refactorizadas para usar API) ---
+  // --- ACTIONS ---
   
   async function fetchTrips() {
     try {
@@ -133,7 +135,6 @@ export const useTripStore = defineStore('trip', () => {
       if (!currentTripId.value) {
         currentTripId.value = savedTripId;
       }
-      await fetchTrips(); // Recargamos la lista completa para reflejar los cambios
       alert('¡Viaje guardado con éxito!');
     } catch (error) {
       alert(`Error al guardar el viaje: ${error.message}`);
@@ -147,7 +148,6 @@ export const useTripStore = defineStore('trip', () => {
         return;
     }
     
-    // Mapeo de nombres de columna de la DB a estado local
     currentTripId.value = tripToLoad.id;
     playerCount.value = tripToLoad.players ? tripToLoad.players.length : 0;
     city.value = tripToLoad.ciudad;
@@ -158,6 +158,8 @@ export const useTripStore = defineStore('trip', () => {
     isTripActive.value = tripToLoad.activo;
     tripDays.value = tripToLoad.tripDays;
     dailyResults.value = tripToLoad.dailyResults;
+    
+    subscribeToTripChanges(tripId);
   }
 
   async function deleteTrip(tripId) {
@@ -170,6 +172,11 @@ export const useTripStore = defineStore('trip', () => {
   }
   
   function resetCurrentTrip() {
+    if (realtimeChannel.value) {
+      supabase.removeChannel(realtimeChannel.value);
+      realtimeChannel.value = null;
+    }
+    
     currentTripId.value = null;
     playerCount.value = 4;
     city.value = '';
@@ -181,6 +188,45 @@ export const useTripStore = defineStore('trip', () => {
     tripDays.value = [];
     dailyResults.value = {};
     setPlayerCount(4);
+  }
+  
+  function subscribeToTripChanges(tripId) {
+    // ESTE ES EL LOG DE VERIFICACIÓN. SI ESTO NO APARECE, LA FUNCIÓN NO SE ESTÁ LLAMANDO.
+    console.log(`[VERIFICACIÓN] La función subscribeToTripChanges se está ejecutando para el viaje: ${tripId}`);
+
+    if (realtimeChannel.value) {
+      supabase.removeChannel(realtimeChannel.value);
+    }
+
+    const channel = supabase.channel(`trip-${tripId}`);
+    
+    channel.on(
+      'postgres_changes',
+      { 
+        event: '*', 
+        schema: 'public', 
+        table: 'resultados_diarios_viaje', 
+        filter: `viaje_id=eq.${tripId}` 
+      },
+      (payload) => {
+        console.log('[REALTIME] ¡CAMBIO RECIBIDO en resultados_diarios_viaje!', payload);
+        fetchTrips().then(() => {
+          loadTrip(tripId);
+        });
+      }
+    ).subscribe((status, err) => {
+      if (status === 'SUBSCRIBED') {
+        console.log(`[REALTIME] Suscripción al canal trip-${tripId} exitosa.`);
+      }
+      if (status === 'CHANNEL_ERROR') {
+        console.error(`[REALTIME] Error en el canal trip-${tripId}:`, err);
+      }
+      if (status === 'TIMED_OUT') {
+        console.warn(`[REALTIME] Se agotó el tiempo de espera para la suscripción al canal trip-${tripId}.`);
+      }
+    });
+
+    realtimeChannel.value = channel;
   }
 
   function recalculateParticipations() {

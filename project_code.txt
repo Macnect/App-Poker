@@ -136,6 +136,13 @@ poker
       </button>
     </nav>
 
+    <!-- BOTÓN "NUEVA MANO" AÑADIDO (AISLADO) -->
+    <button @click="startNewHand()" class="fab-new-hand" :title="$t('nav.newHand')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+    </button>
+
   </div>
   <AuthView v-else />
   <RotateDeviceOverlay v-if="isLandscape" />
@@ -145,6 +152,7 @@ poker
 import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
+import { useGameStore } from './store/game'; // <-- ADICIÓN
 import RotateDeviceOverlay from './components/RotateDeviceOverlay.vue';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
@@ -158,6 +166,7 @@ import SavedTripsView from './views/SavedTripsView.vue';
 import AuthView from './views/AuthView.vue';
 
 const authStore = useAuthStore();
+const gameStore = useGameStore(); // <-- ADICIÓN
 const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
@@ -187,6 +196,12 @@ function switchToView(viewName) {
 
   currentView.value = viewName;
   showMoreMenu.value = false;
+}
+
+// FUNCIÓN PARA LA NUEVA MANO AÑADIDA
+function startNewHand() {
+  gameStore.resetHand();
+  switchToView('CurrentHandView');
 }
 
 function navigateTo(viewName) {
@@ -300,6 +315,41 @@ nav button.active {
 @keyframes slide-up {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
+}
+
+/* ESTILOS PARA EL BOTÓN FLOTANTE (FAB) AÑADIDOS */
+.fab-new-hand {
+  position: fixed;
+  bottom: 35px; /* (Altura nav 70px / 2) */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 64px;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  border: 4px solid #1a202c; /* Borde del color del fondo para efecto "incrustado" */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1002; /* Aumentado para estar por encima del overlay del menú "Más" */
+  color: white;
+  transition: background-color 0.2s, transform 0.2s ease-out;
+}
+
+.fab-new-hand svg {
+  width: 32px;
+  height: 32px;
+}
+
+.fab-new-hand:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fab-new-hand:hover {
+    background-color: #2b6cb0; /* Color primario más oscuro en hover */
+  }
 }
 </style>
 
@@ -840,9 +890,9 @@ function handleWheelScroll(event) {
 
   background-color: #2d3748;
   border-radius: 12px;
-  padding: clamp(10px, 1.5vw, 20px);
-  width: 90%;
-  margin-left: 5%;
+  padding: clamp(5px, 1vw, 15px);
+  width: 70%;
+  margin-left: 16%;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
   color: white;
@@ -854,7 +904,7 @@ function handleWheelScroll(event) {
 .actions-grid {
  width: 100%;
  display: grid;
- gap: clamp(8px, 1.2vw, 15px);
+ gap: clamp(0px, 0.8vw, 1px);
  align-items: center;
  grid-template-columns: repeat(6, 1fr); /* Aumentado a 6 columnas */
  grid-template-rows: auto auto auto;
@@ -865,7 +915,7 @@ function handleWheelScroll(event) {
 }
 
 
-.grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(1rem, 2.5vmin, 1.4rem); }
+.grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(0.9rem, 2vmin, 1.2rem); }
 .grid-fold { grid-area: fold; }
 .grid-call { grid-area: call; }
 .grid-raise { grid-area: raise; }
@@ -879,14 +929,14 @@ function handleWheelScroll(event) {
 .grid-next { grid-area: next-action; }
  
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
-  height: clamp(50px, 8vmin, 65px);
-  font-size: clamp(1.5rem, 2.2vmin, 1.3rem);
+  height: clamp(20px, 6vmin, 55px);
+  font-size: clamp(1.2rem, 1.8vmin, 1.1rem);
   font-weight: bold;
   border-radius: 8px;
   color: white;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 1 22px;
+  padding: 1 18px;
   border: 1px solid #000;
   display: flex;
   align-items: center;
@@ -897,10 +947,10 @@ function handleWheelScroll(event) {
 .grid-input { background-color: #1A202C; text-align: center; width: 100%; }
 .all-in-indicator { display: none; }
 
-.grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; }
+.grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(35px, 1fr)); gap: 4px; }
 .grid-quick-bets button {
-  padding: clamp(6px, 1.5vmin, 12px);
-  font-size: clamp(0.8rem, 1.8vmin, 1rem);
+  padding: clamp(4px, 1.2vmin, 10px);
+  font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
   border-radius: 6px;
   background-color: var(--btn-grey);
   color: white;
@@ -2273,7 +2323,7 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .player-cards {
-  top: 15px; /* Sube un poco las cartas */
+  top: 6px; /* Sube un poco las cartas */
   left: 60%;
   width: 90%;
   gap: 2%;

@@ -9,6 +9,19 @@
     <!-- Menú "Más" (Overlay) -->
     <div v-if="showMoreMenu" class="more-menu-overlay" @click="showMoreMenu = false">
       <div class="more-menu-panel" @click.stop>
+        
+        <!-- ========================================================== -->
+        <!-- ===> INICIO DEL CAMBIO INTEGRADO Y AISLADO              <=== -->
+        <!-- ========================================================== -->
+        <!-- Este botón solo se mostrará si el rol del usuario es 'Administrador'. -->
+        <!-- Asegúrate de haber añadido la propiedad computada 'rol' a useAuthStore.js -->
+        <button v-if="authStore.rol === 'Administrador'" @click="navigateTo('AdminView')">
+          Panel de Administrador
+        </button>
+        <!-- ========================================================== -->
+        <!-- ===> FIN DEL CAMBIO INTEGRADO Y AISLADO                 <=== -->
+        <!-- ========================================================== -->
+        
         <button @click="navigateTo('SavedHandsView')">{{ $t('nav.savedHands') }}</button>
         <button @click="navigateTo('ChartsView')">{{ $t('nav.charts') }}</button>
         <button @click="navigateTo('CommunityView')">Viajes</button>
@@ -70,6 +83,13 @@ import SummaryView from './views/SummaryView.vue';
 import CommunityView from './views/CommunityView.vue';
 import SavedTripsView from './views/SavedTripsView.vue';
 import AuthView from './views/AuthView.vue';
+// ==========================================================
+// ===> INICIO DEL CAMBIO INTEGRADO Y AISLADO              <===
+// ==========================================================
+import AdminView from './views/AdminView.vue';
+// ==========================================================
+// ===> FIN DEL CAMBIO INTEGRADO Y AISLADO                 <===
+// ==========================================================
 
 const authStore = useAuthStore();
 const gameStore = useGameStore(); // <-- ADICIÓN
@@ -88,6 +108,13 @@ const views = shallowRef({
   SummaryView,
   CommunityView,
   SavedTripsView,
+  // ==========================================================
+  // ===> INICIO DEL CAMBIO INTEGRADO Y AISLADO              <===
+  // ==========================================================
+  AdminView,
+  // ==========================================================
+  // ===> FIN DEL CAMBIO INTEGRADO Y AISLADO                 <===
+  // ==========================================================
 });
 
 function switchToView(viewName) {
