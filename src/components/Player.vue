@@ -271,7 +271,7 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  top: 10px;
+  top: 6px;
   left: 62%;
   transform: translateX(-50%);
   display: flex;
@@ -641,7 +641,7 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .player-cards {
-  top: 23px; /* Sube un poco las cartas */
+  top: 15px; /* Sube un poco las cartas */
   left: 60%;
   width: 90%;
   gap: 2%;
