@@ -200,18 +200,31 @@ const dealerButtonStyle = computed(() => {
   };
 });
 const betBoxStyle = computed(() => {
-  const { x, y } = seatCoordinates.value;
-  const thresholdY = 30; // Umbral en porcentaje para decidir si está arriba/abajo
-  const thresholdX = 35; // Umbral en porcentaje para decidir si está a los lados
+  // El visualIndex [0] es siempre el Héroe en la parte inferior.
+  const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
 
-  if (y > thresholdY) { // Asientos inferiores
-    return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-  } else if (y < -thresholdY) { // Asientos superiores
-    return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-  } else if (x < -thresholdX) { // Asientos de la izquierda
-    return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
-  } else { // Asientos de la derecha
-    return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
+  // Lógica de posicionamiento de fichas por asiento individual
+  switch (visualIndex) {
+    case 0: // Asiento del Héroe (inferior central)
+      return { top: '10%', left: '130%', transform: 'translateX(-50%)' };
+    case 1: // Jugador a la derecha del Héroe
+      return { top: '30%', right: '-40%', transform: 'translateY(-50%)' };
+    case 2:
+      return { top: '30%', right: '-20%', transform: 'translateY(-50%)' };
+    case 3:
+      return { bottom: '-40%', left: '0%', transform: 'translateX(-50%)' };
+    case 4: // Jugador en el top
+      return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)' };
+    case 5: // Jugador en el top
+      return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)' };
+    case 6: // Asiento a la izquierda (superior)
+      return { top: '30%', left: '-20%', transform: 'translateY(-50%)' };
+    case 7: // Asiento a la izquierda (inferior)
+      return { top: '30%', left: '-40%', transform: 'translateY(-50%)' };
+    case 8:
+      return { top: '-10%', left: '50%', transform: 'translateX(-50%)' };
+    default: // Fallback por si acaso
+      return { top: '0', left: '105%' };
   }
 });
 const notesPanelStyle = computed(() => {
@@ -333,8 +346,15 @@ const notesPanelStyle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0px;
+  gap: -0px;
   z-index: 9;
+}
+
+.bet-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: -8px; /* <--- ¡AQUÍ ESTÁ LA MAGIA! AJUSTA ESTE VALOR */
 }
 
 .bet-info {
@@ -346,9 +366,9 @@ const notesPanelStyle = computed(() => {
 .bet-amount-text {
   background-color: rgba(0,0,0,0.8);
   border: 1px solid #000;
-  padding: 2px 8px;
+  padding: 0.5px 4px;
   border-radius: 6px;
-  font-size: 1em;
+  font-size: 0.6em;
   font-weight: bold;
   color: white;
   white-space: nowrap;
