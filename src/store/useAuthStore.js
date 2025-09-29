@@ -54,7 +54,15 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         profile.value = null;
         useGameStore().savedHands = [];
-        useSessionStore().savedSessions = [];
+        // ==========================================================
+        // ===> INICIO DEL CAMBIO: LIMPIEZA DE SESIÓN ACTIVA       <===
+        // ==========================================================
+        const sessionStore = useSessionStore();
+        sessionStore.clearActiveSession(); // Limpia la sesión del localStorage
+        sessionStore.savedSessions = []; // Limpia las sesiones guardadas
+        // ==========================================================
+        // ===> FIN DEL CAMBIO                                     <===
+        // ==========================================================
         useTripStore().savedTrips = [];
       }
     }
@@ -77,6 +85,14 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function signOut() {
+    // ==========================================================
+    // ===> INICIO DEL CAMBIO: LIMPIEZA DE SESIÓN ACTIVA       <===
+    // ==========================================================
+    // También limpiamos aquí para asegurar que se borre al hacer clic en "Salir"
+    useSessionStore().clearActiveSession();
+    // ==========================================================
+    // ===> FIN DEL CAMBIO                                     <===
+    // ==========================================================
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   }
@@ -91,12 +107,6 @@ export const useAuthStore = defineStore('auth', () => {
     signIn,
     signUp,
     signOut,
-    // ==========================================================
-    // ===> INICIO DEL CAMBIO: EXPORTAR LA FUNCIÓN             <===
-    // ==========================================================
     fetchUserProfile,
-    // ==========================================================
-    // ===> FIN DEL CAMBIO                                     <===
-    // ==========================================================
   };
 });

@@ -3,26 +3,192 @@ import { ref, computed } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/supabase';
 import { useAuthStore } from './useAuthStore';
-import { apiFetchSessions, apiAddSession, apiDeleteSession } from '@/api'; // Importamos la API
+import { apiFetchSessions, apiAddSession, apiDeleteSession } from '@/api';
+
+// ========================================================================
+// ===> INICIO DEL CAMBIO: LÓGICA DE TEMPORIZADOR PERSISTENTE          <===
+// ========================================================================
+
+const STORAGE_KEY = 'active-poker-session';
 
 export const useSessionStore = defineStore('session', () => {
   // --- STATE ---
-  const isActive = ref(false);
-  const elapsedTime = ref(0);
-  let sessionTimerInterval = null;
-  const isOnBreak = ref(false);
-  const breakElapsedTime = ref(0);
-  let breakTimerInterval = null;
-  const totalBreakTime = ref(0);
-  const totalRebuys = ref(0);
-  const totalExpenses = ref(0);
-  const playerCount = ref(6);
-  const blinds = ref('1/2');
-  const location = ref('');
-  const currency = ref('$');
-  const initialStack = ref(200);
+  // El estado principal ahora se inicializa desde una estructura que se guardará en localStorage
+  const sessionState = ref({
+    isActive: false,
+    startTime: null,
+    isOnBreak: false,
+    breakStartTime: null,
+    totalBreakDuration: 0, // en milisegundos
+    totalRebuys: 0,
+    totalExpenses: 0,
+    playerCount: 6,
+    blinds: '1/2',
+    location: '',
+    currency: '$',
+    initialStack: 200,
+  });
+
   const savedSessions = ref([]);
   
+  // Para actualizar la pantalla cada segundo
+  const timerDisplay = ref(0);
+  let sessionTimerInterval = null;
+
+  // --- HELPERS PERSISTENCIA ---
+  function saveStateToLocalStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionState.value));
+  }
+
+  function clearStateFromLocalStorage() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function loadStateFromLocalStorage() {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      sessionState.value = { ...sessionState.value, ...parsedState };
+      // Si la sesión estaba activa, reiniciamos el intervalo para actualizar la UI
+      if (sessionState.value.isActive) {
+        startUiUpdater();
+      }
+    }
+  }
+  
+  // --- COMPUTED PROPERTIES MODIFICADAS ---
+  // Ahora calculan el tiempo basándose en los timestamps guardados en lugar de un contador simple
+  const elapsedTime = computed(() => {
+    if (!sessionState.value.isActive || !sessionState.value.startTime) return 0;
+    const now = Date.now();
+    const currentBreakDuration = sessionState.value.isOnBreak && sessionState.value.breakStartTime
+      ? now - sessionState.value.breakStartTime
+      : 0;
+    const totalDuration = now - sessionState.value.startTime;
+    const netDuration = totalDuration - sessionState.value.totalBreakDuration - currentBreakDuration;
+    return Math.floor(netDuration / 1000); // Devuelve en segundos
+  });
+
+  const breakElapsedTime = computed(() => {
+    if (!sessionState.value.isOnBreak || !sessionState.value.breakStartTime) return 0;
+    return Math.floor((Date.now() - sessionState.value.breakStartTime) / 1000); // Devuelve en segundos
+  });
+  
+  // --- ACTIONS MODIFICADAS ---
+  
+  function startUiUpdater() {
+    clearInterval(sessionTimerInterval);
+    sessionTimerInterval = setInterval(() => {
+      // Esta variable solo sirve para forzar que las propiedades computadas se recalculen cada segundo
+      timerDisplay.value++; 
+    }, 1000);
+  }
+
+  function startSession() {
+    // Resetea todo a un estado inicial y guarda el timestamp de inicio
+    sessionState.value = {
+      ...sessionState.value, // Mantiene la configuración (ciegas, etc.)
+      isActive: true,
+      startTime: Date.now(),
+      isOnBreak: false,
+      breakStartTime: null,
+      totalBreakDuration: 0,
+      totalRebuys: 0,
+      totalExpenses: 0,
+    };
+    saveStateToLocalStorage();
+    startUiUpdater();
+  }
+
+  function startBreak() {
+    if (!sessionState.value.isActive) return;
+    sessionState.value.isOnBreak = true;
+    sessionState.value.breakStartTime = Date.now();
+    saveStateToLocalStorage();
+  }
+
+  function endBreak() {
+    if (!sessionState.value.isOnBreak || !sessionState.value.breakStartTime) return;
+    const breakDuration = Date.now() - sessionState.value.breakStartTime;
+    sessionState.value.totalBreakDuration += breakDuration;
+    sessionState.value.isOnBreak = false;
+    sessionState.value.breakStartTime = null;
+    saveStateToLocalStorage();
+  }
+
+  function addRebuy(amount) {
+    if (amount > 0) {
+      sessionState.value.totalRebuys += amount;
+      saveStateToLocalStorage();
+    }
+  }
+
+  function addExpense(amount) {
+    if (amount > 0) {
+      sessionState.value.totalExpenses += amount;
+      saveStateToLocalStorage();
+    }
+  }
+  
+  async function stopAndSaveSession(finalStack) {
+    try {
+      const finalElapsedTimeInSeconds = elapsedTime.value;
+      const finalTotalBreakTimeInSeconds = Math.floor(sessionState.value.totalBreakDuration / 1000);
+
+      const ensureFloat = (value) => {
+          const num = parseFloat(value);
+          return isNaN(num) ? 0.0 : num;
+      };
+
+      const currentInvestment = ensureFloat(sessionState.value.initialStack) + ensureFloat(sessionState.value.totalRebuys);
+      const result = ensureFloat(finalStack) - currentInvestment - ensureFloat(sessionState.value.totalExpenses);
+
+      const sessionData = {
+        fecha: new Date().toISOString().split('T')[0],
+        duracion_segundos: finalElapsedTimeInSeconds,
+        tiempo_descanso_segundos: finalTotalBreakTimeInSeconds,
+        cantidad_jugadores: sessionState.value.playerCount,
+        ciegas: sessionState.value.blinds,
+        ubicacion: sessionState.value.location,
+        moneda: sessionState.value.currency,
+        stack_inicial: ensureFloat(sessionState.value.initialStack),
+        total_recompras: ensureFloat(sessionState.value.totalRebuys),
+        total_gastos: ensureFloat(sessionState.value.totalExpenses),
+        stack_final: ensureFloat(finalStack),
+        resultado: result,
+      };
+      
+      await apiAddSession(sessionData);
+      await fetchSessions();
+
+    } catch (error) {
+      console.error('Error en el store al guardar sesión:', error);
+      throw error;
+    } finally {
+      // Limpieza final de la sesión activa
+      clearInterval(sessionTimerInterval);
+      sessionTimerInterval = null;
+      sessionState.value.isActive = false;
+      sessionState.value.startTime = null;
+      clearStateFromLocalStorage();
+    }
+  }
+  
+  // Nueva función para ser llamada desde fuera (ej. al hacer logout)
+  function clearActiveSession() {
+    clearInterval(sessionTimerInterval);
+    sessionTimerInterval = null;
+    sessionState.value.isActive = false;
+    sessionState.value.startTime = null;
+    clearStateFromLocalStorage();
+  }
+
+  // ========================================================================
+  // ===> FIN DEL CAMBIO                                                 <===
+  // ========================================================================
+
+  // --- CÓDIGO ORIGINAL SIN CAMBIOS ---
+
   const summaryDateFilter = ref('all');
 
   function setSummaryDateFilter(newFilter) {
@@ -154,122 +320,54 @@ export const useSessionStore = defineStore('session', () => {
   });
 
   async function fetchSessions() {
-    // La lógica ahora llama a la API centralizada
     savedSessions.value = await apiFetchSessions();
-  }
-
-  function startSession() {
-    elapsedTime.value = 0;
-    totalBreakTime.value = 0;
-    totalRebuys.value = 0;
-    totalExpenses.value = 0;
-    isActive.value = true;
-    isOnBreak.value = false;
-    
-    clearInterval(sessionTimerInterval);
-    sessionTimerInterval = setInterval(() => {
-      if (!isOnBreak.value) {
-        elapsedTime.value++;
-      }
-    }, 1000);
-  }
-
-  function startBreak() {
-    if (!isActive.value) return;
-    isOnBreak.value = true;
-    breakElapsedTime.value = 0;
-
-    clearInterval(breakTimerInterval);
-    breakTimerInterval = setInterval(() => {
-      breakElapsedTime.value++;
-    }, 1000);
-  }
-
-  function endBreak() {
-    isOnBreak.value = false;
-    totalBreakTime.value += breakElapsedTime.value;
-    clearInterval(breakTimerInterval);
-    breakTimerInterval = null;
-  }
-
-  function addRebuy(amount) {
-    if (amount > 0) {
-      totalRebuys.value += amount;
-    }
-  }
-
-  function addExpense(amount) {
-    if (amount > 0) {
-      totalExpenses.value += amount;
-    }
-  }
-  
-  // *** ÚNICO BLOQUE MODIFICADO ***
-  async function stopAndSaveSession(finalStack) {
-    try {
-      if (isOnBreak.value) {
-        totalBreakTime.value += breakElapsedTime.value;
-      }
-
-      const ensureFloat = (value) => {
-          const num = parseFloat(value);
-          return isNaN(num) ? 0.0 : num;
-      };
-
-      const currentInvestment = ensureFloat(initialStack.value) + ensureFloat(totalRebuys.value);
-      const result = ensureFloat(finalStack) - currentInvestment - ensureFloat(totalExpenses.value);
-
-      const sessionData = {
-        fecha: new Date().toISOString().split('T')[0],
-        duracion_segundos: ensureFloat(elapsedTime.value),
-        tiempo_descanso_segundos: ensureFloat(totalBreakTime.value),
-        cantidad_jugadores: playerCount.value || 2,
-        ciegas: blinds.value || 'N/A',
-        ubicacion: location.value || null,
-        moneda: currency.value || '$',
-        stack_inicial: ensureFloat(initialStack.value),
-        total_recompras: ensureFloat(totalRebuys.value),
-        total_gastos: ensureFloat(totalExpenses.value),
-        stack_final: ensureFloat(finalStack),
-        resultado: result,
-      };
-      
-      // 1. Guardamos en la BBDD a través de la API
-      await apiAddSession(sessionData);
-      
-      // 2. Volvemos a cargar TODAS las sesiones para asegurar consistencia
-      await fetchSessions();
-
-    } catch (error) {
-      console.error('Error en el store al guardar sesión:', error);
-      throw error; // Propaga el error para que la vista lo maneje
-    } finally {
-      // Este bloque se ejecuta siempre, haya error o no.
-      isActive.value = false;
-      isOnBreak.value = false;
-      clearInterval(sessionTimerInterval);
-      clearInterval(breakTimerInterval);
-      sessionTimerInterval = null;
-      breakTimerInterval = null;
-      elapsedTime.value = 0;
-      breakElapsedTime.value = 0;
-    }
   }
   
   async function deleteSession(sessionId) {
     try {
-      // Llama a la API para borrar
       await apiDeleteSession(sessionId);
-      // Vuelve a cargar para mantener la consistencia
       await fetchSessions();
     } catch (error) {
       console.error('Error deleting session:', error.message);
     }
   }
 
+  // Lógica de inicialización: Carga el estado al crear el store.
+  loadStateFromLocalStorage();
+
   return {
-    isActive, elapsedTime, isOnBreak, breakElapsedTime, playerCount, blinds, 
-    location, currency, initialStack, savedSessions, totalRebuys, totalExpenses,
+    // Exponemos el estado a través de propiedades computadas para evitar la escritura directa
+    isActive: computed(() => sessionState.value.isActive),
+    isOnBreak: computed(() => sessionState.value.isOnBreak),
+    playerCount: computed({
+      get: () => sessionState.value.playerCount,
+      set: (val) => { sessionState.value.playerCount = val; } // Ya no se guarda aquí
+    }),
+    blinds: computed({
+      get: () => sessionState.value.blinds,
+      set: (val) => { sessionState.value.blinds = val; }
+    }),
+    location: computed({
+      get: () => sessionState.value.location,
+      set: (val) => { sessionState.value.location = val; }
+    }),
+    currency: computed({
+      get: () => sessionState.value.currency,
+      set: (val) => { sessionState.value.currency = val; }
+    }),
+    initialStack: computed({
+      get: () => sessionState.value.initialStack,
+      set: (val) => { sessionState.value.initialStack = val; }
+    }),
+    totalRebuys: computed(() => sessionState.value.totalRebuys),
+    totalExpenses: computed(() => sessionState.value.totalExpenses),
+    elapsedTime, 
+    breakElapsedTime,
+    savedSessions,
+    startSession, startBreak, endBreak, stopAndSaveSession, deleteSession,
+    addRebuy, addExpense,
+    clearActiveSession,
+    fetchSessions,
     summaryDateFilter,
     totalNetProfit,
     averageBuyIn,
@@ -287,9 +385,6 @@ export const useSessionStore = defineStore('session', () => {
     winningStreak,
     averageRebuys,
     totalAllExpenses,
-    startSession, startBreak, endBreak, stopAndSaveSession, deleteSession,
-    addRebuy, addExpense,
     setSummaryDateFilter,
-    fetchSessions,
   };
 });
