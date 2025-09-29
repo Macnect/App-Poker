@@ -5,21 +5,16 @@ import { supabase } from '@/supabase';
 import { useAuthStore } from './useAuthStore';
 import { apiFetchSessions, apiAddSession, apiDeleteSession } from '@/api';
 
-// ========================================================================
-// ===> INICIO DEL CAMBIO: LÓGICA DE TEMPORIZADOR PERSISTENTE          <===
-// ========================================================================
-
 const STORAGE_KEY = 'active-poker-session';
 
 export const useSessionStore = defineStore('session', () => {
   // --- STATE ---
-  // El estado principal ahora se inicializa desde una estructura que se guardará en localStorage
   const sessionState = ref({
     isActive: false,
     startTime: null,
     isOnBreak: false,
     breakStartTime: null,
-    totalBreakDuration: 0, // en milisegundos
+    totalBreakDuration: 0,
     totalRebuys: 0,
     totalExpenses: 0,
     playerCount: 6,
@@ -31,11 +26,10 @@ export const useSessionStore = defineStore('session', () => {
 
   const savedSessions = ref([]);
   
-  // Para actualizar la pantalla cada segundo
   const timerDisplay = ref(0);
   let sessionTimerInterval = null;
 
-  // --- HELPERS PERSISTENCIA ---
+  // --- HELPERS ---
   function saveStateToLocalStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sessionState.value));
   }
@@ -49,7 +43,6 @@ export const useSessionStore = defineStore('session', () => {
     if (savedState) {
       const parsedState = JSON.parse(savedState);
       sessionState.value = { ...sessionState.value, ...parsedState };
-      // Si la sesión estaba activa, reiniciamos el intervalo para actualizar la UI
       if (sessionState.value.isActive) {
         startUiUpdater();
       }
@@ -57,8 +50,15 @@ export const useSessionStore = defineStore('session', () => {
   }
   
   // --- COMPUTED PROPERTIES MODIFICADAS ---
-  // Ahora calculan el tiempo basándose en los timestamps guardados en lugar de un contador simple
   const elapsedTime = computed(() => {
+    // ==========================================================
+    // ===> INICIO DEL CAMBIO: AÑADIR DEPENDENCIA REACTIVA     <===
+    // ==========================================================
+    // Al acceder a timerDisplay, hacemos que esta propiedad se recalcule cada segundo.
+    const _trigger = timerDisplay.value;
+    // ==========================================================
+    // ===> FIN DEL CAMBIO                                     <===
+    // ==========================================================
     if (!sessionState.value.isActive || !sessionState.value.startTime) return 0;
     const now = Date.now();
     const currentBreakDuration = sessionState.value.isOnBreak && sessionState.value.breakStartTime
@@ -66,28 +66,33 @@ export const useSessionStore = defineStore('session', () => {
       : 0;
     const totalDuration = now - sessionState.value.startTime;
     const netDuration = totalDuration - sessionState.value.totalBreakDuration - currentBreakDuration;
-    return Math.floor(netDuration / 1000); // Devuelve en segundos
+    return Math.floor(netDuration / 1000);
   });
 
   const breakElapsedTime = computed(() => {
+    // ==========================================================
+    // ===> INICIO DEL CAMBIO: AÑADIR DEPENDENCIA REACTIVA     <===
+    // ==========================================================
+    const _trigger = timerDisplay.value;
+    // ==========================================================
+    // ===> FIN DEL CAMBIO                                     <===
+    // ==========================================================
     if (!sessionState.value.isOnBreak || !sessionState.value.breakStartTime) return 0;
-    return Math.floor((Date.now() - sessionState.value.breakStartTime) / 1000); // Devuelve en segundos
+    return Math.floor((Date.now() - sessionState.value.breakStartTime) / 1000);
   });
   
-  // --- ACTIONS MODIFICADAS ---
+  // --- ACTIONS ---
   
   function startUiUpdater() {
     clearInterval(sessionTimerInterval);
     sessionTimerInterval = setInterval(() => {
-      // Esta variable solo sirve para forzar que las propiedades computadas se recalculen cada segundo
       timerDisplay.value++; 
     }, 1000);
   }
 
   function startSession() {
-    // Resetea todo a un estado inicial y guarda el timestamp de inicio
     sessionState.value = {
-      ...sessionState.value, // Mantiene la configuración (ciegas, etc.)
+      ...sessionState.value,
       isActive: true,
       startTime: Date.now(),
       isOnBreak: false,
@@ -165,7 +170,6 @@ export const useSessionStore = defineStore('session', () => {
       console.error('Error en el store al guardar sesión:', error);
       throw error;
     } finally {
-      // Limpieza final de la sesión activa
       clearInterval(sessionTimerInterval);
       sessionTimerInterval = null;
       sessionState.value.isActive = false;
@@ -174,7 +178,6 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
   
-  // Nueva función para ser llamada desde fuera (ej. al hacer logout)
   function clearActiveSession() {
     clearInterval(sessionTimerInterval);
     sessionTimerInterval = null;
@@ -182,12 +185,6 @@ export const useSessionStore = defineStore('session', () => {
     sessionState.value.startTime = null;
     clearStateFromLocalStorage();
   }
-
-  // ========================================================================
-  // ===> FIN DEL CAMBIO                                                 <===
-  // ========================================================================
-
-  // --- CÓDIGO ORIGINAL SIN CAMBIOS ---
 
   const summaryDateFilter = ref('all');
 
@@ -332,33 +329,37 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  // Lógica de inicialización: Carga el estado al crear el store.
   loadStateFromLocalStorage();
 
   return {
-    // Exponemos el estado a través de propiedades computadas para evitar la escritura directa
     isActive: computed(() => sessionState.value.isActive),
     isOnBreak: computed(() => sessionState.value.isOnBreak),
+    // ==========================================================
+    // ===> INICIO DEL CAMBIO: CORREGIR GUARDADO DE SETTINGS   <===
+    // ==========================================================
     playerCount: computed({
       get: () => sessionState.value.playerCount,
-      set: (val) => { sessionState.value.playerCount = val; } // Ya no se guarda aquí
+      set: (val) => { sessionState.value.playerCount = val; saveStateToLocalStorage(); }
     }),
     blinds: computed({
       get: () => sessionState.value.blinds,
-      set: (val) => { sessionState.value.blinds = val; }
+      set: (val) => { sessionState.value.blinds = val; saveStateToLocalStorage(); }
     }),
     location: computed({
       get: () => sessionState.value.location,
-      set: (val) => { sessionState.value.location = val; }
+      set: (val) => { sessionState.value.location = val; saveStateToLocalStorage(); }
     }),
     currency: computed({
       get: () => sessionState.value.currency,
-      set: (val) => { sessionState.value.currency = val; }
+      set: (val) => { sessionState.value.currency = val; saveStateToLocalStorage(); }
     }),
     initialStack: computed({
       get: () => sessionState.value.initialStack,
-      set: (val) => { sessionState.value.initialStack = val; }
+      set: (val) => { sessionState.value.initialStack = val; saveStateToLocalStorage(); }
     }),
+    // ==========================================================
+    // ===> FIN DEL CAMBIO                                     <===
+    // ==========================================================
     totalRebuys: computed(() => sessionState.value.totalRebuys),
     totalExpenses: computed(() => sessionState.value.totalExpenses),
     elapsedTime, 
