@@ -2,7 +2,7 @@
   <div class="view-container">
     <!-- Panel de Configuración (visible cuando no hay mano activa) -->
     <div v-if="!handIsActive" class="configuration-panel">
-      <h2>Configuración de la Mano</h2>
+      <h2></h2>
       <div class="config-item">
         <label for="player-count">Número de Jugadores:</label>
         <select id="player-count" v-model.number="selectedPlayers">
@@ -203,7 +203,7 @@ onUnmounted(() => {
   max-width: 500px; margin: 1rem auto;
   background-color: #2d3748; border-radius: 12px;
 }
-h2 { font-size: 2.5rem; margin-bottom: -90px; }
+h2 { font-size: 2.5rem; margin-bottom: -50px; }
 .config-item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 label { font-weight: bold; font-size: 1.2rem; }
 select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; text-align: center; box-sizing: border-box; border-radius: 8px; }
