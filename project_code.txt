@@ -868,19 +868,19 @@ function handleWheelScroll(event) {
 .grid-next { grid-area: next-action; }
  
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
-  height: clamp(40px, 8vmin, 65px);
-  font-size: clamp(0.8rem, 2.2vmin, 1.3rem);
+  height: clamp(50px, 8vmin, 65px);
+  font-size: clamp(0.3rem, 2.2vmin, 1.3rem);
   font-weight: bold;
   border-radius: 8px;
   color: white;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 0 5px;
+  padding: 1 22px;
   border: 1px solid #000;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 0;
+  min-width: 0.5%;
 }
 
 .grid-input { background-color: #1A202C; text-align: center; width: 100%; }
@@ -1314,10 +1314,12 @@ h3 {
 --- INICIO DEL ARCHIVO: src/components/DisplayOptions.vue ---
 
 <template>
-  <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: (isDragging ? 'grabbing' : 'grab') }">
-    <h3>Opciones mesa</h3>
+  <!-- Se ha eliminado la lógica de arrastre y el posicionamiento absoluto -->
+  <div class="display-options-wrapper">
+    <h3>Opciones Replay</h3>
     <div class="options-row">
-      <select class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
+      <label for="table-color-select">Color Mesa:</label>
+      <select id="table-color-select" class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
         <option value="#28563a">Verde</option>
         <option value="#3a4c8a">Azul</option>
         <option value="#8a3a3a">Rojo</option>
@@ -1326,17 +1328,24 @@ h3 {
         <option value="#1A202C">Negro</option>
         <option value="#4A5568">Gris</option>
       </select>
+    </div>
+     <div class="options-row">
+       <label>Modo Display:</label>
       <button class="option-item" @click="gameStore.toggleDisplayMode()">
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
     </div>
     <div class="options-row">
+       <label>Controles:</label>
+      <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
       <button class="option-item" @click="gameStore.toggleReplay()">
         {{ gameStore.isReplaying ? '⏸️' : '▶️' }}
       </button>
-      <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
       <button class="option-item" @click="gameStore.navigateHistory(1)">▶</button>
-      <select class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
+    </div>
+     <div class="options-row">
+       <label for="replay-speed-select">Velocidad:</label>
+       <select id="replay-speed-select" class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
         <option value="2000">1x</option>
         <option value="1000">2x</option>
         <option value="500">4x</option>
@@ -1346,10 +1355,10 @@ h3 {
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+// Se eliminan los imports que ya no son necesarios (ref, onMounted, onUnmounted)
 import { useGameStore } from '../store/game';
 
-// Definimos las propiedades y eventos para comunicarnos con el componente padre
+// Las props y emits se mantienen igual
 defineProps({
   modelValue: String
 });
@@ -1357,86 +1366,54 @@ defineEmits(['update:modelValue']);
 
 const gameStore = useGameStore();
 
-const panelRef = ref(null);
-const isDragging = ref(false);
-const dragOffset = ref({ x: 0, y: 0 });
-const panelPosition = ref({ x: 0, y: 0 });
-
-function startDrag(event) {
-  isDragging.value = true;
-  const rect = panelRef.value.getBoundingClientRect();
-  dragOffset.value = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
-  };
-  document.addEventListener('mousemove', drag);
-  document.addEventListener('mouseup', stopDrag);
-}
-
-function drag(event) {
-  if (!isDragging.value) return;
-  panelPosition.value = {
-    x: event.clientX - dragOffset.value.x,
-    y: event.clientY - dragOffset.value.y
-  };
-}
-
-function stopDrag() {
-  isDragging.value = false;
-  localStorage.setItem('displayOptionsPosition', JSON.stringify(panelPosition.value));
-  document.removeEventListener('mousemove', drag);
-  document.removeEventListener('mouseup', stopDrag);
-}
-
-onMounted(() => {
-  const savedPosition = localStorage.getItem('displayOptionsPosition');
-  if (savedPosition) {
-    panelPosition.value = JSON.parse(savedPosition);
-    // Set initial position
-    const rect = panelRef.value.getBoundingClientRect();
-    panelPosition.value = {
-      x: window.innerWidth / 1.25 - rect.width / 2,
-      y: window.innerHeight - 350
-    };
-  }
-});
-
-onUnmounted(() => {
-  document.removeEventListener('mousemove', drag);
-  document.removeEventListener('mouseup', stopDrag);
-});
+// Se ha eliminado toda la lógica de JavaScript relacionada con el arrastre del panel.
 </script>
 
 <style scoped>
+/* Estilos completamente nuevos para que el componente se comporte como un panel fijo */
 .display-options-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  align-items: center;
-  padding: 8px;
   background-color: #2d3748;
   border-radius: 12px;
-  border: 1px solid var(--border-color);
+  padding: clamp(10px, 1.5vw, 20px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
+  color: white;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.5vh, 20px);
+  align-items: center;
+  justify-content: center; /* Centra el contenido verticalmente */
+  width: 100%; /* Ocupa todo el ancho de su celda en el grid */
+  height: 100%; /* Ocupa toda la altura de su celda en el grid */
 }
 
 h3 {
-  margin: 0;
-  font-size: 1.4rem;
+  margin: 0 0 1rem 0;
+  font-size: clamp(1.2rem, 3vmin, 1.6rem);
   font-weight: bold;
   color: white;
+  text-align: center;
 }
 
 .options-row {
   display: flex;
-  gap: 5px;
+  gap: 10px;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.options-row label {
+  font-weight: bold;
+  color: #a0aec0;
+  flex-shrink: 0;
 }
 
 .option-item {
-  height: 45px;
-  width: 70px;
-  padding: 0 15px;
-  font-size: 1.2rem;
+  height: clamp(35px, 6vmin, 50px);
+  padding: 0 10px;
+  font-size: clamp(0.9rem, 2.5vmin, 1.2rem);
   font-weight: bold;
   border: 1px solid #000;
   border-radius: 8px;
@@ -1444,6 +1421,17 @@ h3 {
   color: white;
   cursor: pointer;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+select.option-item {
+  flex-grow: 1;
+}
+
+button.option-item {
+  min-width: 50px;
 }
 </style>
 
@@ -1832,18 +1820,31 @@ const dealerButtonStyle = computed(() => {
   };
 });
 const betBoxStyle = computed(() => {
-  const { x, y } = seatCoordinates.value;
-  const thresholdY = 30; // Umbral en porcentaje para decidir si está arriba/abajo
-  const thresholdX = 35; // Umbral en porcentaje para decidir si está a los lados
+  // El visualIndex [0] es siempre el Héroe en la parte inferior.
+  const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
 
-  if (y > thresholdY) { // Asientos inferiores
-    return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-  } else if (y < -thresholdY) { // Asientos superiores
-    return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-  } else if (x < -thresholdX) { // Asientos de la izquierda
-    return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
-  } else { // Asientos de la derecha
-    return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
+  // Lógica de posicionamiento de fichas por asiento individual
+  switch (visualIndex) {
+    case 0: // Asiento del Héroe (inferior central)
+      return { top: '-13%', left: '60%', transform: 'translateX(-50%)' };
+    case 1: // Jugador a la derecha del Héroe
+      return { top: '20%', right: '-60%', transform: 'translateY(-50%)' };
+    case 2:
+      return { top: '80%', right: '-70%', transform: 'translateY(-50%)' };
+    case 3:
+      return { bottom: '-10%', left: '130%', transform: 'translateX(-50%)' };
+    case 4: // Jugador en el top
+      return { bottom: '-35%', left: '50%', transform: 'translateX(-50%)' };
+    case 5: // Jugador en el top
+      return { bottom: '-35%', left: '50%', transform: 'translateX(-50%)' };
+    case 6: // Asiento a la izquierda (superior)
+      return { top: '95%', left: '-50%', transform: 'translateY(-50%)' };
+    case 7: // Asiento a la izquierda (inferior)
+      return { top: '70%', left: '-55%', transform: 'translateY(-50%)' };
+    case 8:
+      return { top: '-15%', left: '50%', transform: 'translateX(-50%)' };
+    default: // Fallback por si acaso
+      return { top: '0', left: '105%' };
   }
 });
 const notesPanelStyle = computed(() => {
@@ -1945,13 +1946,13 @@ const notesPanelStyle = computed(() => {
 
 .dealer-button {
   position: absolute;
-  width: 25px;
-  height: 25px;
+  width: 15px;
+  height: 15px;
   background: linear-gradient(145deg, #ffffff, #e6e6e6);
   color: #333;
   border-radius: 50%;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.75rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1965,8 +1966,15 @@ const notesPanelStyle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0px;
+  gap: -0px;
   z-index: 9;
+}
+
+.bet-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: -8px; /* <--- ¡AQUÍ ESTÁ LA MAGIA! AJUSTA ESTE VALOR */
 }
 
 .bet-info {
@@ -1978,9 +1986,9 @@ const notesPanelStyle = computed(() => {
 .bet-amount-text {
   background-color: rgba(0,0,0,0.8);
   border: 1px solid #000;
-  padding: 2px 8px;
+  padding: 0.5px 4px;
   border-radius: 6px;
-  font-size: 1em;
+  font-size: 0.6em;
   font-weight: bold;
   color: white;
   white-space: nowrap;
@@ -4528,7 +4536,7 @@ button {
   font-weight: bold;
   transition: background-color 0.2s, transform 0.1s;
   /* Altura mínima para ser un buen "touch target" en móviles */
-  min-height: 44px;
+  min-height: 24px;
 }
 
 /* Solo aplicar :hover en dispositivos con un puntero (ratón), no en táctiles */
@@ -5076,45 +5084,46 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
 .profit { color: #68d391; }
 .loss { color: #fc8181; }
 .even { color: #e2e8f0; }
+.toast { position: fixed; top: 20px; right: 20px; display: flex; align-items: center; gap: 10px; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); z-index: 1000; animation: slideIn 0.3s ease-out; }
+.success-toast { background-color: #38a169; color: white; }
+.toast-icon { font-size: 1.5rem; font-weight: bold; }
+.toast-message { font-size: 1rem; font-weight: bold; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-/* Toast Styles */
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-}
-
-.success-toast {
-  background-color: #38a169;
-  color: white;
-}
-
-.toast-icon {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.toast-message {
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
+/* ========================================================== */
+/* ===> NUEVO BLOQUE DE CÓDIGO PARA ADAPTAR A MÓVILES <=== */
+/* ========================================================== */
+@media (max-width: 640px) {
+  .trip-planner-container {
+    padding: 1rem;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
+  .planner-panel, .tracking-panel {
+    padding: 1.5rem;
+  }
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+  }
+  .form-grid {
+    /* El grid ya pasa a una columna por el minmax(), pero reducimos el gap */
+    gap: 1.5rem;
+  }
+  .config-item label {
+    font-size: 1rem; /* Reducimos el tamaño de la etiqueta */
+  }
+  .config-item input, .config-item select {
+    padding: 12px; /* Reducimos el padding de los inputs */
+    font-size: 1rem; /* Reducimos la fuente de los inputs */
+  }
+  .player-entry {
+    /* Apilamos el nombre y la aportación en vertical */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* Hacemos que ocupen todo el ancho */
+    gap: 8px;
+  }
+  .player-participation-input {
+    width: 100px; /* Aseguramos un ancho mínimo para el input de dinero */
   }
 }
 </style>
@@ -5591,7 +5600,6 @@ const formattedTime = computed(() => {
   height: 12px;
   border-radius: 50%;
   background-color: #718096;
-  /* CORRECTION: Changed colon to a space */
   transition: background-color 0.3s ease;
 }
 .timer-widget:not(.on-break) .status-indicator {
@@ -5705,6 +5713,23 @@ const formattedTime = computed(() => {
     grid-template-columns: 1fr; /* Apila los inputs de configuración */
   }
 }
+
+/* ================================================== */
+/* ===> NUEVO BLOQUE DE CÓDIGO PARA LA SOLUCIÓN <=== */
+/* ================================================== */
+/* En pantallas muy estrechas (móviles verticales), apilamos las acciones rápidas */
+@media (max-width: 480px) {
+  .action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Un espacio más pequeño entre input y botón */
+  }
+  
+  .action-group button {
+    font-size: 1.1rem; /* Hacemos el texto del botón un poco más grande */
+  }
+}
+
 </style>
 
 ---------------------------------------------------------

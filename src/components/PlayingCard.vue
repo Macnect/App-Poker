@@ -49,12 +49,12 @@ const suitDetails = computed(() => {
 }
 
 .rank {
-  font-size: 2.5rem;
+  font-size: 1.6rem;
   line-height: 1.1;
 }
 
 .suit-icon {
-  font-size: 1.5rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
