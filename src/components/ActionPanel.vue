@@ -225,7 +225,7 @@ function handleWheelScroll(event) {
  
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
   height: clamp(50px, 8vmin, 65px);
-  font-size: clamp(0.3rem, 2.2vmin, 1.3rem);
+  font-size: clamp(1.5rem, 2.2vmin, 1.3rem);
   font-weight: bold;
   border-radius: 8px;
   color: white;
@@ -245,7 +245,7 @@ function handleWheelScroll(event) {
 .grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; }
 .grid-quick-bets button {
   padding: clamp(6px, 1.5vmin, 12px);
-  font-size: clamp(0.7rem, 1.8vmin, 1rem);
+  font-size: clamp(0.8rem, 1.8vmin, 1rem);
   border-radius: 6px;
   background-color: var(--btn-grey);
   color: white;
