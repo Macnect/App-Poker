@@ -224,14 +224,14 @@ function handleWheelScroll(event) {
 .grid-next { grid-area: next-action; }
  
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
-  height: clamp(40px, 8vmin, 65px);
-  font-size: clamp(0.8rem, 2.2vmin, 1.3rem);
+  height: clamp(50px, 8vmin, 65px);
+  font-size: clamp(0.7rem, 2.2vmin, 1.3rem);
   font-weight: bold;
   border-radius: 8px;
   color: white;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 0 5px;
+  padding: 0 22px;
   border: 1px solid #000;
   display: flex;
   align-items: center;

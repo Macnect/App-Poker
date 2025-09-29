@@ -326,13 +326,13 @@ const notesPanelStyle = computed(() => {
 
 .dealer-button {
   position: absolute;
-  width: 25px;
-  height: 25px;
+  width: 15px;
+  height: 15px;
   background: linear-gradient(145deg, #ffffff, #e6e6e6);
   color: #333;
   border-radius: 50%;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 0.75rem;
   display: flex;
   justify-content: center;
   align-items: center;
