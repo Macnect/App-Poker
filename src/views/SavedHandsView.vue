@@ -312,9 +312,9 @@ onUnmounted(() => {
 .hand-preview {
   display: flex;
   flex-grow: 1;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 2rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
 }
 .card-group {
   display: flex;
