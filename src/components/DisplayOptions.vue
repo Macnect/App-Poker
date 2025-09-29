@@ -1,8 +1,10 @@
 <template>
-  <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: (isDragging ? 'grabbing' : 'grab') }">
-    <h3>Opciones mesa</h3>
+  <!-- Se ha eliminado la lógica de arrastre y el posicionamiento absoluto -->
+  <div class="display-options-wrapper">
+    <h3>Opciones Replay</h3>
     <div class="options-row">
-      <select class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
+      <label for="table-color-select">Color Mesa:</label>
+      <select id="table-color-select" class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
         <option value="#28563a">Verde</option>
         <option value="#3a4c8a">Azul</option>
         <option value="#8a3a3a">Rojo</option>
@@ -11,17 +13,24 @@
         <option value="#1A202C">Negro</option>
         <option value="#4A5568">Gris</option>
       </select>
+    </div>
+     <div class="options-row">
+       <label>Modo Display:</label>
       <button class="option-item" @click="gameStore.toggleDisplayMode()">
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
     </div>
     <div class="options-row">
+       <label>Controles:</label>
+      <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
       <button class="option-item" @click="gameStore.toggleReplay()">
         {{ gameStore.isReplaying ? '⏸️' : '▶️' }}
       </button>
-      <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
       <button class="option-item" @click="gameStore.navigateHistory(1)">▶</button>
-      <select class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
+    </div>
+     <div class="options-row">
+       <label for="replay-speed-select">Velocidad:</label>
+       <select id="replay-speed-select" class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
         <option value="2000">1x</option>
         <option value="1000">2x</option>
         <option value="500">4x</option>
@@ -31,10 +40,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+// Se eliminan los imports que ya no son necesarios (ref, onMounted, onUnmounted)
 import { useGameStore } from '../store/game';
 
-// Definimos las propiedades y eventos para comunicarnos con el componente padre
+// Las props y emits se mantienen igual
 defineProps({
   modelValue: String
 });
@@ -42,86 +51,54 @@ defineEmits(['update:modelValue']);
 
 const gameStore = useGameStore();
 
-const panelRef = ref(null);
-const isDragging = ref(false);
-const dragOffset = ref({ x: 0, y: 0 });
-const panelPosition = ref({ x: 0, y: 0 });
-
-function startDrag(event) {
-  isDragging.value = true;
-  const rect = panelRef.value.getBoundingClientRect();
-  dragOffset.value = {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
-  };
-  document.addEventListener('mousemove', drag);
-  document.addEventListener('mouseup', stopDrag);
-}
-
-function drag(event) {
-  if (!isDragging.value) return;
-  panelPosition.value = {
-    x: event.clientX - dragOffset.value.x,
-    y: event.clientY - dragOffset.value.y
-  };
-}
-
-function stopDrag() {
-  isDragging.value = false;
-  localStorage.setItem('displayOptionsPosition', JSON.stringify(panelPosition.value));
-  document.removeEventListener('mousemove', drag);
-  document.removeEventListener('mouseup', stopDrag);
-}
-
-onMounted(() => {
-  const savedPosition = localStorage.getItem('displayOptionsPosition');
-  if (savedPosition) {
-    panelPosition.value = JSON.parse(savedPosition);
-    // Set initial position
-    const rect = panelRef.value.getBoundingClientRect();
-    panelPosition.value = {
-      x: window.innerWidth / 1.25 - rect.width / 2,
-      y: window.innerHeight - 350
-    };
-  }
-});
-
-onUnmounted(() => {
-  document.removeEventListener('mousemove', drag);
-  document.removeEventListener('mouseup', stopDrag);
-});
+// Se ha eliminado toda la lógica de JavaScript relacionada con el arrastre del panel.
 </script>
 
 <style scoped>
+/* Estilos completamente nuevos para que el componente se comporte como un panel fijo */
 .display-options-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  align-items: center;
-  padding: 8px;
   background-color: #2d3748;
   border-radius: 12px;
-  border: 1px solid var(--border-color);
+  padding: clamp(10px, 1.5vw, 20px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
+  color: white;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.5vh, 20px);
+  align-items: center;
+  justify-content: center; /* Centra el contenido verticalmente */
+  width: 100%; /* Ocupa todo el ancho de su celda en el grid */
+  height: 100%; /* Ocupa toda la altura de su celda en el grid */
 }
 
 h3 {
-  margin: 0;
-  font-size: 1.4rem;
+  margin: 0 0 1rem 0;
+  font-size: clamp(1.2rem, 3vmin, 1.6rem);
   font-weight: bold;
   color: white;
+  text-align: center;
 }
 
 .options-row {
   display: flex;
-  gap: 5px;
+  gap: 10px;
   align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.options-row label {
+  font-weight: bold;
+  color: #a0aec0;
+  flex-shrink: 0;
 }
 
 .option-item {
-  height: 45px;
-  width: 70px;
-  padding: 0 15px;
-  font-size: 1.2rem;
+  height: clamp(35px, 6vmin, 50px);
+  padding: 0 10px;
+  font-size: clamp(0.9rem, 2.5vmin, 1.2rem);
   font-weight: bold;
   border: 1px solid #000;
   border-radius: 8px;
@@ -129,5 +106,16 @@ h3 {
   color: white;
   cursor: pointer;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+select.option-item {
+  flex-grow: 1;
+}
+
+button.option-item {
+  min-width: 50px;
 }
 </style>

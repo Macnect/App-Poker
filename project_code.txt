@@ -59,6 +59,7 @@ poker
     "vue-i18n": "^11.1.12"
   },
   "devDependencies": {
+    "@pinegrow/vite-plugin": "^3.0.69",
     "@vitejs/plugin-vue": "^6.0.1",
     "sharp": "^0.34.4",
     "vite": "^7.1.6"
@@ -645,15 +646,12 @@ export const apiDeleteTrip = async (tripId) => {
   <div class="action-panel-wrapper">
     
     <div class="actions-grid">
-      <!-- Fila 1 -->
       <div class="grid-turn-info">{{ $t('actionPanel.turnOf') }} <strong>{{ gameStore.activePlayer?.name }}</strong></div>
       <button @click="gameStore.performAction('fold')" class="grid-fold btn-fold">{{ $t('actionPanel.fold') }}</button>
       <button @click="handleCheckCall" :disabled="isCallDisabled" class="grid-call btn-call">{{ checkOrCallLabel.toUpperCase() }}</button>
       
-      <!-- Fila 2 -->
       <button @click="handleBetRaise" :disabled="isRaiseDisabled" class="grid-raise btn-raise">{{ betOrRaiseLabel.toUpperCase() }}</button>
       
-      <!-- Input ahora usa 'displayRaiseAmount' para ser dinámico -->
       <input type="number" v-model="displayRaiseAmount" class="grid-input" />
       <div v-if="isAllIn" class="all-in-indicator">▲</div>
       
@@ -668,7 +666,6 @@ export const apiDeleteTrip = async (tripId) => {
         :style="sliderStyle" 
       />
 
-      <!-- Fila 3 -->
       <div class="grid-quick-bets">
         <button @click="setRaiseAmountByPot(0.25)">25%</button>
         <button @click="setRaiseAmountByPot(0.33)">33%</button>
@@ -676,11 +673,9 @@ export const apiDeleteTrip = async (tripId) => {
         <button @click="setRaiseAmountByPot(0.75)">75%</button>
         <button @click="setRaiseAmountByPot(1)">{{ $t('actionPanel.pot') }}</button>
         <button @click="setRaiseAmountByPot(1.5)">150%</button>
-        <!-- BOTÓN ALL-IN MODIFICADO -->
         <button @click="setRaiseAmountToAllIn" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
       </div>
 
-      <!-- Controles de la mesa -->
       <select class="grid-color-select" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
         <option value="#28563a">Verde</option>
         <option value="#3a4c8a">Azul</option>
@@ -693,6 +688,9 @@ export const apiDeleteTrip = async (tripId) => {
       <button class="grid-bbs-toggle" @click="gameStore.toggleDisplayMode()">
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
+      <button @click="gameStore.saveCurrentHand()" class="grid-save btn-save-hand">Guardar Mano</button>
+      <button @click="gameStore.navigateHistory(-1)" class="grid-prev btn-nav" v-if="gameStore.gamePhase !== 'replay'">◀</button>
+      <button @click="gameStore.navigateHistory(1)" class="grid-next btn-nav" v-if="gameStore.gamePhase !== 'replay'">▶</button>
     </div>
   </div>
 </template>
@@ -805,7 +803,7 @@ function setRaiseAmountToAllIn() {
 
 
 function handleWheelScroll(event) {
-  event.preventDefault();
+  // event.preventDefault(); // <-- ELIMINADO PARA SOLUCIONAR EL [VIOLATION]
   const step = gameStore.bigBlind;
   let newValue;
   if (event.deltaY < 0) {
@@ -820,202 +818,123 @@ function handleWheelScroll(event) {
 </script>
 
 <style scoped>
-/* --- ESTILOS ESCRITORIO --- */
 .action-panel-wrapper {
   --btn-red: #f95f41;
-  --btn-red-hover: #e04a2f;
   --btn-green: #70b75b;
-  --btn-green-hover: #59b33f;
   --btn-orange: #e39e49;
-  --btn-orange-hover: #de8f32;
   --btn-purple: #a955cd;
-  --btn-purple-hover: #9c51bb;
   --btn-grey: #4A5568;
-  --btn-grey-hover: #2D3748;
   --slider-color-active: #FAB76B;
   --slider-color-inactive: #1A202C;
-  
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
 
   background-color: #2d3748;
   border-radius: 12px;
-  padding: 20px;
-  width: 900px;
+  padding: clamp(10px, 1.5vw, 20px);
+  width: 90%;
+  margin-left: 5%;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: 3px solid var(--border-color);
+  border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
   color: white;
-  transition: all 0.3s ease;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
 }
+
 .actions-grid {
-  display: grid;
-  grid-template-columns: 180px 120px 1fr 120px 120px;
-  grid-template-rows: auto auto auto;
-  gap: 15px;
-  align-items: center;
-  grid-template-areas:
-    "fold       call       turn-info  color-select bbs-toggle"
-    "raise      input      slider     slider       slider"
-    "quick-bets quick-bets quick-bets quick-bets   quick-bets";
+ width: 100%;
+ display: grid;
+ gap: clamp(8px, 1.2vw, 15px);
+ align-items: center;
+ grid-template-columns: repeat(6, 1fr); /* Aumentado a 6 columnas */
+ grid-template-rows: auto auto auto;
+ grid-template-areas:
+   "fold       call       turn-info  turn-info    color-select bbs-toggle"
+   "raise      input      slider     slider       slider       slider"
+   "quick-bets quick-bets quick-bets save-hand    prev-action  next-action";
 }
-.grid-turn-info { grid-area: turn-info; text-align: center; font-size: 1.4rem; }
+
+
+.grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(1rem, 2.5vmin, 1.4rem); }
 .grid-fold { grid-area: fold; }
 .grid-call { grid-area: call; }
 .grid-raise { grid-area: raise; }
 .grid-input { grid-area: input; }
-.grid-slider { grid-area: slider; margin-right: 20px; }
+.grid-slider { grid-area: slider; }
 .grid-quick-bets { grid-area: quick-bets; }
 .grid-color-select { grid-area: color-select; }
 .grid-bbs-toggle { grid-area: bbs-toggle; }
-.grid-fold, .grid-call, .grid-raise {
-  height: 65px;
-  font-size: 1.3rem;
+.grid-save { grid-area: save-hand; }
+.grid-prev { grid-area: prev-action; }
+.grid-next { grid-area: next-action; }
+ 
+.grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
+  height: clamp(40px, 8vmin, 65px);
+  font-size: clamp(0.8rem, 2.2vmin, 1.3rem);
   font-weight: bold;
-  border: 1px solid #000;
   border-radius: 8px;
   color: white;
   cursor: pointer;
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 1px solid #000;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  line-height: 1.2;
-  padding: 2px;
+  justify-content: center;
+  min-width: 0;
 }
-.grid-input {
-  height: 65px;
-  border-radius: 8px;
-  border: 1px solid #000;
-  background-color: #1A202C;
-  color: white;
-  font-size: 2rem;
-  text-align: center;
-  width: 84%;
-  position: relative;
-}
-.all-in-indicator {
-  position: absolute;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #f95f41;
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-.grid-quick-bets {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
+
+.grid-input { background-color: #1A202C; text-align: center; width: 100%; }
+.all-in-indicator { display: none; }
+
+.grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); gap: 5px; }
 .grid-quick-bets button {
-  flex-grow: 1;
-  padding: 12px;
-  font-size: 1rem;
-  border: 1px solid #000;
+  padding: clamp(6px, 1.5vmin, 12px);
+  font-size: clamp(0.7rem, 1.8vmin, 1rem);
   border-radius: 6px;
   background-color: var(--btn-grey);
   color: white;
   cursor: pointer;
-}
-.grid-quick-bets button:hover {
-  background-color: var(--btn-grey-hover);
-}
-.grid-color-select, .grid-bbs-toggle {
-  height: 65px;
-  padding: 0 15px;
-  font-size: 1.2rem;
-  font-weight: bold;
   border: 1px solid #000;
-  border-radius: 8px;
-  background-color: #718096;
-  color: white;
-  cursor: pointer;
 }
+
+.grid-color-select, .grid-bbs-toggle { background-color: #718096; }
 .btn-fold { background-color: var(--btn-red); }
 .btn-call { background-color: var(--btn-green); }
 .btn-raise { background-color: var(--btn-orange); }
-.btn-allin { background-color: var(--btn-purple) !important; }
+.btn-allin { background-color: var(--btn-purple) !important; grid-column: 1 / -1; }
+.btn-save-hand { background-color: var(--btn-green); }
+.btn-nav { background-color: #718096; }
+button:disabled, .grid-slider:disabled { background-color: #718096 !important; cursor: not-allowed; opacity: 0.6; }
+ 
+ .grid-slider { -webkit-appearance: none; appearance: none; width: 90%; height: clamp(12px, 2.2vmin, 16px); background: transparent; outline: none; border-radius: 8px; }
+.grid-slider::-webkit-slider-runnable-track { width: 100%; height: 100%; cursor: pointer; border-radius: 8px; border: 1px solid #000; background: linear-gradient(to right, var(--slider-color-active) var(--slider-fill-percentage), var(--slider-color-inactive) var(--slider-fill-percentage)); }
+.grid-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; border: 1px solid #000; height: calc(clamp(12px, 2.2vmin, 16px) + 14px); width: clamp(15px, 2.5vmin, 20px); border-radius: 4px; background: #E2E8F0; cursor: pointer; margin-top: calc(clamp(12px, 2.2vmin, 16px) / -2 + -7px); }
 
-button:disabled {
-  background-color: #718096 !important;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-.grid-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 98%;
-  height: 16px;
-  background: transparent;
-  outline: none;
-  border-radius: 8px;
-}
-.grid-slider::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 16px;
-  cursor: pointer;
-  border-radius: 8px;
-  border: 1px solid #000;
-  background: linear-gradient(to right, 
-    var(--slider-color-active) var(--slider-fill-percentage), 
-    var(--slider-color-inactive) var(--slider-fill-percentage)
-  );
-}
-.grid-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  border: 1px solid #000;
-  height: 30px;
-  width: 20px;
-  border-radius: 4px;
-  background: #E2E8F0;
-  cursor: pointer;
-  margin-top: -8px;
-}
-
-/* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
-@media screen and (max-width: 900px) and (orientation: landscape) {
-  .action-panel-wrapper {
-    position: relative;
-    left: auto;
-    bottom: auto;
-    transform: none;
-    width: 100%;
-    height: auto;
-    flex-grow: 1;
-    overflow-y: auto;
-    padding: 10px;
-    border-width: 2px;
-    min-height: 0;
-  }
-
+/* Media query para compactar el layout en contenedores más estrechos que el diseño ideal */
+@media (max-width: 900px) {
   .actions-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto 1fr auto auto;
-    gap: 8px;
-    height: 100%;
+    grid-template-rows: auto auto auto auto 1fr auto;
     grid-template-areas:
-      "turn-info  turn-info"
-      "fold       call"
-      "raise      input"
-      "slider     slider"
-      "quick-bets quick-bets"
-      "color-select bbs-toggle";
-  }
-
-  .grid-turn-info { font-size: 0.9rem; }
-  .grid-fold, .grid-call, .grid-raise { height: 45px; font-size: 0.9rem; }
-  .grid-input { height: 45px; font-size: 1.1rem; width: 100%; }
-  .all-in-indicator { font-size: 0.9rem; bottom: -14px; }
-  .grid-slider { margin: 5px 0; }
-  .grid-quick-bets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-  .grid-quick-bets button { padding: 6px; font-size: 0.7rem; }
-  .grid-quick-bets .btn-allin { grid-column: 1 / -1; }
-  .grid-color-select, .grid-bbs-toggle { height: 35px; font-size: 0.8rem; padding: 0 8px; }
+     "turn-info  turn-info"
+     "fold       call"
+     "raise      input"
+     "slider     slider"
+     "quick-bets quick-bets"
+     "save-hand  save-hand"
+     "prev-action next-action"
+     "bbs-toggle color-select";
+ }
 }
-</style>```
+
+/* Media query para mover el panel a la derecha en móviles horizontales */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .action-panel-wrapper {
+    margin-left: auto;
+    margin-right: 0;
+  }
+}
+</style>
 
 ----------------------------------------------------------
 
@@ -1232,7 +1151,7 @@ const stackDetails = computed(() => {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  height: 60px;
+  height: 30px;
   width: 45px;
   /* La perspectiva es clave para el efecto 3D */
   perspective: 500px;
@@ -1247,11 +1166,11 @@ const stackDetails = computed(() => {
 
 .chip {
   position: absolute;
-  width: 30px;
-  height: 30px;
+  width: 15px;
+  height: 25px;
   border-radius: 50%;
   box-sizing: border-box;
-  left: 5.5px; /* Centrado en el contenedor de 45px */
+  left: 15px; /* Centrado en el contenedor de 45px */
   
   /* --- EFECTO 3D Y REALISMO --- */
 
@@ -1395,7 +1314,7 @@ h3 {
 --- INICIO DEL ARCHIVO: src/components/DisplayOptions.vue ---
 
 <template>
-  <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: isDraggable ? (isDragging ? 'grabbing' : 'grab') : 'default' }">
+  <div class="display-options-wrapper" ref="panelRef" @mousedown="startDrag" :style="{ position: 'absolute', left: panelPosition.x + 'px', top: panelPosition.y + 'px', cursor: (isDragging ? 'grabbing' : 'grab') }">
     <h3>Opciones mesa</h3>
     <div class="options-row">
       <select class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
@@ -1407,10 +1326,21 @@ h3 {
         <option value="#1A202C">Negro</option>
         <option value="#4A5568">Gris</option>
       </select>
-
       <button class="option-item" @click="gameStore.toggleDisplayMode()">
         {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
       </button>
+    </div>
+    <div class="options-row">
+      <button class="option-item" @click="gameStore.toggleReplay()">
+        {{ gameStore.isReplaying ? '⏸️' : '▶️' }}
+      </button>
+      <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
+      <button class="option-item" @click="gameStore.navigateHistory(1)">▶</button>
+      <select class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
+        <option value="2000">1x</option>
+        <option value="1000">2x</option>
+        <option value="500">4x</option>
+      </select>
     </div>
   </div>
 </template>
@@ -1431,10 +1361,8 @@ const panelRef = ref(null);
 const isDragging = ref(false);
 const dragOffset = ref({ x: 0, y: 0 });
 const panelPosition = ref({ x: 0, y: 0 });
-const isDraggable = ref(true);
 
 function startDrag(event) {
-  if (!isDraggable.value) return;
   isDragging.value = true;
   const rect = panelRef.value.getBoundingClientRect();
   dragOffset.value = {
@@ -1455,7 +1383,6 @@ function drag(event) {
 
 function stopDrag() {
   isDragging.value = false;
-  isDraggable.value = false;
   localStorage.setItem('displayOptionsPosition', JSON.stringify(panelPosition.value));
   document.removeEventListener('mousemove', drag);
   document.removeEventListener('mouseup', stopDrag);
@@ -1465,15 +1392,12 @@ onMounted(() => {
   const savedPosition = localStorage.getItem('displayOptionsPosition');
   if (savedPosition) {
     panelPosition.value = JSON.parse(savedPosition);
-    isDraggable.value = false;
-  } else {
     // Set initial position
     const rect = panelRef.value.getBoundingClientRect();
     panelPosition.value = {
-      x: window.innerWidth / 2 - rect.width / 2,
-      y: window.innerHeight - 300
+      x: window.innerWidth / 1.25 - rect.width / 2,
+      y: window.innerHeight - 350
     };
-    isDraggable.value = true;
   }
 });
 
@@ -1489,7 +1413,7 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 15px;
   align-items: center;
-  padding: 15px;
+  padding: 8px;
   background-color: #2d3748;
   border-radius: 12px;
   border: 1px solid var(--border-color);
@@ -1497,20 +1421,20 @@ onUnmounted(() => {
 
 h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: white;
 }
 
 .options-row {
   display: flex;
-  gap: 15px;
+  gap: 5px;
   align-items: center;
 }
 
 .option-item {
-  height: 50px;
-  width: 120px;
+  height: 45px;
+  width: 70px;
   padding: 0 15px;
   font-size: 1.2rem;
   font-weight: bold;
@@ -1707,7 +1631,7 @@ const count = ref(0)
 --- INICIO DEL ARCHIVO: src/components/Player.vue ---
 
 <template>
-  <div class="player-container" :style="seatStyle">
+  <div class="player-container" :style="seatStyle" :class="{ 'is-9-max': playerCount >= 9 }">
 
     <div class="player-cards">
         <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
@@ -1857,56 +1781,48 @@ onUnmounted(() => {
 });
 
 const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.player.id);
-function calculateEquidistantPositions(playerCount, radiusX = 450, radiusY = 220) {
-  const positions = [];
-  const angleStep = (Math.PI * 2) / playerCount;
-  for (let i = 0; i < playerCount; i++) {
-    const angleRad = angleStep * i + Math.PI / 2; // Start from top
-    const x = Math.cos(angleRad) * radiusX;
-    let y = Math.sin(angleRad) * radiusY;
-    // Adjust top and bottom players to be closer to table edges
-    const angleDeg = (angleRad * 180) / Math.PI;
-    if (angleDeg > 60 && angleDeg < 120) { // Top area
-      y *= 1.1; // Move higher
-    } else if (angleDeg > 240 && angleDeg < 300) { // Bottom area
-      y *= 1.1; // Move lower
-    }
-    positions.push({ x: Math.round(x), y: Math.round(y) });
-  }
-  return positions;
-}
 
+// --- LÓGICA DE POSICIONAMIENTO DE ASIENTOS (MODIFICADA PARA RESPONSIVE) ---
+// Las coordenadas ahora son porcentajes del radio de la mesa (ej: x: 50 es el borde derecho).
+// La posición [0] es siempre la inferior central (la vista del Héroe).
 const PREDEFINED_LAYOUTS = {
-  2: [ { x: 0, y: 280 }, { x: 0, y: -280 } ],
-  3: [ { x: 0, y: 240 }, { x: -520, y: -120 }, { x: 520, y: -120 } ],
-  4: [ { x: 0, y: 280 }, { x: -420, y: 0 }, { x: 0, y: -280 }, { x: 420, y: 0 } ],
-  5: [ { x: 0, y: 240 }, { x: -520, y: 100 }, { x: -400, y: -240 }, { x: 400, y: -240 }, { x: 520, y: 100 } ],
-  6: [ { x: 0, y: 240 }, { x: -520, y: 120 }, { x: -520, y: -140 }, { x: 0, y: -280 }, { x: 520, y: -140 }, { x: 520, y: 120 } ],
-  7: calculateEquidistantPositions(7, 500, 240),
-  8: calculateEquidistantPositions(8, 500, 260),
-  9: calculateEquidistantPositions(9, 500, 280),
+  2: [ { x: 50, y: -10 }, { x: -50, y: -10 } ],
+  3: [ { x: 0, y: 50 }, { x: -50, y: -25 }, { x: 45, y: -25 } ],
+  4: [ { x: 0, y: 50 }, { x: -50, y: 0 }, { x: 0, y: -50 }, { x: 50, y: 0 } ],
+  5: [ { x: 0, y: 50 }, { x: -45, y: 25 }, { x: -35, y: -40 }, { x: 35, y: -40 }, { x: 45, y: 25 } ],
+  6: [ { x: 0, y: 50 }, { x: -48, y: 20 }, { x: -48, y: -40 }, { x: 0, y: -55 }, { x: 48, y: -40 }, { x: 48, y: 20 } ],
+  7: [ { x: 0, y: 50 }, { x: -40, y: 35 }, { x: -50, y: -25 }, { x: -20, y: -50 }, { x: 20, y: -50 }, { x: 50, y: -25 }, { x: 40, y: 35 } ],
+  8: [ { x: 2, y: 53 }, { x: -33, y: 50 }, { x: -55, y: -10 }, { x: -28, y: -48 }, { x: 0, y: -52 }, { x: 30, y: -48 }, { x: 55, y: -10 }, { x: 35, y: 50 } ],
+  9: [ { x: 0, y: 50 }, { x: -30, y: 50 }, { x: -50, y: 5 }, { x: -45, y: -50 }, { x: -14, y: -60 }, { x: 16, y: -60 }, { x: 45, y: -50 }, { x: 50, y: 5 }, { x: 30, y: 50 } ],
 };
 
 const seatCoordinates = computed(() => {
+  // Si el jugador tiene coordenadas personalizadas, úsalas
+  if (props.player.x !== null && props.player.y !== null) {
+    return { x: props.player.x, y: props.player.y };
+  }
+  // El visualIndex [0] es siempre el Héroe en la parte inferior.
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
   if (PREDEFINED_LAYOUTS[props.playerCount]) {
     return PREDEFINED_LAYOUTS[props.playerCount][visualIndex];
   }
+  // Fallback para 10+ jugadores (aunque la UI actual no lo permite, es bueno tenerlo)
   return { x: 0, y: 0 };
 });
 
+// --- ESTILO DE ASIENTO (MODIFICADO PARA RESPONSIVE) ---
 const seatStyle = computed(() => {
-  const { x, y } = seatCoordinates.value;
-  // Convertimos los píxeles (basados en 1000x480) a porcentajes
-  const xPercent = (x / 1000) * 100;
-  const yPercent = (y / 480) * 100;
-  
+  const { x, y } = seatCoordinates.value; // x e y ya son porcentajes
   return {
-    top: '50%',
-    left: '50%',
-    transform: `translate(calc(-50% + ${xPercent}%), calc(-50% + ${yPercent}%))`
+    // Posiciona el centro del contenedor del jugador en las coordenadas calculadas
+    top: `calc(50% + ${y}%)`,
+    left: `calc(50% + ${x}%)`,
+    // Luego, usa transform para mover el elemento por la mitad de su propio tamaño
+    // para que quede perfectamente centrado en ese punto.
+    transform: 'translate(-50%, -50%)',
   };
 });
+
 
 const dealerButtonStyle = computed(() => {
   return {
@@ -1917,20 +1833,17 @@ const dealerButtonStyle = computed(() => {
 });
 const betBoxStyle = computed(() => {
   const { x, y } = seatCoordinates.value;
-  const threshold = 150;
+  const thresholdY = 30; // Umbral en porcentaje para decidir si está arriba/abajo
+  const thresholdX = 35; // Umbral en porcentaje para decidir si está a los lados
 
-  if (Math.abs(y) > threshold) {
-    if (y > 0) {
-      return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-    } else {
-      return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
-    }
-  } else {
-    if (x < 0) {
-      return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
-    } else {
-      return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
-    }
+  if (y > thresholdY) { // Asientos inferiores
+    return { top: '-30%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
+  } else if (y < -thresholdY) { // Asientos superiores
+    return { bottom: '-45%', left: '50%', transform: 'translateX(-50%)', zIndex: 11 };
+  } else if (x < -thresholdX) { // Asientos de la izquierda
+    return { right: '-40%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
+  } else { // Asientos de la derecha
+    return { left: '-35%', top: '50%', transform: 'translateY(-50%)', zIndex: 11 };
   }
 });
 const notesPanelStyle = computed(() => {
@@ -1942,18 +1855,18 @@ const notesPanelStyle = computed(() => {
 /* --- ESTILOS BASE (ESCRITORIO) --- */
 .player-container {
   position: absolute;
-  top: 50%;
-  left: 50%;
   z-index: 5;
-  width: 15%; 
-  height: 40%;
+  /* El tamaño del jugador es un porcentaje del tamaño de la mesa, haciéndolo responsive */
+  width: 18%; 
+  max-width: 150px; /* Evita que sea demasiado grande en pantallas enormes */
+  height: 50%;
 }
 
 .player-seat {
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 100%;
+  width: 110%;
   height: 60px;
   background: none;
   border: none;
@@ -1977,18 +1890,18 @@ const notesPanelStyle = computed(() => {
 
 .player-cards {
   position: absolute;
-  top: 38px;
-  left: 55%;
+  top: 10px;
+  left: 62%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 5%;
   width: 100%;
-  z-index: 9;
+  z-index: 1;
 }
 
 .card-placeholder {
-  width: 45%; 
+  width: 70%; 
   height: auto;
   aspect-ratio: 100 / 140; 
   cursor: pointer;
@@ -1997,7 +1910,8 @@ const notesPanelStyle = computed(() => {
 
 .player-name {
   font-weight: 700;
-  font-size: 1.1em;
+  /* Usamos clamp para un tamaño de fuente fluido */
+  font-size: clamp(0.7rem, 1.2vw, 1.1em);
   color: #E2E8F0;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   white-space: nowrap;
@@ -2012,7 +1926,7 @@ const notesPanelStyle = computed(() => {
 
 .player-stack {
   font-family: 'Roboto Mono', monospace;
-  font-size: 1.2em;
+  font-size: clamp(0.8rem, 1.4vw, 1.2em);
   font-weight: 700;
   color: #FFFFFF;
   background-color: rgba(0,0,0,0.3);
@@ -2022,7 +1936,7 @@ const notesPanelStyle = computed(() => {
 
 .active .player-info-panel {
   border-color: #f6e05e;
-  box-shadow: 0 0 15px rgba(246, 224, 94, 0.5), 0 4px 15px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 30px rgba(246, 224, 94, 0.5), 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
 .faded {
@@ -2249,40 +2163,126 @@ const notesPanelStyle = computed(() => {
 /* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
 @media screen and (max-width: 900px) and (orientation: landscape) {
   .player-container {
-    width: 18%; /* Hacemos los jugadores un poco más grandes en relación a la mesa */
+    width: 20%; /* Aumentamos el ancho relativo para que no se vea tan pequeño */
     height: 45%;
+    max-width: 120px; /* Limitamos el ancho máximo en píxeles */
   }
   .player-seat {
-    height: 50px; /* Reducimos la altura del panel de info */
+    height: 45px; /* Reducimos aún más la altura del panel */
   }
   .player-info-panel {
-    padding: 4px;
+    padding: 2px; /* Menos padding */
     border-radius: 6px;
   }
-  .player-name {
-    font-size: 0.8em;
-    gap: 4px;
-    margin-bottom: 2px;
-  }
-  .player-stack {
-    font-size: 0.9em;
-  }
   .player-cards {
-    top: 5px; /* Acercamos las cartas al panel de info */
+    top: -55%; /* Subimos las cartas para que se solapen con el panel */
+    gap: 2%;
   }
   .dealer-button {
-    width: 20px;
-    height: 20px;
-    font-size: 0.8rem;
-    bottom: -30px;
+    width: 18px;
+    height: 18px;
+    font-size: 0.7rem;
+    bottom: -25px; /* Acercamos el botón de dealer */
   }
   .bet-box {
-    /* Reducimos el tamaño de la info de apuesta */
-    transform: scale(0.8) translateY(-50%);
+    transform: scale(0.75) translateY(-50%); /* Hacemos más pequeña la info de apuesta */
   }
-  /* Ocultamos elementos de edición para simplificar la UI */
-  .edit-notes-btn, .notes-display-wrapper {
+  /* Ocultamos elementos no esenciales para maximizar el espacio */
+  .edit-notes-btn, .notes-display-wrapper, .player-tag, .player-position-static {
     display: none;
+  }
+}
+/* --- ESTILOS PARA 9+ JUGADORES (MÁS COMPACTO) --- */
+.is-9-max .player-seat {
+  height: 50px;
+}
+
+.is-9-max .player-info-panel {
+  padding: 4px;
+}
+
+.is-9-max .player-name {
+  font-size: clamp(0.6rem, 1.1vw, 0.9em);
+}
+
+.is-9-max .player-stack {
+  font-size: clamp(0.7rem, 1.3vw, 1em);
+}
+
+.is-9-max .player-cards {
+  top: -20px;
+  gap: 1%;
+  width: 80%;
+  left: 50%;
+}
+
+.is-9-max .card-placeholder {
+  width: 65%;
+}
+
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .is-9-max .player-seat {
+    height: 40px;
+    bottom: 10px;
+  }
+  .is-9-max .player-cards {
+    top: -50%;
+  }
+    .is-9-max .player-name, .is-9-max .player-stack {
+    font-size: 0.7rem;
+  }
+}
+
+/* --- ESTILOS PARA 9 JUGADORES (MÁS COMPACTO) --- */
+.is-9-max .player-seat {
+  height: 50px;
+  width: 100%;
+}
+
+.is-9-max .player-info-panel {
+  padding: 4px;
+}
+
+.is-9-max .player-name {
+  font-size: clamp(0.6rem, 1.1vw, 0.9em);
+  gap: 4px;
+}
+
+.is-9-max .player-stack {
+  font-size: clamp(0.7rem, 1.3vw, 1em);
+}
+
+.is-9-max .player-cards {
+  top: 23px; /* Sube un poco las cartas */
+  left: 60%;
+  width: 90%;
+  gap: 2%;
+}
+
+.is-9-max .card-placeholder {
+  width: 60%;
+}
+
+.is-9-max .edit-notes-btn {
+  width: 26px;
+  height: 26px;
+  top: -8px;
+  right: -20px;
+}
+
+.is-9-max .dealer-button {
+  width: 22px;
+  height: 22px;
+  font-size: 0.9rem;
+  bottom: -30px;
+}
+
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .is-9-max .player-seat {
+    height: 40px;
+  }
+  .is-9-max .player-cards {
+    top: -60%;
   }
 }
 </style>
@@ -2366,7 +2366,7 @@ const suitDetails = computed(() => {
   <div class="poker-table-container">
     <div class="poker-table" :style="{ backgroundColor: tableColor }">
       
-      <div class="center-content">
+      <div class="center-content" :style="{ '--board-x': gameStore.tableLayout.board.x + '%', '--board-y': gameStore.tableLayout.board.y + '%' }">
         <div class="pot">
           Bote: 
           <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ gameStore.totalPot }}</span>
@@ -2399,62 +2399,6 @@ const suitDetails = computed(() => {
         :hero-index="heroIndex" 
       />
     </div>
-
-    <div class="controls-panel">
-      <ActionPanel v-if="gameStore.gamePhase !== 'replay'" v-model:modelValue="tableColor" />
-      <DisplayOptions v-else v-model:modelValue="tableColor" />
-      <div class="game-controls">
-        <template v-if="gameStore.gamePhase !== 'replay'">
-          <button @click="gameStore.navigateHistory(-1)" title="Acción anterior">Anterior</button>
-          <button @click="gameStore.navigateHistory(1)" title="Siguiente acción">Siguiente</button>
-          <button class="save-btn" @click="handleSaveHand()">Guardar Mano</button>
-          <button class="reset-btn" @click="confirmNewHand()">Nueva Mano</button>
-        </template>
-        <template v-if="gameStore.gamePhase === 'replay'">
-          <button v-if="!gameStore.isReplaying" @click="gameStore.playReplay()" class="play-btn">Play</button>
-          <button v-else @click="gameStore.pauseReplay()" class="pause-btn">Pause</button>
-          <button @click="gameStore.restartReplay()">Reiniciar</button>
-          <button @click="gameStore.navigateHistory(-1)" title="Acción anterior">Anterior</button>
-          <button @click="gameStore.navigateHistory(1)" title="Siguiente acción">Siguiente</button>
-
-          <!-- SELECTOR DE VELOCIDAD AÑADIDO -->
-          <select
-            :value="gameStore.replaySpeed"
-            @change="gameStore.setReplaySpeed($event.target.value)"
-            title="Velocidad de reproducción"
-          >
-            <option value="0.5">x0.5</option>
-            <option value="1">x1</option>
-            <option value="1.25">x1.25</option>
-            <option value="1.5">x1.5</option>
-            <option value="1.75">x1.75</option>
-            <option value="2">x2</option>
-            <option value="3">x3</option>
-          </select>
-
-          <button @click="goToHandConfig" title="Ir a Configuración de Mano" class="new-hand-btn">Nueva Mano</button>
-          
-        </template>
-      </div>
-    </div>
-
-    <!-- Confirmation Modal for New Hand -->
-    <div v-if="showNewHandModal" class="modal-overlay" @click="closeNewHandModal">
-      <div class="modal-content" @click.stop>
-        <h3>Confirmar Nueva Mano</h3>
-        <p>¿Desea guardar los cambios?</p>
-        <div class="modal-actions">
-          <button class="cancel-btn" @click="justNewHand">No</button>
-          <button class="confirm-btn" @click="saveAndNewHand">Sí</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Success Toast -->
-    <div v-if="showToast" class="toast success-toast">
-      <div class="toast-icon">✓</div>
-      <div class="toast-message">¡Mano guardada con éxito!</div>
-    </div>
   </div>
 </template>
 
@@ -2462,14 +2406,10 @@ const suitDetails = computed(() => {
 import { ref, computed } from 'vue';
 import { useGameStore } from '../store/game';
 import Player from './Player.vue';
-import ActionPanel from './ActionPanel.vue';
-import DisplayOptions from './DisplayOptions.vue';
 import PlayingCard from './PlayingCard.vue';
 
 const gameStore = useGameStore();
 const tableColor = ref('#28563a');
-const showToast = ref(false);
-const showNewHandModal = ref(false);
 
 const clickablePhases = computed(() => ['flop', 'turn', 'river', 'showdown']);
 
@@ -2503,259 +2443,87 @@ const heroIndex = computed(() => {
   const index = gameStore.players.findIndex(p => p.name === 'Hero');
   return index !== -1 ? index : 0;
 });
-
-function handleSaveHand() {
-  gameStore.saveCurrentHand();
-  showToast.value = true;
-  setTimeout(() => {
-    showToast.value = false;
-  }, 3000);
-}
-
-function confirmNewHand() {
-  showNewHandModal.value = true;
-}
-
-function closeNewHandModal() {
-  showNewHandModal.value = false;
-}
-
-function saveAndNewHand() {
-  gameStore.saveCurrentHand();
-  showToast.value = true;
-  setTimeout(() => {
-    showToast.value = false;
-  }, 3000);
-  gameStore.resetHand();
-  closeNewHandModal();
-}
-
-function justNewHand() {
-  gameStore.resetHand();
-  closeNewHandModal();
-}
-
-function goToHandConfig() {
-  gameStore.gamePhase = 'pre-action';
-  gameStore.resetHand();
-}
 </script>
 
 <style scoped>
 .poker-table-container {
+  width: 80%;
+  height: 90%;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  padding: 40px;
-  gap: 20px;
-  /* CAMBIO: Aumentamos el margen superior para bajar toda la mesa */
-  margin-top: 65px;
+  min-height: 0;
+  min-width: 0;
 }
+
 .poker-table {
   position: relative;
-  width: 1000px;
-  height: 480px; 
-  border-radius: 240px;
-  border: 15px solid #5a3a22;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+  width: 90%;
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 50%;
+  border-style: solid;
+  border-color: #5a3a22;
+  border-width: clamp(8px, 1.2vmin, 15px);
+  box-shadow: inset 0 0 clamp(15px, 2.5vmin, 30px) rgba(0, 0, 0, 0.6);
   transition: background-color 0.3s ease;
+  right: -60px;
+  top: 10px;
 }
+
 .center-content {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: calc(50% + var(--board-y, 0%));
+  left: calc(50% + var(--board-x, 0%));
   transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
+  gap: clamp(5px, 1.5vh, 15px);
+  width: 55%;
 }
+
 .pot {
-  font-size: 1.3rem;
+  font-size: clamp(0.9rem, 2.5vmin, 1.3rem);
   font-weight: bold;
   color: white;
   background-color: rgba(0, 0, 0, 0.4);
-  padding: 5px 15px;
+  padding: 0.5em 1em;
   border-radius: 8px;
 }
+
 .board {
   display: flex;
-  gap: 10px;
-  padding: 10px;
+  gap: 2%;
+  padding: 1.5%;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 10px;
-  min-width: 420px;
+  width: 100%;
   justify-content: center;
   z-index: 10;
 }
+
 .card-placeholder {
-  width: var(--player-card-width);
-  height: var(--player-card-height);
+  width: 18%;
+  aspect-ratio: 100 / 140;
   background-color: transparent;
   border-radius: 6px;
   overflow: hidden;
   cursor: pointer;
 }
+
 .card-placeholder:hover {
   outline: 2px solid #f6e05e;
 }
-.controls-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 60px;
-  margin-bottom: 150px;
-}
-.game-controls {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 6px;
-  margin-top: 150px;
-  align-self: flex-end;
-  margin-right: -820px;
-}
-/* REGLA CSS MODIFICADA PARA INCLUIR EL SELECT */
-.game-controls > button, .game-controls > select {
-  padding: 12px 20px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  border-radius: 8px;
-  border: 1px solid #000;
-  background-color: #718096;
-  color: white; /* Añadido para asegurar consistencia */
-  cursor: pointer; /* Añadido para asegurar consistencia */
-}
-.game-controls > button:hover, .game-controls > select:hover {
-  background-color: #4A5568;
-}
-.reset-btn { background-color: #e53e3e !important; }
-.reset-btn:hover { background-color: #c53030 !important; }
-.save-btn { background-color: #48bb78 !important; }
-.save-btn:hover { background-color: #38a169 !important; }
-.new-hand-btn { background-color: #48bb78 !important; }
-.new-hand-btn:hover { background-color: #38a169 !important; }
-.play-btn { background-color: #38a169 !important; }
-.play-btn:hover { background-color: #2f855a !important; }
-.pause-btn { background-color: #dd6b20 !important; }
-.pause-btn:hover { background-color: #c05621 !important; }
 
 .card-placeholder.locked {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
 .card-placeholder.locked:hover {
   outline: none;
-}
-
-/* Toast Styles */
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-}
-
-.success-toast {
-  background-color: #38a169;
-  color: white;
-}
-
-.toast-icon {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-.toast-message {
-  font-size: 1rem;
-  font-weight: bold;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: #2d3748;
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  border: 1px solid var(--border-color);
-}
-
-.modal-content h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-  color: white;
-}
-
-.modal-content p {
-  margin: 0 0 2rem 0;
-  color: #a0aec0;
-  font-size: 1.1rem;
-}
-
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.cancel-btn, .confirm-btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.cancel-btn {
-  background-color: #4A5568;
-  color: white;
-}
-
-.cancel-btn:hover {
-  background-color: #2D3748;
-}
-
-.confirm-btn {
-  background-color: #38a169;
-  color: white;
-}
-
-.confirm-btn:hover {
-  background-color: #2f855a;
 }
 </style>
 
@@ -3313,7 +3081,7 @@ export const useGameStore = defineStore('game', () => {
   const currentOffset = ref(0);
   const pageSize = ref(20);
   
-  const replaySpeed = ref(1);
+  const replaySpeed = ref(2000);
   const isReplaying = ref(false);
   let replayIntervalId = null;
 
@@ -3329,6 +3097,10 @@ export const useGameStore = defineStore('game', () => {
 
   const isPreActionPhase = ref(true);
   const openNotesPanelPlayerId = ref(null);
+  const tableLayout = ref({
+    board: { x: 0, y: 0 },
+    pot: { x: 0, y: 0 }
+  });
 
   const totalPot = computed(() => pots.value.reduce((sum, pot) => sum + pot.amount, 0));
 
@@ -3432,7 +3204,7 @@ export const useGameStore = defineStore('game', () => {
   function toggleDisplayMode() { displayInBBs.value = !displayInBBs.value; }
   
   function setReplaySpeed(newSpeed) {
-    replaySpeed.value = parseFloat(newSpeed) || 1;
+    replaySpeed.value = parseInt(newSpeed, 10) || 2000;
     if (isReplaying.value) {
       pauseReplay();
       playReplay();
@@ -3443,8 +3215,7 @@ export const useGameStore = defineStore('game', () => {
     if (isReplaying.value) return;
     isReplaying.value = true;
     
-    const baseInterval = 1500;
-    const intervalDuration = baseInterval / replaySpeed.value;
+    const intervalDuration = replaySpeed.value;
 
     replayIntervalId = setInterval(() => {
       if (currentActionIndex.value >= history.value.length - 1) {
@@ -3465,6 +3236,13 @@ export const useGameStore = defineStore('game', () => {
     players.value = deepCopy(stateToRestore.players);
     board.value = deepCopy(stateToRestore.board);
     pots.value = deepCopy(stateToRestore.pots);
+  }
+  function toggleReplay() {
+    if (isReplaying.value) {
+      pauseReplay();
+    } else {
+      playReplay();
+    }
   }
   function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null) {
     // ... (El resto de la lógica de setupNewHand, performAction, etc., es interna y no cambia)
@@ -3507,6 +3285,8 @@ export const useGameStore = defineStore('game', () => {
         isBombPot: false,
         notes: '',
         tag: null,
+        x: null,
+        y: null,
       });
     }
     dealerPosition.value = players.value.find((p,i) => i === 0).id
@@ -3932,6 +3712,24 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
+  function updatePlayerPosition(playerId, x, y) {
+    const player = players.value.find(p => p.id === playerId);
+    if (player) {
+      player.x = x;
+      player.y = y;
+    }
+    if (isPreActionPhase.value && history.value.length > 0) {
+      history.value[0].players = deepCopy(players.value);
+    }
+  }
+
+  function updateTableLayout(element, x, y) {
+    if (tableLayout.value[element]) {
+      tableLayout.value[element].x = x;
+      tableLayout.value[element].y = y;
+    }
+  }
+
   function toggleNotesPanel(playerId) {
     if (openNotesPanelPlayerId.value === playerId) {
       openNotesPanelPlayerId.value = null;
@@ -3949,14 +3747,14 @@ export const useGameStore = defineStore('game', () => {
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,
-    replaySpeed, isPreActionPhase, openNotesPanelPlayerId,
+    replaySpeed, isPreActionPhase, openNotesPanelPlayerId, tableLayout,
     toggleDisplayMode,
-    playReplay, pauseReplay, restartReplay, setReplaySpeed,
+    playReplay, pauseReplay, restartReplay, setReplaySpeed, toggleReplay,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
     performAction, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
-    updatePlayerNotes, updatePlayerTag, toggleNotesPanel, closeNotesPanel,
+    updatePlayerNotes, updatePlayerTag, updatePlayerPosition, updateTableLayout, toggleNotesPanel, closeNotesPanel,
     fetchHands, loadMoreHands, hasMore, currentOffset, pageSize,
   }
 });
@@ -5327,18 +5125,15 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
 
 <template>
   <div class="view-container">
+    <!-- Panel de Configuración (visible cuando no hay mano activa) -->
     <div v-if="!handIsActive" class="configuration-panel">
       <h2>Configuración de la Mano</h2>
-
       <div class="config-item">
         <label for="player-count">Número de Jugadores:</label>
         <select id="player-count" v-model.number="selectedPlayers">
-          <option v-for="n in 8" :key="n" :value="n + 1">
-            {{ n + 1 }} Jugadores
-          </option>
+          <option v-for="n in 8" :key="n" :value="n + 1">{{ n + 1 }} Jugadores</option>
         </select>
       </div>
-      
       <div class="blinds-container">
         <div class="config-item">
           <label for="sb-input">Ciega Pequeña:</label>
@@ -5349,7 +5144,6 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
           <input id="bb-input" type="number" v-model.number="bbInput" min="1">
         </div>
       </div>
-      
       <div class="config-item">
         <label for="currency-select">Moneda:</label>
         <select id="currency-select" v-model="selectedCurrency">
@@ -5358,7 +5152,6 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
           </option>
         </select>
       </div>
-
       <div class="config-item">
         <label for="special-rule-select">Regla Especial:</label>
         <select id="special-rule-select" v-model="selectedSpecialRule">
@@ -5368,7 +5161,6 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
           <option value="Bomb Pot">Bomb Pot</option>
         </select>
       </div>
-
       <div v-if="selectedSpecialRule === 'Bomb Pot'" class="config-item">
         <label for="bomb-pot-bb-select">Bomb Pot BB:</label>
         <select id="bomb-pot-bb-select" v-model="selectedBombPotBB">
@@ -5378,18 +5170,19 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
           <option value="5">5bb</option>
         </select>
       </div>
-
       <button @click="loadHandClicked">Iniciar Mano</button>
     </div>
 
-    <!-- Contenedor del Editor de Manos (se oculta en móvil vertical) -->
+    <!-- Contenedor del Editor de Manos (ahora con layout de Grid) -->
     <div v-else class="hand-editor-content">
       <PokerTable />
+      <ActionPanel v-if="gameStore.gamePhase !== 'replay'" v-model="tableColorForActionPanel" />
+      <DisplayOptions v-else v-model="tableColorForActionPanel" />
       <CardPicker v-if="gameStore.isCardPickerOpen" />
     </div>
     
     <!-- Overlay que pide girar el dispositivo (se muestra en móvil vertical) -->
-    <RotateDeviceOverlay class="rotate-device-prompt" />
+    <RotateDeviceOverlay v-if="showRotateOverlay" />
 
     <ConfigurationModal
       v-if="showPositionModal"
@@ -5400,16 +5193,18 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../store/game';
 import PokerTable from '../components/PokerTable.vue';
+import ActionPanel from '../components/ActionPanel.vue';
+import DisplayOptions from '../components/DisplayOptions.vue';
 import ConfigurationModal from '../components/ConfigurationModal.vue';
 import CardPicker from '../components/CardPicker.vue';
-// Importamos el componente de overlay para la rotación
 import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 
 const gameStore = useGameStore();
 const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
+const tableColorForActionPanel = ref('#28563a');
 
 const selectedPlayers = ref(6);
 const sbInput = ref(1);
@@ -5417,6 +5212,18 @@ const bbInput = ref(2);
 const selectedCurrency = ref('$');
 const selectedSpecialRule = ref('Ninguno');
 const selectedBombPotBB = ref(2);
+
+const showRotateOverlay = ref(false);
+
+const checkOrientation = () => {
+  const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  showRotateOverlay.value = handIsActive.value && isPortrait && isCoarsePointer;
+};
+
+watch(handIsActive, () => {
+  checkOrientation();
+});
 
 const currencies = ref([
   { symbol: '$', name: 'USD - Dólar estadounidense' },
@@ -5497,9 +5304,12 @@ function handleKeyDown(event) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('resize', checkOrientation);
+  checkOrientation();
 });
 
 onUnmounted(() => {
+  window.removeEventListener('resize', checkOrientation);
   window.removeEventListener('keydown', handleKeyDown);
   gameStore.pauseReplay();
 });
@@ -5508,113 +5318,70 @@ onUnmounted(() => {
 <style scoped>
 .view-container {
   width: 100%;
+  height: calc(100vh - 70px);
+  display: flex;
+  flex-direction: column;
 }
 .configuration-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
-  padding: 3.5rem;
-  max-width: 500px;
-  margin: 5rem auto;
-  background-color: #2d3748;
-  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 30px; padding: 3.5rem;
+  max-width: 500px; margin: 5rem auto;
+  background-color: #2d3748; border-radius: 12px;
 }
-h2 {
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-.config-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-label {
-  font-weight: bold;
-  font-size: 1.2rem;
-}
-select, input[type="number"] {
+h2 { font-size: 2.5rem; margin-bottom: 10px; }
+.config-item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+label { font-weight: bold; font-size: 1.2rem; }
+select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; text-align: center; box-sizing: border-box; border-radius: 8px; }
+#currency-select { width: 350px; text-align: left; }
+.blinds-container { display: flex; gap: 20px; }
+.blinds-container .config-item { width: auto; }
+.blinds-container input { width: 150px; }
+button { padding: 18px 35px; font-size: 1.4rem; font-weight: bold; border-radius: 8px; margin-top: 10px; }
+
+/* --- NUEVA LÓGICA DE LAYOUT CON GRID --- */
+.hand-editor-content {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  /* Por defecto (escritorio), una columna con la mesa arriba y el panel abajo */
+  grid-template-rows: 1fr auto;
+  grid-template-columns: 100%;
+  gap: 15px;
   padding: 15px;
-  font-size: 1.2rem;
-  width: 250px;
-  text-align: center;
   box-sizing: border-box;
-  border-radius: 8px;
-}
-#currency-select {
-  width: 350px;
-  text-align: left;
-}
-.blinds-container {
-  display: flex;
-  gap: 20px;
-}
-.blinds-container .config-item {
-  width: auto;
-}
-.blinds-container input {
-  width: 150px;
-}
-button {
-  padding: 18px 35px;
-  font-size: 1.4rem;
-  font-weight: bold;
-  border-radius: 8px;
-  margin-top: 10px;
+  overflow: hidden;
 }
 
-/* --- LÓGICA DE VISIBILIDAD PARA EL EDITOR DE MANOS --- */
+.rotate-device-prompt { display: none; }
 
-/* Por defecto, el prompt de rotación está oculto */
-.rotate-device-prompt {
-  display: none;
-}
-
-/* Media query para dispositivos táctiles (la mayoría de móviles y tablets) */
-@media (hover: none) and (pointer: coarse) {
-  /* Si el dispositivo está en vertical (portrait)... */
-  @media (orientation: portrait) {
-    /* ...mostramos el prompt de rotación... */
-    .rotate-device-prompt {
-      display: flex;
-    }
-    /* ...y ocultamos el contenido del editor. */
-    .hand-editor-content {
-      display: none;
-    }
+/* Ocultar editor y mostrar aviso en móvil vertical */
+@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+  /* .rotate-device-prompt { display: flex; } */
+  .hand-editor-content {
+      /* display: none;  */
   }
 }
 
-/* --- ESTILOS RESPONSIVOS PARA EL PANEL DE CONFIGURACIÓN --- */
+/* Reorganizar layout para pantallas apaisadas y no muy altas (móviles horizontales) */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .hand-editor-content {
+    /* Columna flexible para la mesa (min 0), columna fija para acciones */
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 350px);
+    grid-template-rows: 100%; /* Una sola fila */
+    gap: 10px;
+    padding: 10px;
+  }
+}
+
+/* Estilos para el panel de configuración en pantallas pequeñas */
 @media screen and (max-width: 640px) {
-  .configuration-panel {
-    padding: 2rem;
-    margin: 2rem 1rem;
-    gap: 20px;
-  }
-  h2 {
-    font-size: 2rem;
-  }
-  .config-item {
-    width: 100%;
-  }
-  select, input[type="number"] {
-    width: 100%;
-    max-width: 350px;
-  }
-  .blinds-container {
-    flex-direction: column;
-    width: 100%;
-  }
-  .blinds-container .config-item,
-  .blinds-container input {
-    width: 100%;
-  }
-  button {
-    width: 100%;
-  }
+  .configuration-panel { padding: 1.5rem; margin: 1rem; gap: 15px; }
+  h2 { font-size: 2rem; }
+  .config-item { width: 100%; }
+  select, input[type="number"] { width: 100%; max-width: 350px; }
+  .blinds-container { flex-direction: column; width: 100%; }
+  .blinds-container .config-item, .blinds-container input { width: 100%; }
+  button { width: 100%; }
 }
 </style>
 
@@ -7598,6 +7365,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path' // <-- PASO 1: AÑADIR ESTA LÍNEA
+import { liveDesigner } from '@pinegrow/vite-plugin'
 
 export default defineConfig({
   // --- PASO 2: AÑADIR ESTA SECCIÓN 'resolve' COMPLETA ---
