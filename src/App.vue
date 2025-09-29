@@ -28,6 +28,15 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         <span>{{ $t('nav.liveSession') }}</span>
       </button>
+      
+      <!-- BOTÓN "NUEVA MANO" AÑADIDO -->
+      <button @click="startNewHand()" class="new-hand-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ $t('Nueva Mano') }}</span>
+      </button>
+
       <button @click="switchToView('SavedSessionsView')" :class="{ active: currentView === 'SavedSessionsView' }">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
         <span>{{ $t('nav.savedSessions') }}</span>
@@ -58,7 +67,11 @@
 import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
+<<<<<<< HEAD
 import { useGameStore } from './store/game';
+=======
+import { useGameStore } from './store/game'; // <-- IMPORTAR GAMESTORE
+>>>>>>> 7f948f184d48d838bfecb0ea2f6e683681f66033
 import RotateDeviceOverlay from './components/RotateDeviceOverlay.vue';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
@@ -72,7 +85,11 @@ import SavedTripsView from './views/SavedTripsView.vue';
 import AuthView from './views/AuthView.vue';
 
 const authStore = useAuthStore();
+<<<<<<< HEAD
 const gameStore = useGameStore();
+=======
+const gameStore = useGameStore(); // <-- INSTANCIAR GAMESTORE
+>>>>>>> 7f948f184d48d838bfecb0ea2f6e683681f66033
 const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
@@ -104,6 +121,10 @@ function switchToView(viewName) {
   showMoreMenu.value = false;
 }
 
+<<<<<<< HEAD
+=======
+// FUNCIÓN PARA LA NUEVA MANO
+>>>>>>> 7f948f184d48d838bfecb0ea2f6e683681f66033
 function startNewHand() {
   gameStore.resetHand();
   switchToView('CurrentHandView');
@@ -169,9 +190,36 @@ nav button.active {
   color: var(--primary-color);
 }
 
+/* --- ESTILOS PARA EL NUEVO BOTÓN --- */
+.new-hand-btn {
+  transform: translateY(-15px);
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0; /* Evita que se encoja */
+  border: 3px solid #1a202c; /* Borde del color del fondo para crear separación */
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+}
+
+.new-hand-btn svg {
+  width: 32px;
+  height: 32px;
+}
+
+.new-hand-btn span {
+  font-size: 0.65rem;
+  margin-top: -2px; /* Ajuste para que el texto quede más pegado */
+}
+/* --- FIN DE ESTILOS NUEVOS --- */
+
 @media (hover: hover) and (pointer: fine) {
   nav button:not(.active):hover {
       background-color: rgba(74, 85, 104, 0.2);
+  }
+  .new-hand-btn:hover {
+    background-color: #2b6cb0; /* Color primario más oscuro */
   }
 }
 
