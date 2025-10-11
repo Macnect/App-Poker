@@ -9,14 +9,12 @@
           <option v-for="n in 8" :key="n" :value="n + 1">{{ n + 1 }} Jugadores</option>
         </select>
       </div>
-      <div class="blinds-container">
-        <div class="config-item">
-          <label for="sb-input">Ciega Pequeña:</label>
-          <input id="sb-input" type="number" v-model.number="sbInput" min="1">
-        </div>
-        <div class="config-item">
-          <label for="bb-input">Ciega Grande:</label>
-          <input id="bb-input" type="number" v-model.number="bbInput" min="1">
+      <div class="config-item">
+        <label>Ciegas:</label>
+        <div class="blinds-inline-container">
+          <input id="sb-input" type="number" v-model.number="sbInput" min="1" class="blind-input" placeholder="SB">
+          <span class="blind-separator">/</span>
+          <input id="bb-input" type="number" v-model.number="bbInput" min="1" class="blind-input" placeholder="BB">
         </div>
       </div>
       <div class="config-item">
@@ -52,7 +50,12 @@
           <option value="5">5bb</option>
         </select>
       </div>
-      <button @click="loadHandClicked">Iniciar Mano</button>
+      <div class="button-group">
+        <button class="save-config-btn" @click="saveConfiguration">
+          {{ saveButtonText }}
+        </button>
+        <button class="start-hand-btn" @click="loadHandClicked">Iniciar Mano</button>
+      </div>
     </div>
 
     <!-- Contenedor del Editor de Manos (ahora con layout de Grid) -->
@@ -97,12 +100,52 @@ const selectedBombPotBB = ref(2);
 
 const showRotateOverlay = ref(false);
 const showAllCurrencies = ref(false);
+const saveButtonText = ref('Guardar cambios');
 
 const checkOrientation = () => {
   const isPortrait = window.matchMedia('(orientation: portrait)').matches;
   const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
   showRotateOverlay.value = handIsActive.value && !isPortrait && isCoarsePointer;
 };
+
+// Guardar configuración en localStorage
+function saveConfiguration() {
+  const config = {
+    selectedPlayers: selectedPlayers.value,
+    sbInput: sbInput.value,
+    bbInput: bbInput.value,
+    selectedCurrency: selectedCurrency.value,
+    selectedSpecialRule: selectedSpecialRule.value,
+    selectedBombPotBB: selectedBombPotBB.value
+  };
+
+  localStorage.setItem('handConfiguration', JSON.stringify(config));
+
+  // Feedback visual
+  saveButtonText.value = '✓ Guardado';
+  setTimeout(() => {
+    saveButtonText.value = 'Guardar cambios';
+  }, 2000);
+}
+
+// Cargar configuración desde localStorage
+function loadConfiguration() {
+  const savedConfig = localStorage.getItem('handConfiguration');
+
+  if (savedConfig) {
+    try {
+      const config = JSON.parse(savedConfig);
+      selectedPlayers.value = config.selectedPlayers || 6;
+      sbInput.value = config.sbInput || 1;
+      bbInput.value = config.bbInput || 2;
+      selectedCurrency.value = config.selectedCurrency || '$';
+      selectedSpecialRule.value = config.selectedSpecialRule || 'Ninguno';
+      selectedBombPotBB.value = config.selectedBombPotBB || 2;
+    } catch (error) {
+      console.error('Error al cargar la configuración guardada:', error);
+    }
+  }
+}
 
 watch(handIsActive, () => {
   checkOrientation();
@@ -210,6 +253,7 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('resize', checkOrientation);
   checkOrientation();
+  loadConfiguration(); // Cargar configuración guardada al iniciar
 });
 
 onUnmounted(() => {
@@ -248,26 +292,71 @@ select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; t
   background-color: #f0f9ff;
 }
 
-.blinds-container { display: flex; gap: 20px; }
-.blinds-container .config-item { width: auto; }
-.blinds-container input { width: 150px; }
+/* Contenedor de ciegas en línea */
+.blinds-inline-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.blind-input {
+  width: 100px;
+  padding: 15px;
+  font-size: 1.2rem;
+  text-align: center;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.blind-separator {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #fff;
+}
+
+.button-group {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 button {
   padding: 8px 35px;
   font-size: 1.4rem;
   font-weight: bold;
   border-radius: 8px;
   margin-top: 10px;
-  background-color: #22c55e;
   color: white;
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
 }
-button:hover {
+
+.start-hand-btn {
+  background-color: #22c55e;
+}
+
+.start-hand-btn:hover {
   background-color: #16a34a;
 }
-button:active {
+
+.start-hand-btn:active {
   background-color: #15803d;
+}
+
+.save-config-btn {
+  background-color: #3b82f6;
+}
+
+.save-config-btn:hover {
+  background-color: #2563eb;
+}
+
+.save-config-btn:active {
+  background-color: #1d4ed8;
 }
 
 /* --- NUEVA LÓGICA DE LAYOUT CON GRID --- */
@@ -312,8 +401,10 @@ button:active {
   .config-item { width: 100%; }
   select, input[type="number"] { width: 100%; max-width: 350px; }
   #currency-select { width: 100%; max-width: 350px; }
-  .blinds-container { flex-direction: column; width: 100%; }
-  .blinds-container .config-item, .blinds-container input { width: 100%; }
+  .blinds-inline-container { gap: 10px; }
+  .blind-input { width: 90px; padding: 12px; font-size: 1.1rem; }
+  .blind-separator { font-size: 1.5rem; }
+  .button-group { flex-direction: column; gap: 10px; }
   button { width: 100%; }
 }
 </style>
