@@ -151,21 +151,54 @@ async function deleteAndClose() {
 </script>
 
 <style scoped>
+/* ========================================
+   PREMIUM TRIPS DESIGN SYSTEM
+   ======================================== */
+
+/* Import Premium Modern Font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .saved-trips-container {
   padding: 2rem;
   max-width: 900px;
   margin: 0 auto;
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+  min-height: 100vh;
 }
+
 h2 {
   text-align: center;
   margin-bottom: 2rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f9fafb 0%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
+
 .loading-message, .no-trips {
   margin-top: 1rem;
-  color: #a0aec0;
+  color: #d1d5db;
   text-align: center;
   font-size: 1.2rem;
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4);
 }
+
 .trips-list {
   list-style: none;
   padding: 0;
@@ -174,14 +207,30 @@ h2 {
   flex-direction: column;
   gap: 1.5rem;
 }
+
 .trips-list li {
-  background-color: #2d3748;
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
   padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.trips-list li:hover {
+  transform: translateY(-3px);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow:
+    0 8px 16px -2px rgba(0, 0, 0, 0.35),
+    0 16px 32px -4px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 24px rgba(212, 175, 55, 0.08);
 }
 
 .trip-header {
@@ -191,57 +240,117 @@ h2 {
   flex-wrap: wrap;
   gap: 1rem;
 }
+
 .trip-info {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
 }
+
 .trip-destination {
   font-size: 1.5rem;
-  font-weight: bold;
+  font-weight: 700;
+  color: #f9fafb;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
+
 .trip-date {
   font-size: 0.9rem;
-  color: #a0aec0;
+  color: #d1d5db;
+  font-weight: 500;
+  letter-spacing: 0.025em;
 }
+
 .trip-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-shrink: 0;
+}
+
+.trip-actions button {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  color: white;
+  box-shadow:
+    0 4px 6px -1px rgba(4, 120, 87, 0.3),
+    0 10px 20px -3px rgba(4, 120, 87, 0.2);
+}
+
+.trip-actions button:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 8px 16px -2px rgba(4, 120, 87, 0.35),
+    0 16px 32px -4px rgba(4, 120, 87, 0.25);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%) !important;
+  box-shadow:
+    0 4px 6px -1px rgba(220, 38, 38, 0.3),
+    0 10px 20px -3px rgba(220, 38, 38, 0.2) !important;
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%) !important;
+  box-shadow:
+    0 8px 16px -2px rgba(220, 38, 38, 0.35),
+    0 16px 32px -4px rgba(220, 38, 38, 0.25) !important;
 }
 
 .trip-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
-  background-color: #1a202c;
-  padding: 1rem;
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
+
 .stat-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.5rem;
-}
-.stat-item label {
-  font-size: 0.9rem;
-  color: #a0aec0;
-  margin-bottom: 0.25rem;
-  font-weight: bold;
-}
-.stat-item .value {
-  font-size: 1.5rem;
-  font-weight: bold;
+  padding: 0.75rem;
+  background: rgba(26, 32, 44, 0.5);
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-.delete-btn {
-  background-color: #c53030;
+.stat-item:hover {
+  background: rgba(26, 32, 44, 0.7);
+  transform: translateY(-2px);
 }
-.delete-btn:hover {
-  background-color: #9b2c2c;
+
+.stat-item label {
+  font-size: 0.95rem;
+  color: #d1d5db;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+
+.stat-item .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 .profit { color: #68d391; }
 .loss { color: #fc8181; }
 .even { color: #e2e8f0; }
@@ -253,33 +362,57 @@ h2 {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
-  background-color: #2d3748;
-  border-radius: 12px;
-  padding: 2rem;
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border-radius: 16px;
+  padding: 2.5rem;
   max-width: 400px;
   width: 90%;
   text-align: center;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  box-shadow:
+    0 20px 60px -15px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-content h3 {
   margin: 0 0 1rem 0;
   font-size: 1.5rem;
-  color: white;
+  font-weight: 700;
+  color: #f9fafb;
 }
 
 .modal-content p {
   margin: 0 0 2rem 0;
-  color: #a0aec0;
+  color: #d1d5db;
   font-size: 1.1rem;
+  font-weight: 400;
 }
 
 .modal-actions {
@@ -289,30 +422,42 @@ h2 {
 }
 
 .cancel-btn, .confirm-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
 }
 
 .cancel-btn {
-  background-color: #4A5568;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
   color: white;
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
 }
 
 .cancel-btn:hover {
-  background-color: #2D3748;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 1) 100%);
+  transform: translateY(-2px);
 }
 
 .confirm-btn {
-  background-color: #c53030;
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
   color: white;
+  box-shadow:
+    0 4px 6px -1px rgba(220, 38, 38, 0.3),
+    0 10px 20px -3px rgba(220, 38, 38, 0.2);
 }
 
 .confirm-btn:hover {
-  background-color: #9b2c2c;
+  background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 16px -2px rgba(220, 38, 38, 0.35),
+    0 16px 32px -4px rgba(220, 38, 38, 0.25);
 }
 
 /* Toast Styles */
@@ -324,14 +469,17 @@ h2 {
   align-items: center;
   gap: 10px;
   padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
   z-index: 1000;
   animation: slideIn 0.3s ease-out;
+  backdrop-filter: blur(10px);
 }
 
 .success-toast {
-  background-color: #38a169;
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
   color: white;
 }
 
@@ -342,7 +490,8 @@ h2 {
 
 .toast-message {
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 600;
+  letter-spacing: 0.025em;
 }
 
 @keyframes slideIn {
@@ -360,23 +509,42 @@ h2 {
   .saved-trips-container {
     padding: 1rem 0.5rem;
   }
+
+  h2 {
+    font-size: 2rem;
+  }
+
   .trip-header {
     flex-direction: column;
     align-items: stretch;
     gap: 0.75rem;
   }
+
   .trip-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
+
+  .trip-actions button {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+
   .trip-destination {
     font-size: 1.2rem;
   }
+
   .trip-stats {
     grid-template-columns: 1fr 1fr;
+    padding: 1rem;
   }
+
   .stat-item .value {
     font-size: 1.2rem;
+  }
+
+  .modal-content {
+    padding: 2rem;
   }
 }
 </style>

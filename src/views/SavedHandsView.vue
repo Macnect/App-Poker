@@ -216,17 +216,163 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* ========================================
+   PREMIUM POKER ROOM DESIGN SYSTEM
+   SavedHandsView - Premium Style
+   ======================================== */
+
 .saved-hands-container {
-  padding: 1rem;
+  padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: calc(100vh - 70px);
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
 }
+
+h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f9fafb 0%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+
 .loading-message, .no-hands {
-  margin-top: 2rem;
+  margin-top: 3rem;
   text-align: center;
-  color: #a0aec0;
+  color: #d1d5db;
   font-size: 1.2rem;
+  font-weight: 500;
 }
+
+/* ========================================
+   FILTERS CONTAINER - Premium Card
+   ======================================== */
+.filters-container {
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #d1d5db;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+.sort-btn, .clear-btn {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.sort-btn {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(212, 175, 55, 0.25);
+  color: #f9fafb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sort-btn:hover {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 1) 100%);
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.clear-btn {
+  background: linear-gradient(135deg, rgba(113, 128, 150, 0.6) 0%, rgba(74, 85, 104, 0.8) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  color: #f9fafb;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.clear-btn:hover {
+  background: linear-gradient(135deg, rgba(113, 128, 150, 0.8) 0%, rgba(74, 85, 104, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   GROUPED HANDS CONTAINER
+   ======================================== */
+.grouped-hands-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.date-group {
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  animation: cardSlideIn 0.5s ease-out;
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.date-header {
+  cursor: pointer;
+  color: #d1d5db;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  border-bottom: 1.5px solid rgba(212, 175, 55, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
+}
+
+.date-header:hover {
+  color: #d4af37;
+  border-bottom-color: rgba(212, 175, 55, 0.5);
+  transform: translateX(5px);
+}
+
+/* ========================================
+   HANDS LIST - Premium Cards
+   ======================================== */
 .hands-list {
   list-style: none;
   padding: 0;
@@ -235,68 +381,33 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 1rem;
 }
+
 .hands-list li {
-  background-color: #2d3748;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.15);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1.5rem;
   flex-wrap: wrap;
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
-.filters-container {
-  background-color: #2d3748;
-  padding: 1rem 1.5rem;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+
+.hands-list li:hover {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateX(5px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(212, 175, 55, 0.08);
 }
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.filter-group label {
-  font-weight: bold;
-  color: #a0aec0;
-}
-.filter-group input[type="date"] {
-  padding: 8px;
-  border-radius: 4px;
-}
-.sort-btn, .clear-btn {
-  font-size: 1rem;
-  padding: 8px 16px;
-}
-.clear-btn {
-  background-color: #718096;
-}
-.date-header {
-  cursor: pointer;
-  color: #a0aec0;
-  font-size: 1.2rem;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  border-bottom: 1px solid #4A5568;
-}
-.date-header:hover {
-  color: #e2e8f0;
-}
-.grouped-hands-container {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-.date-group {
-  border: 1px solid #4A5568;
-  border-radius: 8px;
-  padding: 1rem;
-}
+
 .hand-info {
   display: flex;
   flex-direction: column;
@@ -304,11 +415,15 @@ onUnmounted(() => {
   gap: 0.5rem;
   flex-basis: 200px;
   flex-shrink: 0;
+  color: #d1d5db;
+  font-weight: 500;
 }
-.hand-actions {
-  display: flex;
-  gap: 0.5rem;
+
+.hand-info strong {
+  color: #d4af37;
+  font-weight: 600;
 }
+
 .hand-preview {
   display: flex;
   flex-grow: 1;
@@ -316,121 +431,241 @@ onUnmounted(() => {
   align-items: flex-start;
   gap: 1rem;
 }
+
 .card-group {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .group-label {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: #a0aec0;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #d1d5db;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
 }
+
 .cards-display {
   display: flex;
   gap: 5px;
 }
+
 .cards-display :deep(.playing-card) {
   width: 45px;
   height: 63px;
-  border-radius: 4px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
+
 .cards-display :deep(.rank) {
   font-size: 1.5rem;
 }
+
 .cards-display :deep(.suit-icon) {
   font-size: 1rem;
 }
+
+.hero-hand-preview {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.08);
+  animation: hero-glow-list 2s infinite ease-in-out;
+}
+
+@keyframes hero-glow-list {
+  0%, 100% {
+    background-color: rgba(16, 185, 129, 0.05);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    background-color: rgba(16, 185, 129, 0.12);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+  }
+}
+
+/* ========================================
+   HAND ACTIONS - Premium Buttons
+   ======================================== */
+.hand-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.hand-actions button {
+  padding: 10px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.hand-actions button:not(.delete-btn) {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  color: white;
+  box-shadow:
+    0 2px 6px rgba(4, 120, 87, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.hand-actions button:not(.delete-btn):hover {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(4, 120, 87, 0.4),
+    0 0 16px rgba(4, 120, 87, 0.2);
+}
+
 .delete-btn {
-  background-color: #c53030;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.8) 0%, rgba(185, 28, 28, 0.9) 100%);
+  color: white;
+  box-shadow:
+    0 2px 6px rgba(220, 38, 38, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
+
 .delete-btn:hover {
-  background-color: #9b2c2c;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 1) 0%, rgba(185, 28, 28, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(220, 38, 38, 0.4),
+    0 0 16px rgba(220, 38, 38, 0.2);
 }
+
+/* ========================================
+   MODAL - Premium Overlay
+   ======================================== */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(10, 14, 26, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
 }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .modal-content {
-  background-color: #2d3748;
-  border-radius: 12px;
-  padding: 2rem;
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 1) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 20px;
+  padding: 2.5rem;
   max-width: 400px;
   width: 90%;
   text-align: center;
-  border: 1px solid var(--border-color);
+
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 20px 60px -15px rgba(212, 175, 55, 0.03);
+
+  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 .modal-content h3 {
   margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-  color: white;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #f9fafb;
 }
+
 .modal-content p {
   margin: 0 0 2rem 0;
-  color: #a0aec0;
+  color: #d1d5db;
   font-size: 1.1rem;
+  font-weight: 500;
 }
+
 .modal-actions {
   display: flex;
   gap: 1rem;
   justify-content: center;
 }
+
 .cancel-btn, .confirm-btn {
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .cancel-btn {
-  background-color: #4A5568;
+  background: linear-gradient(135deg, rgba(74, 85, 104, 0.8) 0%, rgba(45, 55, 72, 1) 100%);
   color: white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
+
 .cancel-btn:hover {
-  background-color: #2D3748;
+  background: linear-gradient(135deg, rgba(74, 85, 104, 1) 0%, rgba(45, 55, 72, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
+
 .confirm-btn {
-  background-color: #c53030;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.9) 0%, rgba(185, 28, 28, 1) 100%);
   color: white;
+  box-shadow:
+    0 2px 6px rgba(220, 38, 38, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
 }
+
 .confirm-btn:hover {
-  background-color: #9b2c2c;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 1) 0%, rgba(185, 28, 28, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(220, 38, 38, 0.5),
+    0 0 20px rgba(220, 38, 38, 0.2);
 }
+
+/* ========================================
+   TOAST NOTIFICATIONS - Premium
+   ======================================== */
 .toast {
   position: fixed;
   top: 20px;
   right: 20px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 15px 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow:
+    0 4px 15px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   z-index: 1000;
-  animation: slideIn 0.3s ease-out;
+  animation: slideInToast 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.success-toast {
-  background-color: #38a169;
-  color: white;
-}
-.toast-icon {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-.toast-message {
-  font-size: 1rem;
-  font-weight: bold;
-}
-@keyframes slideIn {
+
+@keyframes slideInToast {
   from {
     transform: translateX(100%);
     opacity: 0;
@@ -440,44 +675,73 @@ onUnmounted(() => {
     opacity: 1;
   }
 }
-.hero-hand-preview {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #68d391;
-  animation: hero-glow-list 2s infinite ease-in-out;
-}
-.load-more-container {
-  text-align: center;
-  margin-top: 2rem;
-}
-.load-more-container button {
-  padding: 10px 20px;
-  background-color: #4A5568;
+
+.success-toast {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
   color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.load-more-container button:hover {
-  background-color: #2D3748;
-}
-@keyframes hero-glow-list {
-  0%, 100% {
-    background-color: rgba(104, 211, 145, 0.05);
-    box-shadow: 0 0 5px rgba(104, 211, 145, 0.5);
-  }
-  50% {
-    background-color: rgba(104, 211, 145, 0.15);
-    box-shadow: 0 0 12px rgba(104, 211, 145, 0.8);
-  }
 }
 
+.toast-icon {
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+.toast-message {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+/* ========================================
+   LOAD MORE BUTTON - Premium
+   ======================================== */
+.load-more-container {
+  text-align: center;
+  margin-top: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.load-more-container button {
+  padding: 12px 28px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(212, 175, 55, 0.25);
+  color: #f9fafb;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.load-more-container button:hover {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 1) 100%);
+  border-color: rgba(212, 175, 55, 0.5);
+  transform: translateY(-3px);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 16px rgba(212, 175, 55, 0.08);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
 @media (max-width: 768px) {
+  .saved-hands-container {
+    padding: 1rem;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+  }
+
   .hands-list li {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
   }
+
   .hand-info {
     flex-direction: row;
     justify-content: space-between;
@@ -485,14 +749,24 @@ onUnmounted(() => {
     width: 100%;
     font-size: 0.9rem;
   }
+
   .hand-preview {
     justify-content: space-around;
     width: 100%;
   }
+
   .hand-actions {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .filters-container {
+    padding: 1rem;
+  }
+
+  .date-header {
+    font-size: 1.1rem;
   }
 }
 </style>

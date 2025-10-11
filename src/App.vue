@@ -151,33 +151,64 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ========================================
+   PREMIUM POKER ROOM DESIGN SYSTEM
+   Global Styles for App Container
+   ======================================== */
+
+/* Import Premium Modern Font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Apply Poppins font to all elements */
+* {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 #main-container {
   width: 100%;
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+  min-height: 100vh;
 }
 
 main {
   width: 100%;
 }
 
+/* ========================================
+   BOTTOM NAVIGATION - Premium Style
+   ======================================== */
 nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   height: 70px;
-  background-color: #2d3748;
-  border-top: 1px solid var(--border-color);
+
+  /* Premium gradient background */
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 1) 100%);
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
+
   display: flex;
   justify-content: space-around;
   align-items: center;
   z-index: 1000;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+
+  /* Enhanced shadow */
+  box-shadow:
+    0 -4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 -10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+
+  backdrop-filter: blur(10px);
 }
 
 nav button {
   background-color: transparent;
   border: none;
-  color: #a0aec0;
+  color: #9ca3af;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -185,94 +216,200 @@ nav button {
   gap: 4px;
   height: 100%;
   flex-grow: 1;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
 }
 
 nav button svg {
   width: 24px;
   height: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 nav button.active {
-  color: var(--primary-color);
+  color: #d4af37;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+nav button.active svg {
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.4));
+  transform: scale(1.1);
 }
 
 @media (hover: hover) and (pointer: fine) {
   nav button:not(.active):hover {
-      background-color: rgba(74, 85, 104, 0.2);
+    background: linear-gradient(180deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.02) 100%);
+    color: #d1d5db;
+  }
+
+  nav button:not(.active):hover svg {
+    transform: translateY(-2px) scale(1.05);
   }
 }
 
+/* ========================================
+   MORE MENU OVERLAY - Premium Modal
+   ======================================== */
 .more-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(10, 14, 26, 0.85);
+  backdrop-filter: blur(8px);
   z-index: 1001;
   display: flex;
   justify-content: center;
   align-items: flex-end;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .more-menu-panel {
-  background-color: #2d3748;
+  /* Premium glass card effect */
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 1) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+
   width: 100%;
   max-width: 500px;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  padding: 1rem;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 1.5rem;
   padding-bottom: 90px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  animation: slide-up 0.3s ease-out;
+  gap: 0.75rem;
+
+  /* Multi-layer shadow for depth */
+  box-shadow:
+    0 -4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 -10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 -20px 60px -15px rgba(212, 175, 55, 0.03);
+
+  animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Premium accent line at top */
+.more-menu-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: rgba(212, 175, 55, 0.4);
+  border-radius: 0 0 4px 4px;
 }
 
 .more-menu-panel button {
   width: 100%;
-  padding: 1rem;
-  font-size: 1.1rem;
+  padding: 1.1rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 500;
   text-align: left;
-  background-color: #4a5568;
-  border: none;
+  cursor: pointer;
+
+  /* Premium button styling */
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.15);
+  border-radius: 12px;
+  color: #f9fafb;
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.more-menu-panel button:hover {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateX(4px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.25),
+    0 0 12px rgba(212, 175, 55, 0.08);
 }
 
 .more-menu-panel button.logout-btn {
-  border-top: 1px solid var(--border-color);
-  margin-top: 0.5rem;
-  color: #fc8181;
+  margin-top: 0.75rem;
+  border-top: 1.5px solid rgba(212, 175, 55, 0.2);
+  padding-top: 1.25rem;
+  color: #f87171;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.15) 100%);
+  border-color: rgba(220, 38, 38, 0.2);
 }
 
-@keyframes slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+.more-menu-panel button.logout-btn:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(185, 28, 28, 0.25) 100%);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #fca5a5;
 }
 
-/* ESTILOS PARA EL BOTÓN FLOTANTE (FAB) AÑADIDOS */
+/* ========================================
+   FLOATING ACTION BUTTON (FAB) - Premium
+   ======================================== */
 .fab-new-hand {
   position: fixed;
-  bottom: 35px; /* (Altura nav 70px / 2) */
+  bottom: 35px;
   left: 50%;
   transform: translateX(-50%);
   width: 64px;
   height: 64px;
-  background-color: var(--primary-color);
+
+  /* Premium emerald gradient */
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+
   border-radius: 50%;
-  border: 4px solid #1a202c; /* Borde del color del fondo para efecto "incrustado" */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 4px solid rgba(10, 14, 26, 0.95);
+
+  /* Enhanced shadow with glow */
+  box-shadow:
+    0 4px 12px rgba(4, 120, 87, 0.4),
+    0 8px 24px rgba(4, 120, 87, 0.3),
+    0 0 20px rgba(4, 120, 87, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1002; /* Aumentado para estar por encima del overlay del menú "Más" */
+  z-index: 1002;
   color: white;
-  transition: background-color 0.2s, transform 0.2s ease-out;
+  cursor: pointer;
+
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .fab-new-hand svg {
   width: 32px;
   height: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .fab-new-hand:active {
@@ -281,7 +418,13 @@ nav button.active {
 
 @media (hover: hover) and (pointer: fine) {
   .fab-new-hand:hover {
-    background-color: #2b6cb0; /* Color primario más oscuro en hover */
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    transform: translateX(-50%) translateY(-3px) scale(1.05);
+    box-shadow:
+      0 8px 20px rgba(4, 120, 87, 0.45),
+      0 12px 32px rgba(4, 120, 87, 0.35),
+      0 0 32px rgba(4, 120, 87, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.15) inset;
   }
 }
 </style>

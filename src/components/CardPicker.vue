@@ -46,65 +46,141 @@ function selectCard(card) {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 .modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  display: flex; justify-content: center; align-items: center; z-index: 2000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
   padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .card-picker-content {
-  background-color: #1a202c;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   padding: 1.5rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .suit-row {
   display: flex;
   gap: 0.5rem;
 }
+
 .card {
-  width: 50px; height: 70px;
-  border: 1px solid #4A5568;
-  border-radius: 6px;
-  display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  font-family: 'Arial Black', sans-serif; font-size: 1.8rem; font-weight: bold;
+  width: 50px;
+  height: 70px;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Arial Black', sans-serif;
+  font-size: 1.8rem;
+  font-weight: bold;
   cursor: pointer;
   color: white;
   user-select: none;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
-.card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 15px #f6e05e;
+
+.card:hover:not(.disabled) {
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.5);
+  border-color: rgba(212, 175, 55, 0.6);
 }
+
 .suit-icon {
   font-size: 1.2rem;
   line-height: 1;
 }
-.card.black { background-color: #2d3748; }
-.card.red { background-color: #c53030; }
-.card.green { background-color: #2f855a; }
-.card.blue { background-color: #2b6cb0; }
+
+.card.black {
+  background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+}
+.card.red {
+  background: linear-gradient(135deg, #c53030 0%, #9b2c2c 100%);
+}
+.card.green {
+  background: linear-gradient(135deg, #2f855a 0%, #276749 100%);
+}
+.card.blue {
+  background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+}
 
 .card.disabled {
-  background-color: #4a5568;
-  opacity: 0.3;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  opacity: 0.4;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+  border-color: rgba(74, 85, 104, 0.3);
 }
+
 .card.disabled:hover {
   transform: none;
   box-shadow: none;
+  border-color: rgba(74, 85, 104, 0.3);
 }
+
 .close-btn {
   margin-top: 1rem;
-  padding: 10px;
+  padding: 12px 24px;
   font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
 @media (max-width: 768px) {
@@ -116,13 +192,17 @@ function selectCard(card) {
     gap: 0.25rem;
   }
   .card {
-    width: clamp(28px, 6vw, 40px); /* Ancho fluido */
-    height: clamp(40px, 8.4vw, 56px); /* Alto fluido */
-    font-size: clamp(1rem, 3vw, 1.5rem); /* Fuente fluida */
-    border-radius: 4px;
+    width: clamp(28px, 6vw, 40px);
+    height: clamp(40px, 8.4vw, 56px);
+    font-size: clamp(1rem, 3vw, 1.5rem);
+    border-radius: 6px;
   }
   .suit-icon {
     font-size: clamp(0.7rem, 2vw, 1rem);
+  }
+  .close-btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
   }
 }
 </style>

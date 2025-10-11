@@ -78,27 +78,225 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background-color:rgba(0,0,0,.8);display:flex;justify-content:center;align-items:center;z-index:2000; padding: 1rem;}
-.modal-content{background-color:#2d3748;padding:2rem;border-radius:12px;border:1px solid var(--border-color);width:100%;max-width:450px;text-align:center}
-h3{margin-top:0;font-size:1.8rem}
-.summary{text-align:left;margin:1.5rem 0;font-size:1.1rem}
-.summary-item{display:flex;justify-content:space-between;padding:.5rem 0}
-.total-investment{font-weight:700;border-top:1px solid var(--border-color);margin-top:.5rem;padding-top:.5rem}
-.final-stack-input{margin:1.5rem 0}
-.final-stack-input label{display:block;margin-bottom:.5rem;font-weight:700}
-.input-group{display:flex;align-items:center;background-color:#1a202c;border-radius:6px;border:1px solid var(--border-color)}
-.input-group span{padding:0 15px;font-size:1.2rem;color:#a0aec0}
-.input-group input{flex-grow:1;background:0 0;border:none;font-size:1.5rem;padding:15px;color:#fff;outline:0}
-.result-display{margin:1.5rem 0;padding:1rem;border-radius:8px}
-.result-display h4{margin:0 0 .5rem}
-.result-display p{margin:0;font-size:2.5rem;font-weight:700}
-.result-display.profit{background-color:rgba(47,133,90,.3);color:#68d391}
-.result-display.loss{background-color:rgba(197,48,48,.3);color:#fc8181}
-.result-display.even{background-color:rgba(74,85,104,.3);color:#a0aec0}
-.modal-actions{display:flex;gap:1rem;margin-top:2rem}
-.modal-actions button{flex-grow:1;padding:15px;font-size:1.1rem;font-weight:700}
-.btn-cancel{background-color:#718096}
-.btn-confirm{background-color:#48bb78}
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+  padding: 2rem;
+  border-radius: 14px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  width: 100%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h3 {
+  margin-top: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.summary {
+  text-align: left;
+  margin: 1.5rem 0;
+  font-size: 1.1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.total-investment {
+  font-weight: 700;
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  color: rgba(212, 175, 55, 0.9);
+}
+
+.final-stack-input {
+  margin: 1.5rem 0;
+}
+
+.final-stack-input label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: rgba(212, 175, 55, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+}
+
+.input-group {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group:focus-within {
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.input-group span {
+  padding: 0 15px;
+  font-size: 1.2rem;
+  color: rgba(212, 175, 55, 0.7);
+  font-weight: 600;
+}
+
+.input-group input {
+  flex-grow: 1;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  padding: 15px;
+  color: #fff;
+  outline: 0;
+  font-weight: 600;
+}
+
+.result-display {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 2px solid;
+}
+
+.result-display h4 {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.result-display p {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.result-display.profit {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
+.result-display.loss {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(153, 27, 27, 0.15) 100%);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #ef4444;
+}
+
+.result-display.even {
+  background: linear-gradient(135deg, rgba(74, 85, 104, 0.15) 0%, rgba(45, 55, 72, 0.15) 100%);
+  border-color: rgba(160, 174, 192, 0.4);
+  color: #a0aec0;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.modal-actions button {
+  flex-grow: 1;
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.btn-cancel {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: rgba(212, 175, 55, 0.2);
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-confirm:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+  box-shadow: none;
+}
 
 @media (max-width: 480px) {
   .modal-content {

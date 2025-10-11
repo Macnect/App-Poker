@@ -174,22 +174,37 @@ function handleWheelScroll(event) {
 </script>
 
 <style scoped>
-.action-panel-wrapper {
-  --btn-red: #f95f41;
-  --btn-green: #70b75b;
-  --btn-orange: #e39e49;
-  --btn-purple: #a955cd;
-  --btn-grey: #4A5568;
-  --slider-color-active: #FAB76B;
-  --slider-color-inactive: #1A202C;
+/* ========================================
+   PREMIUM POKER ROOM DESIGN SYSTEM
+   ActionPanel - Premium Control Panel
+   ======================================== */
 
-  background-color: #2d3748;
-  border-radius: 12px;
-  padding: clamp(5px, 1vw, 15px);
+.action-panel-wrapper {
+  /* Premium button colors - more vibrant and sophisticated */
+  --btn-red: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  --btn-green: linear-gradient(135deg, #047857 0%, #059669 100%);
+  --btn-orange: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  --btn-purple: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  --btn-grey: linear-gradient(135deg, rgba(74, 85, 104, 0.8) 0%, rgba(55, 65, 81, 0.9) 100%);
+  --slider-color-active: #d4af37;
+  --slider-color-inactive: rgba(31, 41, 55, 0.8);
+
+  /* Premium glass panel effect */
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 16px;
+  padding: clamp(8px, 1.2vw, 18px);
   width: 70%;
   margin-left: 16%;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  border: clamp(2px, 0.4vw, 3px) solid var(--border-color);
+
+  /* Multi-layer shadow for depth */
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 20px 60px -15px rgba(212, 175, 55, 0.03);
+
+  backdrop-filter: blur(10px);
   color: white;
   box-sizing: border-box;
   overflow: hidden;
@@ -197,20 +212,33 @@ function handleWheelScroll(event) {
 }
 
 .actions-grid {
- width: 100%;
- display: grid;
- gap: clamp(0px, 0.8vw, 1px);
- align-items: center;
- grid-template-columns: repeat(6, 1fr); /* Aumentado a 6 columnas */
- grid-template-rows: auto auto auto;
- grid-template-areas:
-   "fold       call       turn-info  turn-info    color-select bbs-toggle"
-   "raise      input      slider     slider       slider       slider"
-   "quick-bets quick-bets quick-bets save-hand    prev-action  next-action";
+  width: 100%;
+  display: grid;
+  gap: clamp(6px, 0.8vw, 10px);
+  align-items: center;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "fold       call       turn-info  turn-info    color-select bbs-toggle"
+    "raise      input      slider     slider       slider       slider"
+    "quick-bets quick-bets quick-bets save-hand    prev-action  next-action";
 }
 
+/* Grid areas assignment */
+.grid-turn-info {
+  grid-area: turn-info;
+  text-align: center;
+  font-size: clamp(0.9rem, 2vmin, 1.2rem);
+  font-weight: 600;
+  color: #d1d5db;
+  letter-spacing: 0.025em;
+}
 
-.grid-turn-info { grid-area: turn-info; text-align: center; font-size: clamp(0.9rem, 2vmin, 1.2rem); }
+.grid-turn-info strong {
+  color: #d4af37;
+  font-weight: 700;
+}
+
 .grid-fold { grid-area: fold; }
 .grid-call { grid-area: call; }
 .grid-raise { grid-area: raise; }
@@ -222,68 +250,257 @@ function handleWheelScroll(event) {
 .grid-save { grid-area: save-hand; }
 .grid-prev { grid-area: prev-action; }
 .grid-next { grid-area: next-action; }
- 
+
+/* ========================================
+   PREMIUM BUTTON STYLING
+   ======================================== */
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
-  height: clamp(20px, 6vmin, 55px);
-  font-size: clamp(1.2rem, 1.8vmin, 1.1rem);
-  font-weight: bold;
-  border-radius: 8px;
+  height: clamp(28px, 6vmin, 55px);
+  font-size: clamp(0.85rem, 1.8vmin, 1.1rem);
+  font-weight: 700;
+  border-radius: 10px;
   color: white;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 1 18px;
-  border: 1px solid #000;
+  padding: 0 18px;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 0.5%;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 
-.grid-input { background-color: #1A202C; text-align: center; width: 100%; }
+.grid-fold:hover, .grid-call:hover, .grid-raise:hover, .grid-color-select:hover, .grid-bbs-toggle:hover, .grid-save:hover, .btn-nav:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.grid-fold:active, .grid-call:active, .grid-raise:active, .grid-color-select:active, .grid-bbs-toggle:active, .grid-save:active, .btn-nav:active {
+  transform: translateY(0);
+}
+
+/* Premium input styling */
+.grid-input {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  text-align: center;
+  width: 100%;
+  font-weight: 600;
+  color: #f9fafb;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.grid-input:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.grid-input:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
 .all-in-indicator { display: none; }
 
-.grid-quick-bets { display: grid; grid-template-columns: repeat(auto-fit, minmax(35px, 1fr)); gap: 4px; }
-.grid-quick-bets button {
-  padding: clamp(4px, 1.2vmin, 10px);
-  font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
-  border-radius: 6px;
-  background-color: var(--btn-grey);
-  color: white;
-  cursor: pointer;
-  border: 1px solid #000;
+/* ========================================
+   QUICK BET BUTTONS - Premium Grid
+   ======================================== */
+.grid-quick-bets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+  gap: clamp(3px, 0.6vw, 6px);
 }
 
-.grid-color-select, .grid-bbs-toggle { background-color: #718096; }
-.btn-fold { background-color: var(--btn-red); }
-.btn-call { background-color: var(--btn-green); }
-.btn-raise { background-color: var(--btn-orange); }
-.btn-allin { background-color: var(--btn-purple) !important; grid-column: 1 / -1; }
-.btn-save-hand { background-color: var(--btn-green); }
-.btn-nav { background-color: #718096; }
-button:disabled, .grid-slider:disabled { background-color: #718096 !important; cursor: not-allowed; opacity: 0.6; }
- 
- .grid-slider { -webkit-appearance: none; appearance: none; width: 90%; height: clamp(12px, 2.2vmin, 16px); background: transparent; outline: none; border-radius: 8px; }
-.grid-slider::-webkit-slider-runnable-track { width: 100%; height: 100%; cursor: pointer; border-radius: 8px; border: 1px solid #000; background: linear-gradient(to right, var(--slider-color-active) var(--slider-fill-percentage), var(--slider-color-inactive) var(--slider-fill-percentage)); }
-.grid-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; border: 1px solid #000; height: calc(clamp(12px, 2.2vmin, 16px) + 14px); width: clamp(15px, 2.5vmin, 20px); border-radius: 4px; background: #E2E8F0; cursor: pointer; margin-top: calc(clamp(12px, 2.2vmin, 16px) / -2 + -7px); }
+.grid-quick-bets button {
+  padding: clamp(6px, 1.2vmin, 12px);
+  font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--btn-grey);
+  color: white;
+  cursor: pointer;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-/* Media query para compactar el layout en contenedores más estrechos que el diseño ideal */
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+.grid-quick-bets button:hover {
+  background: linear-gradient(135deg, rgba(74, 85, 104, 1) 0%, rgba(55, 65, 81, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.grid-quick-bets button:active {
+  transform: translateY(0);
+}
+
+/* Select dropdowns premium styling */
+.grid-color-select, .grid-bbs-toggle {
+  background: var(--btn-grey);
+  font-weight: 600;
+}
+
+.grid-color-select option {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 12px 16px;
+  font-weight: 500;
+}
+
+/* ========================================
+   ACTION BUTTON COLORS - Premium Gradients
+   ======================================== */
+.btn-fold {
+  background: var(--btn-red);
+}
+
+.btn-fold:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  filter: brightness(1.1);
+}
+
+.btn-call {
+  background: var(--btn-green);
+}
+
+.btn-call:hover {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.btn-raise {
+  background: var(--btn-orange);
+}
+
+.btn-raise:hover {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+}
+
+.btn-allin {
+  background: var(--btn-purple) !important;
+  grid-column: 1 / -1;
+  font-size: clamp(0.9rem, 1.8vmin, 1.2rem) !important;
+  letter-spacing: 0.05em;
+}
+
+.btn-allin:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  filter: brightness(1.15);
+}
+
+.btn-save-hand {
+  background: var(--btn-green);
+}
+
+.btn-save-hand:hover {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.btn-nav {
+  background: var(--btn-grey);
+}
+
+.btn-nav:hover {
+  background: linear-gradient(135deg, rgba(74, 85, 104, 1) 0%, rgba(55, 65, 81, 1) 100%);
+}
+
+/* Disabled state - premium style */
+button:disabled, .grid-slider:disabled {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.5) 0%, rgba(75, 85, 99, 0.6) 100%) !important;
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none !important;
+}
+
+/* ========================================
+   PREMIUM SLIDER STYLING
+   ======================================== */
+.grid-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 95%;
+  height: clamp(14px, 2.2vmin, 18px);
+  background: transparent;
+  outline: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.grid-slider::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+  background: linear-gradient(to right,
+    var(--slider-color-active) var(--slider-fill-percentage),
+    var(--slider-color-inactive) var(--slider-fill-percentage)
+  );
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.grid-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  height: calc(clamp(14px, 2.2vmin, 18px) + 16px);
+  width: clamp(18px, 2.5vmin, 24px);
+  border-radius: 6px;
+  background: linear-gradient(145deg, #f9fafb 0%, #e5e7eb 100%);
+  cursor: pointer;
+  margin-top: calc(clamp(14px, 2.2vmin, 18px) / -2 + -8px);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  transition: all 0.2s ease;
+}
+
+.grid-slider::-webkit-slider-thumb:hover {
+  background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 100%);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(212, 175, 55, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
 @media (max-width: 900px) {
   .actions-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto auto 1fr auto;
     grid-template-areas:
-     "turn-info  turn-info"
-     "fold       call"
-     "raise      input"
-     "slider     slider"
-     "quick-bets quick-bets"
-     "save-hand  save-hand"
-     "prev-action next-action"
-     "bbs-toggle color-select";
- }
+      "turn-info  turn-info"
+      "fold       call"
+      "raise      input"
+      "slider     slider"
+      "quick-bets quick-bets"
+      "save-hand  save-hand"
+      "prev-action next-action"
+      "bbs-toggle color-select";
+  }
 }
 
-/* Media query para mover el panel a la derecha en móviles horizontales */
 @media screen and (orientation: landscape) and (max-height: 600px) {
   .action-panel-wrapper {
     margin-left: auto;
