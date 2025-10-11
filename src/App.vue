@@ -23,6 +23,7 @@
         <!-- ========================================================== -->
         
         <button @click="navigateTo('SavedHandsView')">{{ $t('nav.savedHands') }}</button>
+        <button @click="navigateTo('SavedSessionsView')">{{ $t('nav.savedSessions') }}</button>
         <button @click="navigateTo('ChartsView')">{{ $t('nav.charts') }}</button>
         <button @click="navigateTo('CommunityView')">Viajes</button>
         <button @click="navigateTo('SavedTripsView')">Viajes Guardados</button>
@@ -41,9 +42,10 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         <span>{{ $t('nav.liveSession') }}</span>
       </button>
-      <button @click="switchToView('SavedSessionsView')" :class="{ active: currentView === 'SavedSessionsView' }">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
-        <span>{{ $t('nav.savedSessions') }}</span>
+      <button @click="startNewHand()" class="fab-nav-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
       </button>
       <button @click="switchToView('SummaryView')" :class="{ active: currentView === 'SummaryView' }">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
@@ -54,13 +56,6 @@
         <span>Más</span>
       </button>
     </nav>
-
-    <!-- BOTÓN "NUEVA MANO" AÑADIDO (AISLADO) -->
-    <button @click="startNewHand()" class="fab-new-hand" :title="$t('nav.newHand')">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-      </svg>
-    </button>
 
   </div>
   <AuthView v-else />
@@ -229,6 +224,48 @@ nav button svg {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.fab-nav-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  border: 4px solid rgba(10, 14, 26, 0.95);
+  box-shadow:
+    0 4px 12px rgba(4, 120, 87, 0.4),
+    0 8px 24px rgba(4, 120, 87, 0.3),
+    0 0 20px rgba(4, 120, 87, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -20px; /* to make it stick out above the nav */
+  z-index: 10;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-nav-btn svg {
+  width: 32px;
+  height: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.fab-nav-btn:active {
+  transform: scale(0.95);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fab-nav-btn:hover {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow:
+      0 8px 20px rgba(4, 120, 87, 0.45),
+      0 12px 32px rgba(4, 120, 87, 0.35),
+      0 0 32px rgba(4, 120, 87, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+  }
+}
+
 nav button.active {
   color: #d4af37;
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
@@ -372,59 +409,4 @@ nav button.active svg {
   color: #fca5a5;
 }
 
-/* ========================================
-   FLOATING ACTION BUTTON (FAB) - Premium
-   ======================================== */
-.fab-new-hand {
-  position: fixed;
-  bottom: 35px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 64px;
-  height: 64px;
-
-  /* Premium emerald gradient */
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
-
-  border-radius: 50%;
-  border: 4px solid rgba(10, 14, 26, 0.95);
-
-  /* Enhanced shadow with glow */
-  box-shadow:
-    0 4px 12px rgba(4, 120, 87, 0.4),
-    0 8px 24px rgba(4, 120, 87, 0.3),
-    0 0 20px rgba(4, 120, 87, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1002;
-  color: white;
-  cursor: pointer;
-
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.fab-new-hand svg {
-  width: 32px;
-  height: 32px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.fab-new-hand:active {
-  transform: translateX(-50%) scale(0.95);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .fab-new-hand:hover {
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-    transform: translateX(-50%) translateY(-3px) scale(1.05);
-    box-shadow:
-      0 8px 20px rgba(4, 120, 87, 0.45),
-      0 12px 32px rgba(4, 120, 87, 0.35),
-      0 0 32px rgba(4, 120, 87, 0.2),
-      0 0 0 1px rgba(255, 255, 255, 0.15) inset;
-  }
-}
 </style>
