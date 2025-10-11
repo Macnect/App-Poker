@@ -2,6 +2,18 @@
   <div class="view-container">
     <!-- Panel de Configuración (visible cuando no hay mano activa) -->
     <div v-if="!handIsActive" class="configuration-panel">
+      <!-- Botón de guardar minimalista en la esquina superior -->
+      <button
+        class="save-icon-btn"
+        @click="saveConfiguration"
+        :title="saveButtonText"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="save-icon">
+          <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </svg>
+        <span v-if="saveButtonText === '✓ Guardado'" class="saved-indicator">✓</span>
+      </button>
+
       <h2></h2>
       <div class="config-item">
         <label for="player-count">Número de Jugadores:</label>
@@ -50,12 +62,7 @@
           <option value="5">5bb</option>
         </select>
       </div>
-      <div class="button-group">
-        <button class="save-config-btn" @click="saveConfiguration">
-          {{ saveButtonText }}
-        </button>
-        <button class="start-hand-btn" @click="loadHandClicked">Iniciar Mano</button>
-      </div>
+      <button class="start-hand-btn" @click="loadHandClicked">Iniciar Mano</button>
     </div>
 
     <!-- Contenedor del Editor de Manos (ahora con layout de Grid) -->
@@ -275,6 +282,72 @@ onUnmounted(() => {
   justify-content: center; gap: 30px; padding: 3.5rem;
   max-width: 500px; margin: 1rem auto;
   background-color: #2d3748; border-radius: 12px;
+  position: relative;
+}
+
+/* Botón de guardar minimalista en la esquina superior */
+.save-icon-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  background-color: rgba(59, 130, 246, 0.15);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.save-icon-btn:hover {
+  background-color: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+}
+
+.save-icon-btn:active {
+  transform: translateY(0);
+  background-color: rgba(59, 130, 246, 0.35);
+}
+
+.save-icon {
+  width: 22px;
+  height: 22px;
+  color: #60a5fa;
+}
+
+.saved-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #22c55e;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 h2 { font-size: 2.5rem; margin-bottom: -50px; }
 .config-item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
@@ -315,15 +388,8 @@ select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; t
   color: #fff;
 }
 
-.button-group {
-  display: flex;
-  gap: 15px;
-  width: 100%;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-button {
+/* Botón de iniciar mano */
+.start-hand-btn {
   padding: 8px 35px;
   font-size: 1.4rem;
   font-weight: bold;
@@ -333,9 +399,6 @@ button {
   border: none;
   cursor: pointer;
   transition: background-color 0.2s;
-}
-
-.start-hand-btn {
   background-color: #22c55e;
 }
 
@@ -345,18 +408,6 @@ button {
 
 .start-hand-btn:active {
   background-color: #15803d;
-}
-
-.save-config-btn {
-  background-color: #3b82f6;
-}
-
-.save-config-btn:hover {
-  background-color: #2563eb;
-}
-
-.save-config-btn:active {
-  background-color: #1d4ed8;
 }
 
 /* --- NUEVA LÓGICA DE LAYOUT CON GRID --- */
@@ -404,7 +455,8 @@ button {
   .blinds-inline-container { gap: 10px; }
   .blind-input { width: 90px; padding: 12px; font-size: 1.1rem; }
   .blind-separator { font-size: 1.5rem; }
-  .button-group { flex-direction: column; gap: 10px; }
-  button { width: 100%; }
+  .start-hand-btn { width: 100%; }
+  .save-icon-btn { top: 10px; right: 10px; width: 36px; height: 36px; }
+  .save-icon { width: 20px; height: 20px; }
 }
 </style>

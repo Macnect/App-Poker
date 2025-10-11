@@ -36,6 +36,19 @@
 
       <!-- WIDGET DE CONFIGURACIÓN -->
       <div class="widget config-widget">
+        <!-- Botón de guardar minimalista en la esquina superior -->
+        <button
+          class="save-icon-btn"
+          @click="saveConfiguration"
+          :title="saveButtonText"
+          :disabled="sessionStore.isActive"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="save-icon">
+            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+          </svg>
+          <span v-if="saveButtonText === '✓ Guardado'" class="saved-indicator">✓</span>
+        </button>
+
          <div class="widget-header">
           <span>CONFIGURACIÓN DE LA PARTIDA</span>
         </div>
@@ -48,8 +61,12 @@
               </select>
             </div>
             <div class="config-item">
-              <label for="blinds">Ciegas</label>
-              <input type="text" id="blinds" v-model="sessionStore.blinds" placeholder="Ej: 1/2">
+              <label>Ciegas</label>
+              <div class="blinds-inline-container">
+                <input type="number" v-model.number="smallBlind" min="0.01" step="0.01" class="blind-input" placeholder="SB">
+                <span class="blind-separator">/</span>
+                <input type="number" v-model.number="bigBlind" min="0.01" step="0.01" class="blind-input" placeholder="BB">
+              </div>
             </div>
             <div class="config-item">
               <label for="location">Lugar</label>
@@ -101,7 +118,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
 import { useAuthStore } from '../store/useAuthStore';
 import EndSessionModal from '../components/EndSessionModal.vue';
@@ -114,6 +131,19 @@ const isSaving = ref(false);
 const rebuyAmount = ref(null);
 const tipAmount = ref(null);
 const expenseAmount = ref(null);
+
+const saveButtonText = ref('Guardar cambios');
+
+// Campos separados para ciegas
+const smallBlind = ref(1);
+const bigBlind = ref(2);
+
+// Actualizar sessionStore.blinds cuando cambien los valores
+watch([smallBlind, bigBlind], ([sb, bb]) => {
+  if (sb !== null && sb !== undefined && bb !== null && bb !== undefined) {
+    sessionStore.blinds = `${sb}/${bb}`;
+  }
+});
 
 function handleAddRebuy() {
   if (rebuyAmount.value > 0) {
@@ -145,6 +175,64 @@ async function handleConfirmEndSession(finalStack) {
     isSaving.value = false;
   }
 }
+
+// Guardar configuración de sesión en localStorage
+function saveConfiguration() {
+  const config = {
+    playerCount: sessionStore.playerCount,
+    smallBlind: smallBlind.value,
+    bigBlind: bigBlind.value,
+    location: sessionStore.location,
+    currency: sessionStore.currency,
+    initialStack: sessionStore.initialStack
+  };
+
+  localStorage.setItem('liveSessionConfiguration', JSON.stringify(config));
+
+  // Feedback visual
+  saveButtonText.value = '✓ Guardado';
+  setTimeout(() => {
+    saveButtonText.value = 'Guardar cambios';
+  }, 2000);
+}
+
+// Cargar configuración de sesión desde localStorage
+function loadConfiguration() {
+  const savedConfig = localStorage.getItem('liveSessionConfiguration');
+
+  if (savedConfig) {
+    try {
+      const config = JSON.parse(savedConfig);
+      sessionStore.playerCount = config.playerCount || 6;
+      sessionStore.location = config.location || '';
+      sessionStore.currency = config.currency || '$';
+      sessionStore.initialStack = config.initialStack || 200;
+
+      // Cargar ciegas separadas
+      if (config.smallBlind !== undefined && config.bigBlind !== undefined) {
+        smallBlind.value = config.smallBlind;
+        bigBlind.value = config.bigBlind;
+      } else if (config.blinds) {
+        // Compatibilidad con formato antiguo "1/2"
+        const [sb, bb] = config.blinds.split('/').map(Number);
+        if (!isNaN(sb) && !isNaN(bb)) {
+          smallBlind.value = sb;
+          bigBlind.value = bb;
+        }
+      } else {
+        smallBlind.value = 1;
+        bigBlind.value = 2;
+      }
+    } catch (error) {
+      console.error('Error al cargar la configuración de sesión guardada:', error);
+    }
+  }
+}
+
+// Cargar configuración al montar el componente
+onMounted(() => {
+  loadConfiguration();
+});
 
 const formattedTime = computed(() => {
   const totalSeconds = sessionStore.isOnBreak ? sessionStore.breakElapsedTime : sessionStore.elapsedTime;
@@ -192,7 +280,80 @@ const formattedTime = computed(() => {
 }
 .timer-widget { grid-area: timer; }
 .actions-widget { grid-area: actions; }
-.config-widget { grid-area: config; }
+.config-widget {
+  grid-area: config;
+  position: relative;
+}
+
+/* Botón de guardar minimalista en la esquina superior del widget de configuración */
+.save-icon-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+  background-color: rgba(59, 130, 246, 0.15);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+.save-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.save-icon-btn:not(:disabled):hover {
+  background-color: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+}
+
+.save-icon-btn:not(:disabled):active {
+  transform: translateY(0);
+  background-color: rgba(59, 130, 246, 0.35);
+}
+
+.save-icon {
+  width: 22px;
+  height: 22px;
+  color: #60a5fa;
+}
+
+.saved-indicator {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #22c55e;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 
 /* --- Timer Widget --- */
 .status-indicator {
@@ -258,14 +419,37 @@ const formattedTime = computed(() => {
   gap: 1.5rem;
 }
 .config-item { display: flex; flex-direction: column; gap: 10px; }
-.config-item label { 
-  font-weight: bold; 
+.config-item label {
+  font-weight: bold;
   font-size: 1.1rem;
-  color: #a0aec0; 
+  color: #a0aec0;
 }
-.config-item input, .config-item select { 
+.config-item input, .config-item select {
   font-size: 1.1rem;
   padding: 15px;
+}
+
+/* Contenedor de ciegas en línea */
+.blinds-inline-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.blind-input {
+  width: 80px;
+  padding: 15px;
+  font-size: 1.1rem;
+  text-align: center;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+.blind-separator {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #a0aec0;
 }
 
 /* --- Main Controls --- */
@@ -312,6 +496,16 @@ const formattedTime = computed(() => {
   .config-grid {
     grid-template-columns: 1fr; /* Apila los inputs de configuración */
   }
+  .save-icon-btn {
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+  }
+  .save-icon {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* ================================================== */
@@ -324,9 +518,23 @@ const formattedTime = computed(() => {
     flex-direction: column;
     gap: 0.75rem; /* Un espacio más pequeño entre input y botón */
   }
-  
+
   .action-group button {
     font-size: 1.1rem; /* Hacemos el texto del botón un poco más grande */
+  }
+
+  .blinds-inline-container {
+    gap: 8px;
+  }
+
+  .blind-input {
+    width: 70px;
+    padding: 12px;
+    font-size: 1rem;
+  }
+
+  .blind-separator {
+    font-size: 1.3rem;
   }
 }
 
