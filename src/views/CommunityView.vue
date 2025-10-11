@@ -250,39 +250,240 @@ h3 { font-size: 1.6rem; color: #cbd5e0; border-bottom: 1px solid #4a5568; paddin
 @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 /* ========================================================== */
-/* ===> NUEVO BLOQUE DE CÓDIGO PARA ADAPTAR A MÓVILES <=== */
+/* ===> ADAPTACIÓN COMPLETA PARA MÓVILES <=== */
 /* ========================================================== */
 @media (max-width: 640px) {
   .trip-planner-container {
-    padding: 1rem;
+    padding: 0.5rem;
   }
+
   .planner-panel, .tracking-panel {
-    padding: 1.5rem;
+    padding: 1rem;
+    border-radius: 8px;
   }
+
   h2 {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
   }
+
+  h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Panel de Planificación */
   .form-grid {
-    /* El grid ya pasa a una columna por el minmax(), pero reducimos el gap */
-    gap: 1.5rem;
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
+
+  .form-column {
+    gap: 1rem;
+  }
+
   .config-item label {
-    font-size: 1rem; /* Reducimos el tamaño de la etiqueta */
+    font-size: 0.95rem;
   }
-  .config-item input, .config-item select {
-    padding: 12px; /* Reducimos el padding de los inputs */
-    font-size: 1rem; /* Reducimos la fuente de los inputs */
+
+  .config-item input,
+  .config-item select {
+    padding: 10px;
+    font-size: 0.95rem;
+    width: 100%;
+    box-sizing: border-box;
   }
+
+  /* Selector de moneda: mostrar texto más compacto */
+  .config-item select option {
+    font-size: 0.9rem;
+  }
+
+  .collective-bankroll .calculated-value {
+    font-size: 1.2rem;
+    padding: 12px;
+  }
+
+  /* Lista de jugadores */
+  .player-list {
+    max-height: 300px;
+  }
+
   .player-entry {
-    /* Apilamos el nombre y la aportación en vertical */
     display: flex;
     flex-direction: column;
-    align-items: stretch; /* Hacemos que ocupen todo el ancho */
+    align-items: stretch;
     gap: 8px;
   }
+
+  .player-name-input {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  .participation-input-group {
+    width: 100%;
+    padding-left: 8px;
+  }
+
   .player-participation-input {
-    width: 100px; /* Aseguramos un ancho mínimo para el input de dinero */
+    width: 80px;
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+
+  .participation-input-group .currency-symbol,
+  .participation-input-group .participation-percentage {
+    font-size: 0.85rem;
+  }
+
+  .start-trip-btn {
+    font-size: 1.1rem;
+    padding: 12px 30px;
+  }
+
+  /* Panel de Seguimiento */
+  .tracking-header {
+    gap: 1rem;
+  }
+
+  .trip-info {
+    font-size: 1rem;
+    text-align: center;
+    padding: 0 0.5rem;
+  }
+
+  .trip-actions-header {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .save-trip-btn,
+  .new-trip-btn {
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+
+  .add-day-form {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .date-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  .add-day-btn {
+    width: 100%;
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+
+  /* Tarjetas de días */
+  .day-card {
+    padding: 1rem;
+  }
+
+  .day-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .player-session-details {
+    padding-bottom: 1rem;
+  }
+
+  .player-name {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* Grid de inputs: adaptación clave para móvil */
+  .player-inputs-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .input-group {
+    gap: 6px;
+  }
+
+  .input-group label {
+    font-size: 0.85rem;
+  }
+
+  .input-group input {
+    padding: 8px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+  }
+
+  .input-group.calculated span {
+    font-size: 1.1rem;
+    padding: 8px;
+  }
+
+  /* Sección de totales */
+  .totals-section {
+    margin-top: 2rem;
+    padding: 1rem;
+  }
+
+  .player-total-item-detailed {
+    padding: 0.75rem;
+  }
+
+  .player-total-item-detailed > .player-name {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .player-financials {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .financial-item label {
+    font-size: 0.85rem;
+  }
+
+  .financial-item .value {
+    font-size: 1.1rem;
+  }
+
+  .trip-totals-summary {
+    gap: 0.5rem;
+    padding-top: 1rem;
+  }
+
+  .trip-total-item {
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 1rem;
+  }
+
+  .trip-total-item.main-total {
+    font-size: 1.3rem;
+  }
+
+  /* Toast */
+  .toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    padding: 12px 15px;
+  }
+
+  .toast-icon {
+    font-size: 1.2rem;
+  }
+
+  .toast-message {
+    font-size: 0.9rem;
   }
 }
 </style>
