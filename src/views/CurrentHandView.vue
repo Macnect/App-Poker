@@ -271,151 +271,415 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* ========================================
+   PREMIUM POKER ROOM DESIGN SYSTEM
+   Inspired by high-end casinos & modern poker apps
+   ======================================== */
+
+/* Import Premium Modern Font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Apply Poppins font to all elements */
+* {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1; /* Enhanced legibility */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .view-container {
   width: 100%;
   height: calc(100vh - 70px);
   display: flex;
   flex-direction: column;
-}
-.configuration-panel {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 30px; padding: 3.5rem;
-  max-width: 500px; margin: 1rem auto;
-  background-color: #2d3748; border-radius: 12px;
-  position: relative;
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
 }
 
-/* Botón de guardar minimalista en la esquina superior */
+/* ========================================
+   CONFIGURATION PANEL - Premium Card Style
+   ======================================== */
+.configuration-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 4.5rem 2.5rem 3.5rem 2.5rem; /* Increased top padding to prevent overlap */
+  max-width: 520px;
+  margin: 1.5rem auto;
+
+  /* Premium glass card effect */
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 20px;
+
+  /* Multi-layer shadow for depth - Subtle version */
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 20px 60px -15px rgba(212, 175, 55, 0.03);
+
+  position: relative;
+  backdrop-filter: blur(10px);
+
+  /* Subtle animation on mount */
+  animation: cardSlideIn 0.5s ease-out;
+}
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Premium accent line at top - Subtle version */
+.configuration-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(212, 175, 55, 0.3) 50%,
+    transparent 100%
+  );
+  border-radius: 0 0 4px 4px;
+}
+
+/* ========================================
+   SAVE BUTTON - Premium Icon Style
+   ======================================== */
 .save-icon-btn {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  width: 40px;
-  height: 40px;
-  padding: 8px;
-  background-color: rgba(59, 130, 246, 0.15);
-  border: 2px solid rgba(59, 130, 246, 0.3);
-  border-radius: 8px;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+
+  /* Premium button styling */
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+  border: 1.5px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0;
+
+  /* Subtle glow effect */
+  box-shadow:
+    0 2px 8px rgba(212, 175, 55, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
 
 .save-icon-btn:hover {
-  background-color: rgba(59, 130, 246, 0.25);
-  border-color: rgba(59, 130, 246, 0.5);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%);
+  border-color: rgba(212, 175, 55, 0.5);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow:
+    0 4px 16px rgba(212, 175, 55, 0.15),
+    0 0 20px rgba(212, 175, 55, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 
 .save-icon-btn:active {
-  transform: translateY(0);
-  background-color: rgba(59, 130, 246, 0.35);
+  transform: translateY(-1px) scale(1.02);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(212, 175, 55, 0.25) 100%);
 }
 
 .save-icon {
-  width: 22px;
-  height: 22px;
-  color: #60a5fa;
+  width: 24px;
+  height: 24px;
+  color: #d4af37;
+  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.2));
+  transition: all 0.3s ease;
+}
+
+.save-icon-btn:hover .save-icon {
+  filter: drop-shadow(0 4px 8px rgba(212, 175, 55, 0.3));
 }
 
 .saved-indicator {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #22c55e;
+  top: -6px;
+  right: -6px;
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
   color: white;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: bold;
-  animation: popIn 0.3s ease;
+  font-weight: 700;
+  border: 2px solid rgba(10, 14, 26, 0.95);
+  box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
+  animation: popInGlow 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes popIn {
+@keyframes popInGlow {
   0% {
     transform: scale(0);
+    opacity: 0;
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.3);
   }
   100% {
     transform: scale(1);
+    opacity: 1;
   }
 }
-h2 { font-size: 2.5rem; margin-bottom: -50px; }
-.config-item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-label { font-weight: bold; font-size: 1.2rem; }
-select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; text-align: center; box-sizing: border-box; border-radius: 8px; }
 
+/* ========================================
+   TYPOGRAPHY - Premium Hierarchy
+   ======================================== */
+h2 {
+  font-size: 2.5rem;
+  margin-bottom: -50px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f9fafb 0%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
+}
+
+/* ========================================
+   FORM ELEMENTS - Refined Inputs
+   ======================================== */
+.config-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+label {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #d1d5db;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Shared input/select styling */
+select,
+input[type="number"] {
+  padding: 16px 20px;
+  font-size: 1.15rem;
+  font-weight: 500;
+  width: 280px;
+  text-align: center;
+  box-sizing: border-box;
+  border-radius: 12px;
+
+  /* Premium dark theme styling */
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  color: #f9fafb;
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+select:hover,
+input[type="number"]:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 8px rgba(212, 175, 55, 0.05);
+}
+
+select:focus,
+input[type="number"]:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.6);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 1) 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 3px rgba(212, 175, 55, 0.1),
+    0 0 12px rgba(212, 175, 55, 0.08);
+}
+
+/* Dropdown options styling - Dark background for readability */
+select option {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 12px 16px;
+  font-weight: 500;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+  color: #d4af37;
+}
+
+/* Currency select - wider for better readability */
 #currency-select {
-  width: 350px;
+  width: 380px;
   text-align: left;
+  padding-left: 24px;
 }
 
 .show-more-option {
-  font-weight: bold;
-  color: #3b82f6;
-  background-color: #f0f9ff;
+  font-weight: 600;
+  color: #d4af37;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%) !important;
 }
 
-/* Contenedor de ciegas en línea */
+/* ========================================
+   BLINDS INPUT - Side by Side Premium
+   ======================================== */
 .blinds-inline-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   justify-content: center;
 }
 
 .blind-input {
-  width: 100px;
-  padding: 15px;
-  font-size: 1.2rem;
+  width: 110px;
+  padding: 16px 20px;
+  font-size: 1.25rem;
+  font-weight: 600;
   text-align: center;
-  border-radius: 8px;
+  border-radius: 12px;
   box-sizing: border-box;
+
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  color: #f9fafb;
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.blind-input:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 8px rgba(212, 175, 55, 0.05);
+}
+
+.blind-input:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 3px rgba(212, 175, 55, 0.1),
+    0 0 12px rgba(212, 175, 55, 0.08);
 }
 
 .blind-separator {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: #fff;
+  font-size: 2rem;
+  font-weight: 300;
+  color: rgba(212, 175, 55, 0.6);
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.15);
+  user-select: none;
 }
 
-/* Botón de iniciar mano */
+/* ========================================
+   START HAND BUTTON - Premium CTA
+   ======================================== */
 .start-hand-btn {
-  padding: 8px 35px;
-  font-size: 1.4rem;
-  font-weight: bold;
-  border-radius: 8px;
-  margin-top: 10px;
+  padding: 18px 48px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-radius: 14px;
+  margin-top: 16px;
   color: white;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s;
-  background-color: #22c55e;
+  position: relative;
+  overflow: hidden;
+
+  /* Premium emerald gradient */
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+
+  /* Multi-layer shadow for depth - Subtle version */
+  box-shadow:
+    0 4px 6px -1px rgba(4, 120, 87, 0.3),
+    0 10px 20px -3px rgba(4, 120, 87, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 -2px 0 rgba(0, 0, 0, 0.15) inset;
+
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Shine effect overlay */
+.start-hand-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
 }
 
 .start-hand-btn:hover {
-  background-color: #16a34a;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 8px 16px -2px rgba(4, 120, 87, 0.35),
+    0 16px 32px -4px rgba(4, 120, 87, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 0 24px rgba(4, 120, 87, 0.15),
+    0 -2px 0 rgba(0, 0, 0, 0.15) inset;
+}
+
+.start-hand-btn:hover::before {
+  left: 100%;
 }
 
 .start-hand-btn:active {
-  background-color: #15803d;
+  transform: translateY(-1px) scale(1);
+  box-shadow:
+    0 4px 8px -1px rgba(4, 120, 87, 0.4),
+    0 8px 16px -2px rgba(4, 120, 87, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 1px 0 rgba(0, 0, 0, 0.3) inset;
 }
 
-/* --- NUEVA LÓGICA DE LAYOUT CON GRID --- */
+/* ========================================
+   HAND EDITOR LAYOUT - Grid System
+   ======================================== */
 .hand-editor-content {
   width: 100%;
   height: 100%;
   display: grid;
-  /* Por defecto (escritorio), una columna con la mesa arriba y el panel abajo */
   grid-template-rows: 1fr auto;
   grid-template-columns: 100%;
   gap: 15px;
@@ -424,39 +688,114 @@ select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; t
   overflow: hidden;
 }
 
-.rotate-device-prompt { display: none; }
+.rotate-device-prompt {
+  display: none;
+}
 
-/* Ocultar editor y mostrar aviso en móvil vertical */
+/* ========================================
+   RESPONSIVE DESIGN - Mobile & Tablet
+   ======================================== */
+
+/* Mobile portrait - hide editor, show rotation prompt */
 @media (hover: none) and (pointer: coarse) and (orientation: portrait) {
-  /* .rotate-device-prompt { display: flex; } */
   .hand-editor-content {
-      /* display: none;  */
+    /* display: none; */
   }
 }
 
-/* Reorganizar layout para pantallas apaisadas y no muy altas (móviles horizontales) */
+/* Mobile landscape - side-by-side layout */
 @media screen and (orientation: landscape) and (max-height: 600px) {
   .hand-editor-content {
-    /* Columna flexible para la mesa (min 0), columna fija para acciones */
     grid-template-columns: minmax(0, 1fr) minmax(280px, 350px);
-    grid-template-rows: 100%; /* Una sola fila */
+    grid-template-rows: 100%;
     gap: 10px;
     padding: 10px;
   }
 }
 
-/* Estilos para el panel de configuración en pantallas pequeñas */
+/* Small screens - responsive adjustments */
 @media screen and (max-width: 640px) {
-  .configuration-panel { padding: 1.5rem; margin: 1rem; gap: 15px; }
-  h2 { font-size: 2rem; }
-  .config-item { width: 100%; }
-  select, input[type="number"] { width: 100%; max-width: 350px; }
-  #currency-select { width: 100%; max-width: 350px; }
-  .blinds-inline-container { gap: 10px; }
-  .blind-input { width: 90px; padding: 12px; font-size: 1.1rem; }
-  .blind-separator { font-size: 1.5rem; }
-  .start-hand-btn { width: 100%; }
-  .save-icon-btn { top: 10px; right: 10px; width: 36px; height: 36px; }
-  .save-icon { width: 20px; height: 20px; }
+  .configuration-panel {
+    padding: 3.5rem 1.5rem 2rem 1.5rem; /* Maintain top padding for save button */
+    margin: 1rem;
+    gap: 20px;
+    border-radius: 16px;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  .config-item {
+    width: 100%;
+  }
+
+  label {
+    font-size: 0.9rem;
+  }
+
+  select,
+  input[type="number"] {
+    width: 100%;
+    max-width: 350px;
+    padding: 14px 18px;
+    font-size: 1.1rem;
+  }
+
+  #currency-select {
+    width: 100%;
+    max-width: 350px;
+    padding-left: 18px;
+  }
+
+  .blinds-inline-container {
+    gap: 12px;
+  }
+
+  .blind-input {
+    width: 95px;
+    padding: 14px 16px;
+    font-size: 1.15rem;
+  }
+
+  .blind-separator {
+    font-size: 1.6rem;
+  }
+
+  .start-hand-btn {
+    width: 100%;
+    padding: 16px 32px;
+    font-size: 1.25rem;
+  }
+
+  .save-icon-btn {
+    top: 14px;
+    right: 14px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .save-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Extra small screens */
+@media screen and (max-width: 380px) {
+  .configuration-panel {
+    padding: 3rem 1rem 1.5rem 1rem; /* Maintain top padding for save button */
+    gap: 16px;
+  }
+
+  .blind-input {
+    width: 85px;
+    padding: 12px 14px;
+  }
+
+  .start-hand-btn {
+    padding: 14px 28px;
+    font-size: 1.15rem;
+  }
 }
 </style>
