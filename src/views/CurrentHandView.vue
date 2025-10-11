@@ -21,9 +21,16 @@
       </div>
       <div class="config-item">
         <label for="currency-select">Moneda:</label>
-        <select id="currency-select" v-model="selectedCurrency">
-          <option v-for="currency in currencies" :key="currency.symbol" :value="currency.symbol">
+        <select
+          id="currency-select"
+          v-model="selectedCurrency"
+          @change="handleCurrencyChange"
+        >
+          <option v-for="currency in displayedCurrencies" :key="currency.symbol" :value="currency.symbol">
             {{ currency.symbol }} - {{ currency.name }}
+          </option>
+          <option v-if="!showAllCurrencies" value="__show_more__" class="show-more-option">
+            + Ver todas las monedas
           </option>
         </select>
       </div>
@@ -89,6 +96,7 @@ const selectedSpecialRule = ref('Ninguno');
 const selectedBombPotBB = ref(2);
 
 const showRotateOverlay = ref(false);
+const showAllCurrencies = ref(false);
 
 const checkOrientation = () => {
   const isPortrait = window.matchMedia('(orientation: portrait)').matches;
@@ -132,6 +140,27 @@ const currencies = ref([
   { symbol: 'د.إ', name: 'AED - Dírham de los EAU' },
   { symbol: 'Col$', name: 'COP - Peso colombiano' }
 ]);
+
+// Las 3 monedas más utilizadas
+const topCurrencies = [
+  { symbol: '$', name: 'USD - Dólar estadounidense' },
+  { symbol: '€', name: 'EUR - Euro' },
+  { symbol: '£', name: 'GBP - Libra esterlina' }
+];
+
+// Monedas a mostrar según el estado
+const displayedCurrencies = computed(() => {
+  return showAllCurrencies.value ? currencies.value : topCurrencies;
+});
+
+// Manejar el cambio de selección de moneda
+function handleCurrencyChange(event) {
+  if (selectedCurrency.value === '__show_more__') {
+    showAllCurrencies.value = true;
+    // Mantener la moneda anteriormente seleccionada o usar la primera
+    selectedCurrency.value = '$';
+  }
+}
 
 const showPositionModal = ref(false);
 
@@ -207,11 +236,39 @@ h2 { font-size: 2.5rem; margin-bottom: -50px; }
 .config-item { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 label { font-weight: bold; font-size: 1.2rem; }
 select, input[type="number"] { padding: 15px; font-size: 1.2rem; width: 250px; text-align: center; box-sizing: border-box; border-radius: 8px; }
-#currency-select { width: 350px; text-align: left; }
+
+#currency-select {
+  width: 350px;
+  text-align: left;
+}
+
+.show-more-option {
+  font-weight: bold;
+  color: #3b82f6;
+  background-color: #f0f9ff;
+}
+
 .blinds-container { display: flex; gap: 20px; }
 .blinds-container .config-item { width: auto; }
 .blinds-container input { width: 150px; }
-button { padding: 8px 35px; font-size: 1.4rem; font-weight: bold; border-radius: 8px; margin-top: 10px; }
+button {
+  padding: 8px 35px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  border-radius: 8px;
+  margin-top: 10px;
+  background-color: #22c55e;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+button:hover {
+  background-color: #16a34a;
+}
+button:active {
+  background-color: #15803d;
+}
 
 /* --- NUEVA LÓGICA DE LAYOUT CON GRID --- */
 .hand-editor-content {
@@ -254,6 +311,7 @@ button { padding: 8px 35px; font-size: 1.4rem; font-weight: bold; border-radius:
   h2 { font-size: 2rem; }
   .config-item { width: 100%; }
   select, input[type="number"] { width: 100%; max-width: 350px; }
+  #currency-select { width: 100%; max-width: 350px; }
   .blinds-container { flex-direction: column; width: 100%; }
   .blinds-container .config-item, .blinds-container input { width: 100%; }
   button { width: 100%; }
