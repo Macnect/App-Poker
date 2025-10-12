@@ -289,10 +289,12 @@ onUnmounted(() => {
 
 .view-container {
   width: 100%;
+  max-width: 100vw;
   height: calc(100vh - 70px);
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+  overflow-x: hidden;
 }
 
 /* ========================================
@@ -678,6 +680,7 @@ select option:checked {
    ======================================== */
 .hand-editor-content {
   width: 100%;
+  max-width: 100vw;
   height: 100%;
   display: grid;
   grid-template-rows: 1fr auto;
@@ -685,7 +688,8 @@ select option:checked {
   gap: 15px;
   padding: 15px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
 }
 
 .rotate-device-prompt {

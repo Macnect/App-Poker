@@ -207,12 +207,16 @@ onMounted(() => {
 
 #main-container {
   width: 100%;
+  max-width: 100vw;
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 main {
   width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* ========================================
