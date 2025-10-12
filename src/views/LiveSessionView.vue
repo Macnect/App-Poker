@@ -57,7 +57,7 @@
             <div class="config-item">
               <label for="player-count">Jugadores</label>
               <select id="player-count" v-model.number="sessionStore.playerCount">
-                <option v-for="n in 8" :key="n" :value="n + 1">{{ n + 1 }} jugadores</option>
+                <option v-for="n in 8" :key="n" :value="n + 1">{{ n + 1 }} Jugadores</option>
               </select>
             </div>
             <div class="config-item">
