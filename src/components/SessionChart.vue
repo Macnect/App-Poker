@@ -272,32 +272,31 @@ const chartOptions = {
 }
 
 .current-profit-display {
-  position: absolute;
-  top: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 6px;
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
   border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
-  padding: 8px 14px;
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-bottom: -10px;
+  flex-shrink: 0;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
 
 .profit-label {
-  font-size: 0.85rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #9ca3af;
   letter-spacing: 0.025em;
 }
 
 .profit-value {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);

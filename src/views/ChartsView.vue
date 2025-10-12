@@ -73,26 +73,29 @@ onActivated(async () => {
 }
 
 .charts-container {
-  padding: 2.5rem;
+  padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
   height: calc(100vh - 70px);
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
-  overflow-y: auto; /* Permite scroll solo si el contenido excede la altura */
+  overflow: hidden; /* Evita scroll */
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 0.5rem;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 h2 {
   margin: 0;
-  font-size: 2.5rem;
+  font-size: 1rem;
   font-weight: 700;
   background: linear-gradient(135deg, #f9fafb 0%, #d4af37 100%);
   -webkit-background-clip: text;
@@ -104,31 +107,31 @@ h2 {
 .controls-wrapper {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
 }
 
 .filter-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 6px;
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.8) 100%);
-  padding: 10px 16px;
-  border-radius: 12px;
+  padding: 4px 8px;
+  border-radius: 10px;
   border: 1px solid rgba(212, 175, 55, 0.15);
 }
 
 .filter-controls label {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.7rem;
   color: #d1d5db;
   letter-spacing: 0.025em;
   text-transform: uppercase;
 }
 
 .filter-controls select {
-  padding: 10px 16px;
-  font-size: 1rem;
+  padding: 4px 8px;
+  font-size: 0.75rem;
   font-weight: 500;
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
   border: 1.5px solid rgba(156, 163, 175, 0.2);
@@ -156,8 +159,8 @@ h2 {
 .toggle-chart-btn {
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
   border: 1.5px solid rgba(212, 175, 55, 0.25);
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -182,8 +185,8 @@ h2 {
 }
 
 .toggle-chart-btn svg {
-  width: 26px;
-  height: 26px;
+  width: 18px;
+  height: 18px;
   color: #d4af37;
   filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.2));
 }
@@ -191,12 +194,12 @@ h2 {
 .loading-message,
 .no-data-message {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #d1d5db;
   font-weight: 500;
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
   border: 1px solid rgba(212, 175, 55, 0.15);
-  padding: 3rem 2rem;
+  padding: 1.5rem 1rem;
   border-radius: 16px;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
@@ -218,19 +221,23 @@ h2 {
 .chart-wrapper {
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
   border: 1px solid rgba(212, 175, 55, 0.15);
-  padding: 2.5rem;
+  padding: 0.75rem;
   border-radius: 16px;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 10px 25px -3px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   animation: cardSlideIn 0.5s ease-out;
-  min-height: 400px;
-  height: calc(100vh - 300px);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-wrapper > div {
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 /* ========================================
@@ -255,7 +262,7 @@ h2 {
   }
 
   h2 {
-    font-size: 1.25rem; /* Más pequeño para ahorrar espacio vertical */
+    font-size: 1rem; /* Reducido aún más para ahorrar espacio vertical */
     margin: 0;
     line-height: 1.2;
   }
@@ -281,16 +288,16 @@ h2 {
   }
 
   .filter-controls {
-    padding: 4px 10px; /* Más compacto */
+    padding: 3px 8px; /* Aún más compacto */
   }
 
   .filter-controls label {
-    font-size: 0.75rem; /* Más pequeño */
+    font-size: 0.65rem; /* Más pequeño */
   }
 
   .filter-controls select {
-    padding: 4px 10px;
-    font-size: 0.85rem; /* Más pequeño */
+    padding: 3px 8px;
+    font-size: 0.75rem; /* Más pequeño */
   }
 
   .toggle-chart-btn {
