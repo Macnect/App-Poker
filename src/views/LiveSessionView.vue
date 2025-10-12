@@ -21,15 +21,15 @@
         <div class="live-actions">
           <div class="action-group">
             <input type="number" v-model.number="rebuyAmount" placeholder="Monto Recarga">
-            <button @click="handleAddRebuy">Añadir Recarga</button>
+            <button @click="handleAddRebuy" class="btn-add">+</button>
           </div>
           <div class="action-group">
             <input type="number" v-model.number="tipAmount" placeholder="Propina">
-            <button @click="handleAddTip">Tip Dealer</button>
+            <button @click="handleAddTip" class="btn-add">+</button>
           </div>
           <div class="action-group">
             <input type="number" v-model.number="expenseAmount" placeholder="Gasto">
-            <button @click="handleAddExpense">Consumición</button>
+            <button @click="handleAddExpense" class="btn-add">+</button>
           </div>
         </div>
       </div>
@@ -108,12 +108,24 @@
         </template>
       </div>
     </div>
-    <EndSessionModal 
-      v-if="showEndSessionModal" 
-      @confirm="handleConfirmEndSession" 
+    <EndSessionModal
+      v-if="showEndSessionModal"
+      @confirm="handleConfirmEndSession"
       @cancel="showEndSessionModal = false"
-      :is-saving="isSaving" 
+      :is-saving="isSaving"
     />
+
+    <!-- Notificación toast -->
+    <Transition name="toast">
+      <div v-if="showToast" class="toast-notification" :class="toastType">
+        <div class="toast-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <span class="toast-message">{{ toastMessage }}</span>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -134,6 +146,26 @@ const expenseAmount = ref(null);
 
 const saveButtonText = ref('Guardar cambios');
 
+// Sistema de notificaciones toast
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref('success');
+let toastTimeout = null;
+
+function showNotification(message, type = 'success') {
+  toastMessage.value = message;
+  toastType.value = type;
+  showToast.value = true;
+
+  // Limpiar timeout anterior si existe
+  if (toastTimeout) clearTimeout(toastTimeout);
+
+  // Ocultar después de 3 segundos
+  toastTimeout = setTimeout(() => {
+    showToast.value = false;
+  }, 3000);
+}
+
 // Campos separados para ciegas
 const smallBlind = ref(1);
 const bigBlind = ref(2);
@@ -147,19 +179,25 @@ watch([smallBlind, bigBlind], ([sb, bb]) => {
 
 function handleAddRebuy() {
   if (rebuyAmount.value > 0) {
-    sessionStore.addRebuy(rebuyAmount.value);
+    const amount = rebuyAmount.value;
+    sessionStore.addRebuy(amount);
+    showNotification(`💰 Recarga de ${sessionStore.currency}${amount} añadida correctamente`);
     rebuyAmount.value = null;
   }
 }
 function handleAddTip() {
   if (tipAmount.value > 0) {
-    sessionStore.addExpense(tipAmount.value);
+    const amount = tipAmount.value;
+    sessionStore.addExpense(amount);
+    showNotification(`🎲 Propina de ${sessionStore.currency}${amount} registrada correctamente`);
     tipAmount.value = null;
   }
 }
 function handleAddExpense() {
   if (expenseAmount.value > 0) {
-    sessionStore.addExpense(expenseAmount.value);
+    const amount = expenseAmount.value;
+    sessionStore.addExpense(amount);
+    showNotification(`🍹 Gasto de ${sessionStore.currency}${amount} añadido correctamente`);
     expenseAmount.value = null;
   }
 }
@@ -249,12 +287,32 @@ const formattedTime = computed(() => {
    LiveSessionView - Premium Style
    ======================================== */
 
+/* Import Premium Modern Font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+/* Apply Poppins font to all elements */
+.live-session-container * {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1; /* Enhanced legibility */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.live-session-container *,
+.live-session-container *::before,
+.live-session-container *::after {
+  box-sizing: border-box;
+}
+
 .live-session-container {
   display: flex;
   justify-content: center;
   padding: 2rem 1rem;
   min-height: calc(100vh - 70px);
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .session-panel {
@@ -266,7 +324,8 @@ const formattedTime = computed(() => {
     "timer timer"
     "actions config"
     "controls controls";
-  gap: 2rem;
+  gap: 1.5rem;
+  box-sizing: border-box;
 }
 
 /* ========================================
@@ -529,6 +588,18 @@ const formattedTime = computed(() => {
     0 0 16px rgba(4, 120, 87, 0.2);
 }
 
+.btn-add {
+  width: 56px;
+  min-width: 56px;
+  padding: 16px !important;
+  font-size: 1.8rem !important;
+  font-weight: 700 !important;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* ========================================
    CONFIG WIDGET - Premium Form
    ======================================== */
@@ -658,7 +729,7 @@ const formattedTime = computed(() => {
   display: flex;
   justify-content: center;
   gap: 1.5rem;
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 .main-controls button {
@@ -750,7 +821,7 @@ const formattedTime = computed(() => {
    ======================================== */
 @media (max-width: 820px) {
   .live-session-container {
-    padding: 1rem;
+    padding: 1rem 0.75rem;
   }
 
   .session-panel {
@@ -760,24 +831,37 @@ const formattedTime = computed(() => {
       "actions"
       "config"
       "controls";
-    gap: 1.5rem;
+    gap: 1rem;
+  }
+
+  .widget {
+    padding: 1.5rem 1.25rem;
   }
 
   .main-controls {
     flex-direction: column;
+    gap: 1rem;
   }
 
   .main-controls button {
     max-width: none;
+    font-size: 1.1rem;
+    padding: 16px 24px;
+  }
+
+  .main-controls button svg {
+    width: 24px;
+    height: 24px;
   }
 
   .config-grid {
     grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 
   .save-icon-btn {
     top: 8px;
-    right: 14px;
+    right: 12px;
     width: 40px;
     height: 40px;
   }
@@ -786,17 +870,67 @@ const formattedTime = computed(() => {
     width: 22px;
     height: 22px;
   }
+
+  .timer-display {
+    font-size: clamp(3rem, 10vw, 5rem);
+  }
+
+  .live-actions {
+    gap: 1.25rem;
+  }
 }
 
 @media (max-width: 480px) {
+  .live-session-container {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .session-panel {
+    gap: 1rem;
+  }
+
+  .widget {
+    padding: 1.25rem 1rem;
+    border-radius: 12px;
+  }
+
+  .widget-header {
+    font-size: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
   .action-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+  }
+
+  .action-group input {
+    padding: 14px 16px;
+    font-size: 1rem;
   }
 
   .action-group button {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
+  }
+
+  .btn-add {
+    width: 48px;
+    min-width: 48px;
+    padding: 14px !important;
+  }
+
+  .live-actions {
+    gap: 1rem;
+  }
+
+  .config-item label {
+    font-size: 0.85rem;
+  }
+
+  .config-item input,
+  .config-item select {
+    padding: 12px 14px;
+    font-size: 0.95rem;
   }
 
   .blinds-inline-container {
@@ -804,17 +938,216 @@ const formattedTime = computed(() => {
   }
 
   .blind-input {
-    width: 75px;
-    padding: 12px 14px;
+    width: 70px;
+    padding: 12px 10px;
     font-size: 1rem;
   }
 
   .blind-separator {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
   }
 
   .timer-display {
     font-size: clamp(2.5rem, 12vw, 4rem);
+  }
+
+  .main-controls button {
+    font-size: 1rem;
+    padding: 14px 20px;
+    gap: 10px;
+  }
+
+  .main-controls button svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .save-icon-btn {
+    width: 36px;
+    height: 36px;
+    top: 6px;
+    right: 10px;
+  }
+
+  .save-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (max-width: 375px) {
+  .live-session-container {
+    padding: 0.5rem 0.375rem;
+  }
+
+  .session-panel {
+    gap: 0.875rem;
+  }
+
+  .widget {
+    padding: 1rem 0.75rem;
+  }
+
+  .widget-header {
+    font-size: 0.8rem;
+  }
+
+  .action-group input {
+    padding: 12px 14px;
+    font-size: 0.95rem;
+  }
+
+  .btn-add {
+    width: 44px;
+    min-width: 44px;
+    padding: 12px !important;
+    font-size: 1.4rem !important;
+  }
+
+  .blind-input {
+    width: 65px;
+    padding: 10px 8px;
+    font-size: 0.95rem;
+  }
+
+  .config-item input,
+  .config-item select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+
+  .main-controls button {
+    font-size: 0.95rem;
+    padding: 12px 18px;
+    gap: 8px;
+  }
+
+  .timer-display {
+    font-size: clamp(2rem, 10vw, 3.5rem);
+  }
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS - Premium Style
+   ======================================== */
+.toast-notification {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  min-width: 300px;
+  max-width: 90vw;
+
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 1) 100%);
+  border: 1.5px solid rgba(16, 185, 129, 0.5);
+  border-radius: 12px;
+
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    0 4px 32px rgba(16, 185, 129, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.toast-notification.success {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    0 4px 32px rgba(16, 185, 129, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+}
+
+.toast-icon {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 6px rgba(16, 185, 129, 0.4));
+}
+
+.toast-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.toast-message {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f9fafb;
+  letter-spacing: 0.015em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Transición de entrada/salida */
+.toast-enter-active {
+  animation: toastSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast-leave-active {
+  animation: toastSlideOut 0.3s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes toastSlideIn {
+  0% {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-20px);
+    opacity: 0;
+  }
+}
+
+/* Responsive para móviles */
+@media (max-width: 480px) {
+  .toast-notification {
+    top: 80px;
+    min-width: 280px;
+    padding: 14px 20px;
+  }
+
+  .toast-icon {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+  }
+
+  .toast-message {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .toast-notification {
+    top: 70px;
+    min-width: 260px;
+    padding: 12px 18px;
+  }
+
+  .toast-message {
+    font-size: 0.9rem;
   }
 }
 </style>
