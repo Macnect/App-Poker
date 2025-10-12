@@ -1,7 +1,7 @@
 <template>
   <div class="chart-container">
-    <!-- Display del valor actual para gráfica de línea -->
-    <div v-if="chartsStore.chartType === 'line' && currentProfit !== null" class="current-profit-display">
+    <!-- Display del valor acumulado para ambos tipos de gráfica -->
+    <div v-if="currentProfit !== null" class="current-profit-display">
       <span class="profit-label">{{ t('charts.cumulativeProfit') }}:</span>
       <span class="profit-value" :class="{ positive: currentProfit >= 0, negative: currentProfit < 0 }">
         {{ formatCurrency(currentProfit) }}
