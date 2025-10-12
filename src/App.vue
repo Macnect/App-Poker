@@ -36,19 +36,19 @@
         <!-- Este botón solo se mostrará si el rol del usuario es 'Administrador'. -->
         <!-- Asegúrate de haber añadido la propiedad computada 'rol' a useAuthStore.js -->
         <button v-if="authStore.rol === 'Administrador'" @click="navigateTo('AdminView')">
-          Panel de Administrador
+          🛡️ Panel de Administrador
         </button>
         <!-- ========================================================== -->
         <!-- ===> FIN DEL CAMBIO INTEGRADO Y AISLADO                 <=== -->
         <!-- ========================================================== -->
-        
-        <button @click="navigateTo('SavedHandsView')">{{ $t('nav.savedHands') }}</button>
-        <button @click="navigateTo('SavedSessionsView')">{{ $t('nav.savedSessions') }}</button>
-        <button @click="navigateTo('ChartsView')">{{ $t('nav.charts') }}</button>
-        <button @click="navigateTo('CommunityView')">Viajes</button>
-        <button @click="navigateTo('SavedTripsView')">Viajes Guardados</button>
-        <button @click="navigateTo('SettingsView')">{{ $t('nav.settings') }}</button>
-        <button @click="authStore.signOut()" class="logout-btn">Salir</button>
+
+        <button @click="navigateTo('SavedHandsView')">🃏 {{ $t('nav.savedHands') }}</button>
+        <button @click="navigateTo('SavedSessionsView')">📝 {{ $t('nav.savedSessions') }}</button>
+        <button @click="navigateTo('ChartsView')">📊 {{ $t('nav.charts') }}</button>
+        <button @click="navigateTo('CommunityView')">✈️ Viajes</button>
+        <button @click="navigateTo('SavedTripsView')">🗂️ Viajes Guardados</button>
+        <button @click="navigateTo('SettingsView')">⚙️ {{ $t('nav.settings') }}</button>
+        <button @click="authStore.signOut()" class="logout-btn">🚪 Salir</button>
       </div>
     </div>
 
