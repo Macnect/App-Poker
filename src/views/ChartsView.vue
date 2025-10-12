@@ -270,7 +270,7 @@ h2 {
   .chart-wrapper {
     flex: 1; /* Ocupa el espacio restante disponible */
     min-height: 0; /* Permite que flex funcione correctamente */
-    padding: 0.5rem 1rem; /* Padding reducido */
+    padding: 0.25rem 0.5rem; /* Padding aún más reducido */
     overflow: hidden; /* Evita cualquier scroll interno */
     box-sizing: border-box;
     display: flex;

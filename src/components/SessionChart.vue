@@ -158,16 +158,16 @@ const barChartData = computed(() => {
   };
 });
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   aspectRatio: undefined,
   layout: {
     padding: {
-      bottom: 5,
+      bottom: window.matchMedia('(orientation: landscape)').matches ? 20 : 5,
       left: 5,
       right: 5,
-      top: 50
+      top: window.matchMedia('(orientation: landscape)').matches ? 30 : 50
     }
   },
   plugins: {
@@ -247,11 +247,12 @@ const chartOptions = {
     x: {
       ticks: {
         color: '#d1d5db',
-        font: { size: 9 },
-        maxRotation: 45,
-        minRotation: 45,
+        font: { size: window.matchMedia('(orientation: landscape)').matches ? 7.5 : 9 },
+        maxRotation: window.matchMedia('(orientation: landscape)').matches ? 35 : 45,
+        minRotation: window.matchMedia('(orientation: landscape)').matches ? 35 : 45,
         autoSkip: true,
-        maxTicksLimit: 10
+        maxTicksLimit: window.matchMedia('(orientation: landscape)').matches ? 12 : 10,
+        padding: window.matchMedia('(orientation: landscape)').matches ? 2 : 0
       },
       grid: {
         display: true,
@@ -259,7 +260,7 @@ const chartOptions = {
       },
     },
   },
-};
+}));
 </script>
 
 <style scoped>
@@ -281,7 +282,7 @@ const chartOptions = {
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 8px;
   padding: 4px 10px;
-  margin-bottom: -10px;
+  margin-bottom: 8px;
   flex-shrink: 0;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
@@ -316,15 +317,17 @@ const chartOptions = {
 @media (orientation: landscape) {
   .current-profit-display {
     top: 1px;
-    padding: 6px 12px;
+    padding: 2px 8px;
+    margin-bottom: -5px;
+    gap: 3px;
   }
 
   .profit-label {
-    font-size: 0.75rem;
+    font-size: 0.6rem;
   }
 
   .profit-value {
-    font-size: 1rem;
+    font-size: 0.8rem;
   }
 }
 </style>
