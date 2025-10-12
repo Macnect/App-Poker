@@ -209,6 +209,7 @@ function calculateTripProfit(trip) {
   font-feature-settings: 'liga' 1, 'calt' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
 }
 
 .admin-container {
@@ -217,6 +218,8 @@ function calculateTripProfit(trip) {
   padding: 2.5rem;
   min-height: calc(100vh - 70px);
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .admin-panel {
@@ -231,6 +234,7 @@ function calculateTripProfit(trip) {
     0 10px 25px -3px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   animation: cardSlideIn 0.5s ease-out;
+  overflow-x: hidden;
 }
 
 @keyframes cardSlideIn {
@@ -289,6 +293,8 @@ h2 {
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.2) inset,
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  width: 100%;
+  max-width: 100%;
 }
 
 .user-selector select:hover {
@@ -366,6 +372,9 @@ h2 {
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 .data-list li:hover {
@@ -380,6 +389,9 @@ h2 {
 .data-list li span {
   color: #d1d5db;
   font-weight: 500;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .profit {
@@ -408,11 +420,16 @@ h2 {
   flex-direction: column;
   flex-grow: 1;
   gap: 0.5rem;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .hand-info span {
   color: #d1d5db;
   font-weight: 500;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .replay-btn {
@@ -450,31 +467,120 @@ h2 {
    ======================================== */
 @media (max-width: 768px) {
   .admin-container {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .admin-panel {
-    padding: 1.5rem;
+    padding: 1rem;
+    border-radius: 12px;
+    max-width: 100%;
   }
 
   h2 {
-    font-size: 2rem;
-    margin-bottom: 2rem;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    word-wrap: break-word;
+  }
+
+  .user-selector {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .user-selector label {
+    font-size: 0.85rem;
+  }
+
+  .user-selector select {
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .player-data-container h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    word-wrap: break-word;
+  }
+
+  .data-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .data-section h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .data-list {
+    gap: 0.75rem;
   }
 
   .data-list li {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
+    padding: 0.875rem 1rem;
+  }
+
+  .data-list li span {
+    font-size: 0.9rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
   }
 
   .hand-item {
     width: 100%;
   }
 
+  .hand-info {
+    width: 100%;
+  }
+
+  .hand-info span {
+    font-size: 0.9rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
   .replay-btn {
     width: 100%;
     margin-left: 0;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+
+  .loading-message,
+  .no-data {
+    font-size: 0.95rem;
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-container {
+    padding: 0.5rem;
+  }
+
+  .admin-panel {
+    padding: 0.875rem;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+  }
+
+  .user-selector select {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+
+  .data-list li span {
+    font-size: 0.85rem;
+  }
+
+  .hand-info span {
+    font-size: 0.85rem;
   }
 }
 </style>
