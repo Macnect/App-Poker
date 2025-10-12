@@ -14,7 +14,7 @@
         <span v-if="saveButtonText === '✓ Guardado'" class="saved-indicator">✓</span>
       </button>
 
-      <h2></h2>
+      <h2>Generar Mano</h2>
       <div class="config-item">
         <label for="player-count">Número de Jugadores:</label>
         <select id="player-count" v-model.number="selectedPlayers">
@@ -306,10 +306,10 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 28px;
-  padding: 4.5rem 2.5rem 3.5rem 2.5rem; /* Increased top padding to prevent overlap */
+  gap: 16px;
+  padding: 2.5rem 2.5rem 1.5rem 2.5rem; /* Reduced padding for better fit */
   max-width: 520px;
-  margin: 1.5rem auto;
+  margin: 0.5rem auto;
 
   /* Premium glass card effect */
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
@@ -451,8 +451,8 @@ onUnmounted(() => {
    TYPOGRAPHY - Premium Hierarchy
    ======================================== */
 h2 {
-  font-size: 2.5rem;
-  margin-bottom: -50px;
+  font-size: 1.8rem;
+  margin-bottom: 0;
   font-weight: 700;
   background: linear-gradient(135deg, #f9fafb 0%, #d4af37 100%);
   -webkit-background-clip: text;
