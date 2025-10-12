@@ -21,7 +21,14 @@
 
     <!-- Menú "Más" (Overlay) -->
     <div v-if="showMoreMenu" class="more-menu-overlay" @click="showMoreMenu = false">
-      <div class="more-menu-panel" @click.stop>
+      <div
+        class="more-menu-panel"
+        @click.stop
+        @touchstart="handleDragStart"
+        @touchmove="handleDragMove"
+        @touchend="handleDragEnd"
+        :style="{ transform: `translateY(${dragOffset}px)` }"
+      >
         
         <!-- ========================================================== -->
         <!-- ===> INICIO DEL CAMBIO INTEGRADO Y AISLADO              <=== -->
@@ -115,6 +122,11 @@ const tripStore = useTripStore();
 const showMoreMenu = ref(false);
 const isLandscape = ref(false);
 
+// Drag/swipe state for more menu
+const dragStartY = ref(0);
+const dragOffset = ref(0);
+const isDragging = ref(false);
+
 // Game mode selection state
 const selectedGameMode = ref(localStorage.getItem('selectedGameMode') || null);
 
@@ -159,6 +171,41 @@ function startNewHand() {
 
 function navigateTo(viewName) {
   switchToView(viewName);
+}
+
+// Drag handlers for more menu
+function handleDragStart(e) {
+  isDragging.value = true;
+  dragStartY.value = e.touches[0].clientY;
+  dragOffset.value = 0;
+}
+
+function handleDragMove(e) {
+  if (!isDragging.value) return;
+
+  const currentY = e.touches[0].clientY;
+  const diff = currentY - dragStartY.value;
+
+  // Only allow dragging down (positive values)
+  if (diff > 0) {
+    dragOffset.value = diff;
+    // Prevent default scrolling while dragging
+    e.preventDefault();
+  }
+}
+
+function handleDragEnd() {
+  if (!isDragging.value) return;
+
+  isDragging.value = false;
+
+  // If dragged more than 100px, close the menu
+  if (dragOffset.value > 100) {
+    showMoreMenu.value = false;
+  }
+
+  // Reset offset
+  dragOffset.value = 0;
 }
 
 // Game mode selection handlers
@@ -369,6 +416,8 @@ nav button.active svg {
 }
 
 .more-menu-panel {
+  position: relative;
+
   /* Premium glass card effect */
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 1) 100%);
   border: 1px solid rgba(212, 175, 55, 0.15);
@@ -377,8 +426,7 @@ nav button.active svg {
   max-width: 500px;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
-  padding: 1.5rem;
-  padding-bottom: 90px;
+  padding: 2rem 1.5rem 90px 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -391,6 +439,13 @@ nav button.active svg {
     0 -20px 60px -15px rgba(212, 175, 55, 0.03);
 
   animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Smooth transition when releasing drag */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Enable touch manipulation */
+  touch-action: pan-y;
+  user-select: none;
 }
 
 @keyframes slide-up {
@@ -404,17 +459,23 @@ nav button.active svg {
   }
 }
 
-/* Premium accent line at top */
+/* Premium accent line at top - Drag handle */
 .more-menu-panel::before {
   content: '';
   position: absolute;
-  top: 0;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
-  width: 60px;
-  height: 4px;
-  background: rgba(212, 175, 55, 0.4);
-  border-radius: 0 0 4px 4px;
+  width: 80px;
+  height: 5px;
+  background: rgba(212, 175, 55, 0.5);
+  border-radius: 10px;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+.more-menu-panel:active::before {
+  cursor: grabbing;
 }
 
 .more-menu-panel button {
