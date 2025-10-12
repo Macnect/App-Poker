@@ -216,10 +216,11 @@ function calculateTripProfit(trip) {
   display: flex;
   justify-content: center;
   padding: 2.5rem;
-  min-height: calc(100vh - 70px);
+  height: calc(100vh - 70px);
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   width: 100%;
   overflow-x: hidden;
+  overflow-y: auto; /* Permite scroll solo si el contenido excede la altura */
 }
 
 .admin-panel {

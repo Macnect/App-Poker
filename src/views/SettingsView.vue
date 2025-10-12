@@ -45,8 +45,9 @@ const settingsStore = useSettingsStore();
   display: flex;
   justify-content: center;
   padding: 3rem 2rem;
-  min-height: calc(100vh - 70px);
+  height: calc(100vh - 70px);
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
+  overflow-y: auto; /* Permite scroll solo si el contenido excede la altura */
 }
 
 .settings-panel {

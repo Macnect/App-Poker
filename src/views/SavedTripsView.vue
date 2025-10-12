@@ -170,7 +170,8 @@ async function deleteAndClose() {
   max-width: 900px;
   margin: 0 auto;
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
-  min-height: 100vh;
+  height: calc(100vh - 70px);
+  overflow-y: auto; /* Permite scroll solo si el contenido excede la altura */
 }
 
 h2 {

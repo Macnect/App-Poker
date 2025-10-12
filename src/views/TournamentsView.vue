@@ -64,12 +64,13 @@ defineEmits(['back-to-selector']);
 <style scoped>
 .tournaments-view {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
+  overflow-y: auto; /* Permite scroll solo si el contenido excede la altura */
 }
 
 .content-container {
