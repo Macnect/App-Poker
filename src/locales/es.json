@@ -1,8 +1,8 @@
 {
   "nav": {
-    "currentHand": "Mano Actual",
+    "currentHand": "Mano",
     "savedHands": "Manos Guardadas",
-    "liveSession": "Sesión en Vivo",
+    "liveSession": "Sesión",
     "savedSessions": "Sesiones Guardadas",
     "newHand": "Nueva Mano",
     "charts": "Gráficas",

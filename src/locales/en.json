@@ -1,8 +1,8 @@
 {
   "nav": {
-    "currentHand": "Current Hand",
+    "currentHand": "Hand",
     "savedHands": "Saved Hands",
-    "liveSession": "Live Session",
+    "liveSession": "Session",
     "savedSessions": "Saved Sessions",
     "newHand": "New Hand",
     "charts": "Charts",
