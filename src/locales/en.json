@@ -100,5 +100,23 @@
     "sessionsTitle": "Sessions",
     "sessionCount": "Sessions Played",
     "totalHours": "Hours Played"
+  },
+  "gameMode": {
+    "selectMode": "Select Game Mode",
+    "subtitle": "Choose the type of game you want to track",
+    "cashGames": "Cash Games",
+    "cashDesc": "Record and analyze your cash game sessions, live play and individual hands",
+    "tournaments": "Multi Table Tournaments",
+    "tournamentsDesc": "Manage tournaments, track results and analyze your performance in competitions",
+    "comingSoon": "Coming Soon"
+  },
+  "tournaments": {
+    "title": "Multi Table Tournaments",
+    "comingSoon": "This feature will be available soon",
+    "feature1": "Tournament tracking with blind structure",
+    "feature2": "Position and prize tracking",
+    "feature3": "ROI and profitability analysis",
+    "feature4": "Buy-ins, re-entries and add-ons management",
+    "backToSelector": "Back to Mode Selector"
   }
 }

@@ -102,5 +102,23 @@
     "totalHours": "Horas de Juego",
     "avgHours": "Media de Horas/Sesión",
     "avgBreak": "Duración media de descanso"
+  },
+  "gameMode": {
+    "selectMode": "Selecciona el Modo de Juego",
+    "subtitle": "Elige el tipo de partida que deseas rastrear",
+    "cashGames": "Cash Games",
+    "cashDesc": "Registra y analiza tus partidas de cash game, sesiones en vivo y manos individuales",
+    "tournaments": "Torneos Multi Mesa",
+    "tournamentsDesc": "Gestiona torneos, haz seguimiento de resultados y analiza tu rendimiento en competiciones",
+    "comingSoon": "Próximamente"
+  },
+  "tournaments": {
+    "title": "Torneos Multi Mesa",
+    "comingSoon": "Esta funcionalidad estará disponible próximamente",
+    "feature1": "Registro de torneos con estructura de ciegas",
+    "feature2": "Seguimiento de posición y premios",
+    "feature3": "Análisis de ROI y rentabilidad",
+    "feature4": "Gestión de buy-ins, re-entries y add-ons",
+    "backToSelector": "Volver al Selector de Modo"
   }
 }

@@ -1,5 +1,18 @@
 <template>
-  <div v-if="authStore.user" id="main-container">
+  <!-- Game Mode Selector - Shown after login but before mode selection -->
+  <GameModeSelector
+    v-if="authStore.user && !selectedGameMode"
+    @mode-selected="handleModeSelection"
+  />
+
+  <!-- Tournaments View - Shown when tournament mode is selected -->
+  <TournamentsView
+    v-else-if="authStore.user && selectedGameMode === 'tournament'"
+    @back-to-selector="resetGameMode"
+  />
+
+  <!-- Main Cash Games App - Shown when cash mode is selected -->
+  <div v-else-if="authStore.user && selectedGameMode === 'cash'" id="main-container">
     <main>
       <KeepAlive>
         <component :is="views[currentView]" @switch-view="switchToView" />
@@ -70,11 +83,13 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, onMounted, onUnmounted } from 'vue';
+import { ref, shallowRef, onMounted, onUnmounted, watch } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
 import { useGameStore } from './store/game'; // <-- ADICIÓN
 import RotateDeviceOverlay from './components/RotateDeviceOverlay.vue';
+import GameModeSelector from './views/GameModeSelector.vue';
+import TournamentsView from './views/TournamentsView.vue';
 import CurrentHandView from './views/CurrentHandView.vue';
 import SavedHandsView from './views/SavedHandsView.vue';
 import LiveSessionView from './views/LiveSessionView.vue';
@@ -99,6 +114,9 @@ const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
 const isLandscape = ref(false);
+
+// Game mode selection state
+const selectedGameMode = ref(localStorage.getItem('selectedGameMode') || null);
 
 const views = shallowRef({
   CurrentHandView,
@@ -142,6 +160,24 @@ function startNewHand() {
 function navigateTo(viewName) {
   switchToView(viewName);
 }
+
+// Game mode selection handlers
+function handleModeSelection(mode) {
+  selectedGameMode.value = mode;
+  localStorage.setItem('selectedGameMode', mode);
+}
+
+function resetGameMode() {
+  selectedGameMode.value = null;
+  localStorage.removeItem('selectedGameMode');
+}
+
+// Watch for user logout to reset game mode
+watch(() => authStore.user, (newUser) => {
+  if (!newUser) {
+    resetGameMode();
+  }
+});
 
 onMounted(() => {
   const mediaQuery = window.matchMedia('(orientation: landscape)');
