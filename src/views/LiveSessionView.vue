@@ -35,7 +35,7 @@
       </div>
 
       <!-- WIDGET DE CONFIGURACIÓN -->
-      <div class="widget config-widget">
+      <div v-if="!sessionStore.isActive" class="widget config-widget">
         <!-- Botón de guardar minimalista en la esquina superior -->
         <button
           class="save-icon-btn"
@@ -322,7 +322,7 @@ const formattedTime = computed(() => {
    ======================================== */
 .save-icon-btn {
   position: absolute;
-  top: 18px;
+  top: 10px;
   right: 18px;
   width: 44px;
   height: 44px;
@@ -776,7 +776,7 @@ const formattedTime = computed(() => {
   }
 
   .save-icon-btn {
-    top: 14px;
+    top: 8px;
     right: 14px;
     width: 40px;
     height: 40px;

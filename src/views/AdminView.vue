@@ -196,94 +196,285 @@ function calculateTripProfit(trip) {
 </script>
 
 <style scoped>
+/* ========================================
+   PREMIUM POKER ROOM DESIGN SYSTEM
+   AdminView - Administration Panel
+   ======================================== */
+
+/* Import Premium Modern Font - Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .admin-container {
   display: flex;
   justify-content: center;
-  padding: 2rem;
+  padding: 2.5rem;
+  min-height: calc(100vh - 70px);
+  background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
 }
+
 .admin-panel {
   width: 100%;
-  max-width: 800px;
-  background-color: #2d3748;
-  border-radius: 12px;
-  padding: 2rem;
-  border: 1px solid var(--border-color);
+  max-width: 900px;
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  animation: cardSlideIn 0.5s ease-out;
 }
+
+@keyframes cardSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 h2 {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f9fafb 0%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
+
 .user-selector {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 2rem;
+  gap: 12px;
+  margin-bottom: 2.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
 }
+
 .user-selector label {
-  font-weight: bold;
-  font-size: 1.2rem;
-  color: #a0aec0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #d1d5db;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
+
 .user-selector select {
-  padding: 12px;
+  padding: 16px 20px;
   font-size: 1.1rem;
+  font-weight: 500;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  color: #f9fafb;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
-.loading-message, .no-data {
+
+.user-selector select:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.user-selector select:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 3px rgba(212, 175, 55, 0.1),
+    0 0 12px rgba(212, 175, 55, 0.08);
+}
+
+.user-selector select option {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 12px 16px;
+  font-weight: 500;
+}
+
+.loading-message,
+.no-data {
   text-align: center;
-  margin-top: 1rem;
-  color: #a0aec0;
+  margin-top: 1.5rem;
+  color: #d1d5db;
+  font-size: 1.1rem;
+  font-weight: 500;
+  padding: 2rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.1);
 }
+
 .player-data-container h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 1rem;
-}
-.data-section {
+  font-size: 1.8rem;
+  font-weight: 700;
   margin-bottom: 2rem;
+  color: #f9fafb;
+  border-bottom: 1.5px solid rgba(212, 175, 55, 0.2);
+  padding-bottom: 1rem;
+  letter-spacing: -0.01em;
 }
+
+.data-section {
+  margin-bottom: 2.5rem;
+}
+
 .data-section h4 {
-  font-size: 1.3rem;
-  color: #cbd5e0;
-  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #f9fafb;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.01em;
 }
+
 .data-list {
   list-style: none;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
+
 .data-list li {
-  background-color: #1a202c;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(156, 163, 175, 0.15);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
-.profit { color: #68d391; }
-.loss { color: #fc8181; }
-.even { color: #e2e8f0; }
 
-/* ========================================================== */
-/* ===> INICIO DEL CAMBIO INTEGRADO Y AISLADO              <=== */
-/* ========================================================== */
-.hand-item {
-  flex-wrap: wrap; /* Permite que el botón pase a la siguiente línea si no hay espacio */
+.data-list li:hover {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
+  border-color: rgba(212, 175, 55, 0.25);
+  transform: translateX(5px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(212, 175, 55, 0.08);
 }
+
+.data-list li span {
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.profit {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.loss {
+  color: #fc8181;
+  font-weight: 700;
+}
+
+.even {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+/* Hand Item Special Styling */
+.hand-item {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .hand-info {
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* Ocupa el espacio disponible */
+  flex-grow: 1;
+  gap: 0.5rem;
 }
+
+.hand-info span {
+  color: #d1d5db;
+  font-weight: 500;
+}
+
 .replay-btn {
-  padding: 8px 16px;
-  font-size: 0.9rem;
-  flex-shrink: 0; /* Evita que el botón se encoja */
-  margin-left: 1rem;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 6px rgba(4, 120, 87, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
-/* ========================================================== */
-/* ===> FIN DEL CAMBIO INTEGRADO Y AISLADO                 <=== */
-/* ========================================================== */
+
+.replay-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(4, 120, 87, 0.4),
+    0 0 16px rgba(4, 120, 87, 0.2);
+}
+
+.replay-btn:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1rem;
+  }
+
+  .admin-panel {
+    padding: 1.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .data-list li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .hand-item {
+    width: 100%;
+  }
+
+  .replay-btn {
+    width: 100%;
+    margin-left: 0;
+  }
+}
 </style>
