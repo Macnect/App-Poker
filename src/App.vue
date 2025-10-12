@@ -35,7 +35,14 @@
     <!-- Barra de Navegación Inferior -->
     <nav>
       <button @click="switchToView('CurrentHandView')" :class="{ active: currentView === 'CurrentHandView' }">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25 1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <!-- Primera carta -->
+          <rect x="3" y="5" width="9" height="13" rx="1.5" stroke="currentColor" fill="none"/>
+          <text x="7.5" y="12.5" font-size="5" fill="currentColor" text-anchor="middle">A</text>
+          <!-- Segunda carta (superpuesta) -->
+          <rect x="12" y="6" width="9" height="13" rx="1.5" stroke="currentColor" fill="none"/>
+          <text x="16.5" y="13.5" font-size="5" fill="currentColor" text-anchor="middle">K</text>
+        </svg>
         <span>{{ $t('nav.currentHand') }}</span>
       </button>
       <button @click="switchToView('LiveSessionView')" :class="{ active: currentView === 'LiveSessionView' }">
@@ -222,6 +229,13 @@ nav button svg {
   width: 24px;
   height: 24px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Hacer los iconos de Mano Actual y Sesión en Vivo más grandes */
+nav button:nth-child(1) svg,
+nav button:nth-child(2) svg {
+  width: 32px;
+  height: 32px;
 }
 
 .fab-nav-btn {
