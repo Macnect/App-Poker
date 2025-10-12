@@ -61,12 +61,14 @@ const selectedPosition = ref(null);
 .modal-content {
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
-  padding: 2rem;
+  padding: 1.75rem;
   border-radius: 14px;
   border: 1px solid rgba(212, 175, 55, 0.2);
   width: 100%;
-  max-width: 500px;
+  max-width: 480px;
   text-align: center;
+  box-sizing: border-box;
+  margin: 0 auto;
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.5),
     0 8px 24px rgba(0, 0, 0, 0.3),
@@ -87,23 +89,26 @@ const selectedPosition = ref(null);
 
 h3 {
   margin-top: 0;
+  margin-bottom: 1.25rem;
   font-size: 1.5rem;
   font-weight: 700;
   color: #fff;
   letter-spacing: 0.5px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  line-height: 1.3;
 }
 
 .positions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin: 2rem 0;
+  width: 100%;
 }
 
 .positions-grid button {
-  padding: 15px;
-  font-size: 1rem;
+  padding: 12px 10px;
+  font-size: 0.95rem;
   font-weight: 600;
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border: 2px solid rgba(212, 175, 55, 0.2);
@@ -112,6 +117,16 @@ h3 {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: none;
+  line-height: 1.3;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .positions-grid button:hover {
@@ -159,17 +174,136 @@ h3 {
   box-shadow: none;
 }
 
-@media (max-width: 480px) {
+/* Tablet y móviles grandes */
+@media (max-width: 600px) {
+  .modal-overlay {
+    padding: 1.25rem;
+  }
+
   .modal-content {
-    padding: 1.5rem;
+    padding: 1.5rem 1.25rem;
+    max-width: min(95vw, 420px);
   }
+
+  h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .positions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 1.5rem 0;
+  }
+}
+
+/* Móviles medianos */
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 1rem;
+  }
+
+  .modal-content {
+    padding: 1.5rem 1rem;
+    max-width: min(92vw, 380px);
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .positions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin: 1.25rem 0;
+  }
+
   .positions-grid button {
-    padding: 12px;
-    font-size: 0.9rem;
+    padding: 10px 5px;
+    font-size: 0.85rem;
+    min-height: 48px;
   }
+
   .confirm-btn {
     padding: 12px;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 380px) {
+  .modal-overlay {
+    padding: 0.75rem;
+  }
+
+  .modal-content {
+    padding: 1.25rem 0.85rem;
+    border-radius: 12px;
+    max-width: min(90vw, 340px);
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .positions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 7px;
+    margin: 1rem 0;
+  }
+
+  .positions-grid button {
+    padding: 9px 4px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    min-height: 46px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .confirm-btn {
+    padding: 11px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 320px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+
+  .modal-content {
+    padding: 1rem 0.75rem;
+    max-width: min(88vw, 300px);
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .positions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 0.85rem 0;
+  }
+
+  .positions-grid button {
+    padding: 8px 2px;
+    font-size: 0.7rem;
+    min-height: 44px;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.2;
+  }
+
+  .confirm-btn {
+    padding: 10px;
+    font-size: 0.9rem;
   }
 }
 </style>
