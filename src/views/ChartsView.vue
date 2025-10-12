@@ -221,7 +221,7 @@ h2 {
 .chart-wrapper {
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
   border: 1px solid rgba(212, 175, 55, 0.15);
-  padding: 0.75rem;
+  padding: 0.5rem;
   border-radius: 16px;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
@@ -270,7 +270,7 @@ h2 {
   .chart-wrapper {
     flex: 1; /* Ocupa el espacio restante disponible */
     min-height: 0; /* Permite que flex funcione correctamente */
-    padding: 0.25rem 0.5rem; /* Padding aún más reducido */
+    padding: 0.25rem; /* Padding mínimo para maximizar área del gráfico */
     overflow: hidden; /* Evita cualquier scroll interno */
     box-sizing: border-box;
     display: flex;

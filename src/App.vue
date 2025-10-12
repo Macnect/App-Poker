@@ -577,6 +577,77 @@ nav button.active svg {
     width: 32px;
     height: 32px;
   }
+
+  /* ========================================
+     MORE MENU PANEL - Landscape Optimization
+     ======================================== */
+  .more-menu-panel {
+    /* Reduce padding dramatically for limited vertical space */
+    padding: 1.5rem 1.5rem 75px 1.5rem;
+
+    /* Tighter gap between buttons */
+    gap: 0.5rem;
+
+    /* Constrain height to viewport with safe margins */
+    max-height: calc(100vh - 20px);
+
+    /* Enable smooth scrolling for overflow content */
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Smooth scroll behavior */
+    scroll-behavior: smooth;
+
+    /* Custom scrollbar styling for premium look */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 175, 55, 0.3) rgba(31, 41, 55, 0.3);
+  }
+
+  /* Webkit scrollbar styling (Chrome, Safari, Edge) */
+  .more-menu-panel::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .more-menu-panel::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.3);
+    border-radius: 3px;
+  }
+
+  .more-menu-panel::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.3);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+  }
+
+  .more-menu-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.5);
+  }
+
+  /* Optimize drag handle for landscape */
+  .more-menu-panel::before {
+    top: 8px;
+    width: 60px;
+    height: 4px;
+  }
+
+  /* Reduce button padding while maintaining touch targets (44px min) */
+  .more-menu-panel button {
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+
+    /* Ensure minimum touch target of 44px */
+    min-height: 44px;
+
+    /* Align content vertically centered */
+    display: flex;
+    align-items: center;
+  }
+
+  /* Optimize logout button spacing */
+  .more-menu-panel button.logout-btn {
+    margin-top: 0.5rem;
+    padding-top: 0.7rem;
+  }
 }
 
 </style>

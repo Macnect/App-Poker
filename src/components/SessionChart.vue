@@ -164,10 +164,10 @@ const chartOptions = computed(() => ({
   aspectRatio: undefined,
   layout: {
     padding: {
-      bottom: window.matchMedia('(orientation: landscape)').matches ? 20 : 5,
+      bottom: 25,
       left: 5,
       right: 5,
-      top: window.matchMedia('(orientation: landscape)').matches ? 30 : 50
+      top: 15
     }
   },
   plugins: {
@@ -246,17 +246,10 @@ const chartOptions = computed(() => ({
     },
     x: {
       ticks: {
-        color: '#d1d5db',
-        font: { size: window.matchMedia('(orientation: landscape)').matches ? 7.5 : 9 },
-        maxRotation: window.matchMedia('(orientation: landscape)').matches ? 35 : 45,
-        minRotation: window.matchMedia('(orientation: landscape)').matches ? 35 : 45,
-        autoSkip: true,
-        maxTicksLimit: window.matchMedia('(orientation: landscape)').matches ? 12 : 10,
-        padding: window.matchMedia('(orientation: landscape)').matches ? 2 : 0
+        display: false
       },
       grid: {
-        display: true,
-        color: 'rgba(156, 163, 175, 0.1)'
+        display: false
       },
     },
   },
