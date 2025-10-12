@@ -225,8 +225,8 @@ h2 {
     0 10px 25px -3px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   animation: cardSlideIn 0.5s ease-out;
-  min-height: 500px;
-  height: calc(100vh - 250px);
+  min-height: 400px;
+  height: calc(100vh - 300px);
 }
 
 .chart-wrapper > div {
@@ -238,16 +238,20 @@ h2 {
    ======================================== */
 @media (orientation: landscape) {
   .charts-container {
-    padding: 0.5rem 1rem 0.5rem 1rem; /* Padding mínimo */
-    height: 100vh;
+    padding: 0.5rem 1rem 0.5rem 1rem; /* Padding mínimo y simétrico */
+    height: calc(100vh - 65px); /* Resta la altura de la barra de navegación (65px en landscape) */
+    max-height: calc(100vh - 65px);
     overflow: hidden; /* Evita scroll en el contenedor principal */
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
   }
 
   .header {
     flex-direction: row;
     margin-bottom: 0.5rem; /* Mínimo margen */
     gap: 0.75rem;
+    flex-shrink: 0; /* No se comprime */
   }
 
   h2 {
@@ -257,12 +261,18 @@ h2 {
   }
 
   .chart-wrapper {
-    height: calc(100vh - 85px); /* Optimizado para no necesitar scroll */
-    min-height: unset;
-    max-height: calc(100vh - 85px); /* Altura máxima para evitar overflow */
-    padding: 0.75rem 1rem; /* Padding mínimo */
+    flex: 1; /* Ocupa el espacio restante disponible */
+    min-height: 0; /* Permite que flex funcione correctamente */
+    padding: 0.5rem 1rem; /* Padding reducido */
     overflow: hidden; /* Evita cualquier scroll interno */
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-wrapper > div {
+    flex: 1;
+    min-height: 0;
   }
 
   .controls-wrapper {

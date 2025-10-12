@@ -1,5 +1,13 @@
 <template>
-  <div>
+  <div class="chart-container">
+    <!-- Display del valor actual para gráfica de línea -->
+    <div v-if="chartsStore.chartType === 'line' && currentProfit !== null" class="current-profit-display">
+      <span class="profit-label">{{ t('charts.cumulativeProfit') }}:</span>
+      <span class="profit-value" :class="{ positive: currentProfit >= 0, negative: currentProfit < 0 }">
+        {{ formatCurrency(currentProfit) }}
+      </span>
+    </div>
+
     <!-- Renderizado condicional del tipo de gráfico. El :key fuerza el redibujado al cambiar -->
     <Line v-if="chartsStore.chartType === 'line'" :key="'line-' + chartsStore.timeRange" :data="lineChartData" :options="chartOptions" />
     <Bar v-else :key="'bar-' + chartsStore.timeRange" :data="barChartData" :options="chartOptions" />
@@ -63,6 +71,25 @@ const sessionsInChronologicalOrder = computed(() => {
   // Ordenamos de la más antigua a la más nueva para la gráfica de líneas
   return [...filteredSessions.value].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 });
+
+// Calcular el beneficio acumulado actual (último punto de la gráfica)
+const currentProfit = computed(() => {
+  const sessions = sessionsInChronologicalOrder.value;
+  if (sessions.length === 0) return null;
+
+  let cumulative = 0;
+  sessions.forEach(s => {
+    cumulative += parseFloat(s.resultado) || 0;
+  });
+
+  return cumulative;
+});
+
+// Formatear moneda
+const formatCurrency = (value) => {
+  const prefix = value >= 0 ? '+' : '';
+  return `${prefix}${sessionStore.currency}${value.toFixed(2)}`;
+};
 
 const lineChartData = computed(() => {
   const sessions = sessionsInChronologicalOrder.value;
@@ -135,14 +162,17 @@ const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   aspectRatio: undefined,
+  layout: {
+    padding: {
+      bottom: 5,
+      left: 5,
+      right: 5,
+      top: 50
+    }
+  },
   plugins: {
     legend: {
-      display: true,
-      labels: {
-        color: '#e5e7eb',
-        font: { size: 14, weight: 'bold' },
-        padding: 15
-      }
+      display: false
     },
     tooltip: {
       callbacks: {
@@ -217,9 +247,11 @@ const chartOptions = {
     x: {
       ticks: {
         color: '#d1d5db',
-        font: { size: 12 },
+        font: { size: 9 },
         maxRotation: 45,
-        minRotation: 45
+        minRotation: 45,
+        autoSkip: true,
+        maxTicksLimit: 10
       },
       grid: {
         display: true,
@@ -229,3 +261,71 @@ const chartOptions = {
   },
 };
 </script>
+
+<style scoped>
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.current-profit-display {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  padding: 8px 14px;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.profit-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.025em;
+}
+
+.profit-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.profit-value.positive {
+  color: #10b981;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.profit-value.negative {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Landscape optimization */
+@media (orientation: landscape) {
+  .current-profit-display {
+    top: 1px;
+    padding: 6px 12px;
+  }
+
+  .profit-label {
+    font-size: 0.75rem;
+  }
+
+  .profit-value {
+    font-size: 1rem;
+  }
+}
+</style>

@@ -532,4 +532,51 @@ nav button.active svg {
   color: #fca5a5;
 }
 
+/* ========================================
+   LANDSCAPE ORIENTATION OPTIMIZATIONS
+   ======================================== */
+@media (orientation: landscape) {
+  /* Aumentar altura de la barra de navegación para iconos más grandes */
+  nav {
+    height: 65px;
+  }
+
+  /* Ajustar tamaños de botones */
+  nav button {
+    font-size: 0.75rem;
+    gap: 4px;
+  }
+
+  nav button svg {
+    width: 46px;
+    height: 46px;
+  }
+
+  /* Iconos de Mano Actual y Sesión en Vivo mucho más grandes */
+  nav button:nth-child(1) svg,
+  nav button:nth-child(2) svg {
+    width: 52px;
+    height: 52px;
+  }
+
+  /* FAB más grande y circular */
+  .fab-nav-btn {
+    width: 60px !important;
+    height: 60px !important;
+    min-width: 60px !important;
+    min-height: 60px !important;
+    max-width: 60px;
+    max-height: 60px;
+    flex-basis: 60px;
+    aspect-ratio: 1 / 1;
+    margin-top: -20px;
+    border: 3px solid rgba(10, 14, 26, 0.95);
+  }
+
+  .fab-nav-btn svg {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 </style>
