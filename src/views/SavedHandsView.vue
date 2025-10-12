@@ -436,6 +436,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
+  width: fit-content;
 }
 
 .group-label {
@@ -468,11 +469,12 @@ h2 {
 }
 
 .hero-hand-preview {
-  padding: 10px 14px;
+  padding: 8px 10px;
   border-radius: 10px;
   border: 1.5px solid rgba(16, 185, 129, 0.4);
   background: rgba(16, 185, 129, 0.08);
   animation: hero-glow-list 2s infinite ease-in-out;
+  width: fit-content;
 }
 
 @keyframes hero-glow-list {
@@ -755,6 +757,36 @@ h2 {
     width: 100%;
   }
 
+  .card-group {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .cards-display {
+    flex: 1;
+    gap: 4px;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .cards-display :deep(.playing-card) {
+    width: 38px;
+    height: 53px;
+    flex-shrink: 0;
+  }
+
+  .cards-display :deep(.rank) {
+    font-size: 1.2rem;
+  }
+
+  .cards-display :deep(.suit-icon) {
+    font-size: 0.9rem;
+  }
+
+  .hero-hand-preview {
+    padding: 6px 8px;
+  }
+
   .hand-actions {
     width: 100%;
     display: grid;
@@ -767,6 +799,35 @@ h2 {
 
   .date-header {
     font-size: 1.1rem;
+  }
+}
+
+/* Ajustes adicionales para pantallas muy pequeñas */
+@media (max-width: 360px) {
+  .cards-display :deep(.playing-card) {
+    width: 34px;
+    height: 48px;
+  }
+
+  .cards-display :deep(.rank) {
+    font-size: 1.1rem;
+  }
+
+  .cards-display :deep(.suit-icon) {
+    font-size: 0.85rem;
+  }
+
+  .cards-display {
+    gap: 3px;
+  }
+
+  .hero-hand-preview {
+    padding: 5px 6px;
+  }
+
+  .group-label {
+    font-size: 0.85rem;
+    min-width: 50px;
   }
 }
 </style>
