@@ -85,9 +85,9 @@ const lineChartData = computed(() => {
         const { ctx, chartArea } = chart;
         if (!chartArea) return null;
         const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-        gradient.addColorStop(0, '#c53030');
-        gradient.addColorStop(0.5, '#718096');
-        gradient.addColorStop(1, '#38a169');
+        gradient.addColorStop(0, '#ef4444');
+        gradient.addColorStop(0.5, '#f59e0b');
+        gradient.addColorStop(1, '#10b981');
         return gradient;
       },
       backgroundColor: (context) => {
@@ -95,15 +95,18 @@ const lineChartData = computed(() => {
         const { ctx, chartArea } = chart;
          if (!chartArea) return null;
          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-         gradient.addColorStop(0, 'rgba(197, 48, 48, 0.2)');
-         gradient.addColorStop(0.5, 'rgba(74, 85, 104, 0.2)');
-         gradient.addColorStop(1, 'rgba(56, 161, 105, 0.2)');
+         gradient.addColorStop(0, 'rgba(239, 68, 68, 0.25)');
+         gradient.addColorStop(0.5, 'rgba(245, 158, 11, 0.25)');
+         gradient.addColorStop(1, 'rgba(16, 185, 129, 0.25)');
          return gradient;
       },
-      borderWidth: 3,
-      pointBackgroundColor: '#fff',
+      borderWidth: 4,
+      pointBackgroundColor: '#d4af37',
       pointBorderColor: '#fff',
-      tension: 0.1,
+      pointBorderWidth: 1,
+      pointRadius: 2,
+      pointHoverRadius: 4,
+      tension: 0.3,
       fill: true,
     }],
   };
@@ -121,18 +124,26 @@ const barChartData = computed(() => {
     datasets: [{
       label: 'Resultado de la Sesión',
       data: dataPoints,
-      backgroundColor: dataPoints.map(val => val >= 0 ? 'rgba(56, 161, 105, 0.6)' : 'rgba(197, 48, 48, 0.6)'),
-      borderColor: dataPoints.map(val => val >= 0 ? '#38a169' : '#c53030'),
-      borderWidth: 1,
+      backgroundColor: dataPoints.map(val => val >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
+      borderColor: dataPoints.map(val => val >= 0 ? '#10b981' : '#ef4444'),
+      borderWidth: 2,
     }],
   };
 });
 
 const chartOptions = {
   responsive: true,
-  maintainAspectRatio: true,
+  maintainAspectRatio: false,
+  aspectRatio: undefined,
   plugins: {
-    legend: { display: false },
+    legend: {
+      display: true,
+      labels: {
+        color: '#e5e7eb',
+        font: { size: 14, weight: 'bold' },
+        padding: 15
+      }
+    },
     tooltip: {
       callbacks: {
         label: function (context) {
@@ -147,10 +158,9 @@ const chartOptions = {
             const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
             if (session) {
               label = 'Resultado de la Sesión: ';
-              // *** CAMBIO CLAVE: Usamos 'resultado' ***
               value = parseFloat(session.resultado);
             }
-          } 
+          }
           else {
             label = 'Resultado de la Sesión: ';
             value = context.parsed.y;
@@ -168,39 +178,53 @@ const chartOptions = {
             if (context.dataIndex > 0) {
               const session = sessionsInChronologicalOrder.value[context.dataIndex - 1];
               if (session) {
-                // *** CAMBIO CLAVE: Usamos 'resultado' ***
                 value = parseFloat(session.resultado);
               }
             }
-          } 
+          }
           else {
             value = context.parsed.y;
           }
 
           return {
-            borderColor: value >= 0 ? '#68d391' : '#fc8181',
-            backgroundColor: value >= 0 ? '#68d391' : '#fc8181',
+            borderColor: value >= 0 ? '#10b981' : '#ef4444',
+            backgroundColor: value >= 0 ? '#10b981' : '#ef4444',
           };
         }
       },
-      backgroundColor: 'rgba(26, 32, 44, 0.9)',
-      titleFont: { size: 14, weight: 'bold' },
-      bodyFont: { size: 12 },
-      padding: 10,
-      borderColor: 'rgba(74, 85, 104, 0.8)',
-      borderWidth: 1,
-      usePointStyle: true, 
-      boxPadding: 4
+      backgroundColor: 'rgba(17, 24, 39, 0.95)',
+      borderColor: 'rgba(212, 175, 55, 0.5)',
+      borderWidth: 2,
+      titleFont: { size: 16, weight: 'bold' },
+      bodyFont: { size: 14 },
+      padding: 15,
+      usePointStyle: true,
+      boxPadding: 6
     },
   },
   scales: {
     y: {
-      ticks: { color: '#a0aec0', callback: (value) => `${sessionStore.currency}${value}` },
-      grid: { color: 'rgba(74, 85, 104, 0.4)' },
+      ticks: {
+        color: '#d1d5db',
+        font: { size: 13, weight: '500' },
+        callback: (value) => `${sessionStore.currency}${value}`
+      },
+      grid: {
+        color: 'rgba(156, 163, 175, 0.2)',
+        lineWidth: 1
+      },
     },
     x: {
-      ticks: { color: '#a0aec0' },
-      grid: { display: false },
+      ticks: {
+        color: '#d1d5db',
+        font: { size: 12 },
+        maxRotation: 45,
+        minRotation: 45
+      },
+      grid: {
+        display: true,
+        color: 'rgba(156, 163, 175, 0.1)'
+      },
     },
   },
 };

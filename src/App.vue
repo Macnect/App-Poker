@@ -86,11 +86,11 @@
 
   </div>
   <AuthView v-else />
-  <RotateDeviceOverlay v-if="isLandscape" />
+  <RotateDeviceOverlay v-if="isLandscape && !allowLandscape" />
 </template>
 
 <script setup>
-import { ref, shallowRef, onMounted, onUnmounted, watch } from 'vue';
+import { ref, shallowRef, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
 import { useGameStore } from './store/game'; // <-- ADICIÓN
@@ -121,6 +121,11 @@ const currentView = ref('CurrentHandView');
 const tripStore = useTripStore();
 const showMoreMenu = ref(false);
 const isLandscape = ref(false);
+
+// Allow landscape mode for specific views (ChartsView)
+const allowLandscape = computed(() => {
+  return currentView.value === 'ChartsView';
+});
 
 // Drag/swipe state for more menu
 const dragStartY = ref(0);
@@ -328,6 +333,8 @@ nav button:nth-child(2) svg {
 .fab-nav-btn {
   width: 64px;
   height: 64px;
+  min-width: 64px; /* Asegura ancho mínimo */
+  min-height: 64px; /* Asegura alto mínimo */
   border-radius: 50%;
   background: linear-gradient(135deg, #047857 0%, #059669 100%);
   border: 4px solid rgba(10, 14, 26, 0.95);
@@ -340,6 +347,7 @@ nav button:nth-child(2) svg {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0; /* Evita que se comprima */
   margin-top: -20px; /* to make it stick out above the nav */
   z-index: 10;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);

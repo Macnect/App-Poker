@@ -225,6 +225,78 @@ h2 {
     0 10px 25px -3px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   animation: cardSlideIn 0.5s ease-out;
+  min-height: 500px;
+  height: calc(100vh - 250px);
+}
+
+.chart-wrapper > div {
+  height: 100%;
+}
+
+/* ========================================
+   LANDSCAPE ORIENTATION OPTIMIZATIONS
+   ======================================== */
+@media (orientation: landscape) {
+  .charts-container {
+    padding: 0.5rem 1rem 0.5rem 1rem; /* Padding mínimo */
+    height: 100vh;
+    overflow: hidden; /* Evita scroll en el contenedor principal */
+    box-sizing: border-box;
+  }
+
+  .header {
+    flex-direction: row;
+    margin-bottom: 0.5rem; /* Mínimo margen */
+    gap: 0.75rem;
+  }
+
+  h2 {
+    font-size: 1.25rem; /* Más pequeño para ahorrar espacio vertical */
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .chart-wrapper {
+    height: calc(100vh - 85px); /* Optimizado para no necesitar scroll */
+    min-height: unset;
+    max-height: calc(100vh - 85px); /* Altura máxima para evitar overflow */
+    padding: 0.75rem 1rem; /* Padding mínimo */
+    overflow: hidden; /* Evita cualquier scroll interno */
+    box-sizing: border-box;
+  }
+
+  .controls-wrapper {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .filter-controls {
+    padding: 4px 10px; /* Más compacto */
+  }
+
+  .filter-controls label {
+    font-size: 0.75rem; /* Más pequeño */
+  }
+
+  .filter-controls select {
+    padding: 4px 10px;
+    font-size: 0.85rem; /* Más pequeño */
+  }
+
+  .toggle-chart-btn {
+    padding: 6px;
+  }
+
+  .toggle-chart-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .loading-message,
+  .no-data-message {
+    padding: 1rem 0.75rem; /* Reducido padding en mensajes */
+    font-size: 1rem;
+  }
 }
 
 /* ========================================
