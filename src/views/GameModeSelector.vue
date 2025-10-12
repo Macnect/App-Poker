@@ -177,8 +177,8 @@ function selectMode(mode) {
 }
 
 .card-icon {
-  width: 70px;
-  height: 70px;
+  width: 90px;
+  height: 90px;
   margin: 0 auto 1.25rem;
   display: flex;
   align-items: center;
@@ -201,8 +201,8 @@ function selectMode(mode) {
 }
 
 .card-icon svg {
-  width: 38px;
-  height: 38px;
+  width: 48px;
+  height: 48px;
   color: #d4af37;
   filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
   transition: all 0.4s ease;
@@ -228,6 +228,16 @@ function selectMode(mode) {
   text-align: center;
   margin-bottom: 0.65rem;
   flex-shrink: 0;
+}
+
+.mode-card.cash-games h2 {
+  color: #10b981;
+  text-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.mode-card.tournaments h2 {
+  color: #d4af37;
+  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
 
 .mode-card p {
@@ -328,14 +338,14 @@ function selectMode(mode) {
   }
 
   .card-icon {
-    width: 58px;
-    height: 58px;
+    width: 70px;
+    height: 70px;
     margin-bottom: 1rem;
   }
 
   .card-icon svg {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
 
   .coming-soon-badge {
@@ -391,14 +401,14 @@ function selectMode(mode) {
   }
 
   .card-icon {
-    width: 85px;
-    height: 85px;
+    width: 105px;
+    height: 105px;
     margin-bottom: 1.5rem;
   }
 
   .card-icon svg {
-    width: 44px;
-    height: 44px;
+    width: 56px;
+    height: 56px;
   }
 
   .coming-soon-badge {
