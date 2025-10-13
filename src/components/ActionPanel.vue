@@ -39,7 +39,7 @@
 
     <!-- Botones circulares externos -->
     <div class="external-controls">
-      <select class="color-select-round" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" title="Color de mesa">
+      <select class="color-select-round" :value="settingsStore.tableColor" @input="settingsStore.setTableColor($event.target.value)" title="Color de mesa">
         <option value="#28563a">🟢</option>
         <option value="#3a4c8a">🔵</option>
         <option value="#8a3a3a">🔴</option>
@@ -65,12 +65,12 @@
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '../store/game';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 const { t } = useI18n();
 
-const props = defineProps({ modelValue: String });
-const emit = defineEmits(['update:modelValue']);
 const gameStore = useGameStore();
+const settingsStore = useSettingsStore();
 
 const handSaved = ref(false);
 

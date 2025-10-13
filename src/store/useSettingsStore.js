@@ -4,9 +4,14 @@ import i18n from '../i18n'; // Importamos la instancia de i18n
 
 export const useSettingsStore = defineStore('settings', () => {
   const locale = ref(localStorage.getItem('locale') || 'es');
+  const tableColor = ref(localStorage.getItem('tableColor') || '#28563a');
 
   function setLocale(newLocale) {
     locale.value = newLocale;
+  }
+
+  function setTableColor(newColor) {
+    tableColor.value = newColor;
   }
 
   // Observador que actualiza la librería i18n y el localStorage cuando cambia el idioma
@@ -15,8 +20,15 @@ export const useSettingsStore = defineStore('settings', () => {
     localStorage.setItem('locale', newLocale);
   });
 
+  // Observador que actualiza el localStorage cuando cambia el color de la mesa
+  watch(tableColor, (newColor) => {
+    localStorage.setItem('tableColor', newColor);
+  });
+
   return {
     locale,
     setLocale,
+    tableColor,
+    setTableColor,
   };
 });

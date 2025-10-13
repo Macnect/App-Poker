@@ -22,7 +22,7 @@
 
     <!-- Botones circulares externos -->
     <div class="external-controls">
-      <select class="color-select-round" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" title="Color de mesa">
+      <select class="color-select-round" :value="settingsStore.tableColor" @input="settingsStore.setTableColor($event.target.value)" title="Color de mesa">
         <option value="#28563a">🟢</option>
         <option value="#3a4c8a">🔵</option>
         <option value="#8a3a3a">🔴</option>
@@ -39,18 +39,11 @@
 </template>
 
 <script setup>
-// Se eliminan los imports que ya no son necesarios (ref, onMounted, onUnmounted)
 import { useGameStore } from '../store/game';
-
-// Las props y emits se mantienen igual
-defineProps({
-  modelValue: String
-});
-defineEmits(['update:modelValue']);
+import { useSettingsStore } from '../store/useSettingsStore';
 
 const gameStore = useGameStore();
-
-// Se ha eliminado toda la lógica de JavaScript relacionada con el arrastre del panel.
+const settingsStore = useSettingsStore();
 </script>
 
 <style scoped>

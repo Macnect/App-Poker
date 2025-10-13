@@ -68,8 +68,8 @@
     <!-- Contenedor del Editor de Manos (ahora con layout de Grid) -->
     <div v-else class="hand-editor-content">
       <PokerTable />
-      <ActionPanel v-if="gameStore.gamePhase !== 'replay'" v-model="tableColorForActionPanel" />
-      <DisplayOptions v-else v-model="tableColorForActionPanel" />
+      <ActionPanel v-if="gameStore.gamePhase !== 'replay'" />
+      <DisplayOptions v-else />
       <CardPicker v-if="gameStore.isCardPickerOpen" />
     </div>
     
@@ -96,7 +96,6 @@ import CardPicker from '../components/CardPicker.vue';
 
 const gameStore = useGameStore();
 const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
-const tableColorForActionPanel = ref('#28563a');
 
 const selectedPlayers = ref(6);
 const sbInput = ref(1);

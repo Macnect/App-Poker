@@ -1,6 +1,6 @@
 <template>
   <div class="poker-table-container">
-    <div class="poker-table" :style="{ backgroundColor: tableColor }">
+    <div class="poker-table" :style="{ backgroundColor: settingsStore.tableColor }">
       
       <div class="center-content" :style="{ '--board-x': gameStore.tableLayout.board.x + '%', '--board-y': gameStore.tableLayout.board.y + '%' }">
         <div class="pot">
@@ -39,13 +39,14 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { useGameStore } from '../store/game';
+import { useSettingsStore } from '../store/useSettingsStore';
 import Player from './Player.vue';
 import PlayingCard from './PlayingCard.vue';
 
 const gameStore = useGameStore();
-const tableColor = ref('#28563a');
+const settingsStore = useSettingsStore();
 
 const clickablePhases = computed(() => ['flop', 'turn', 'river', 'showdown']);
 
