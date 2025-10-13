@@ -155,14 +155,14 @@ const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.play
 // Las coordenadas ahora son porcentajes del radio de la mesa (ej: x: 50 es el borde derecho).
 // La posición [0] es siempre la inferior central (la vista del Héroe).
 const PREDEFINED_LAYOUTS = {
-  2: [ { x: 50, y: -10 }, { x: -50, y: -10 } ],
-  3: [ { x: 0, y: 50 }, { x: -50, y: -25 }, { x: 45, y: -25 } ],
-  4: [ { x: 0, y: 50 }, { x: -50, y: 0 }, { x: 0, y: -50 }, { x: 50, y: 0 } ],
-  5: [ { x: 0, y: 50 }, { x: -45, y: 25 }, { x: -35, y: -40 }, { x: 35, y: -40 }, { x: 45, y: 25 } ],
-  6: [ { x: 0, y: 50 }, { x: -48, y: 20 }, { x: -48, y: -40 }, { x: 0, y: -55 }, { x: 48, y: -40 }, { x: 48, y: 20 } ],
-  7: [ { x: 0, y: 50 }, { x: -40, y: 35 }, { x: -50, y: -25 }, { x: -20, y: -50 }, { x: 20, y: -50 }, { x: 50, y: -25 }, { x: 40, y: 35 } ],
-  8: [ { x: 2, y: 53 }, { x: -33, y: 50 }, { x: -55, y: -10 }, { x: -28, y: -48 }, { x: 0, y: -52 }, { x: 30, y: -48 }, { x: 55, y: -10 }, { x: 35, y: 50 } ],
-  9: [ { x: 0, y: 50 }, { x: -30, y: 50 }, { x: -50, y: 5 }, { x: -45, y: -50 }, { x: -14, y: -60 }, { x: 16, y: -60 }, { x: 45, y: -50 }, { x: 50, y: 5 }, { x: 30, y: 50 } ],
+  2: [ { x: 0, y: 48 }, { x: 0, y: -48 } ],
+  3: [ { x: 0, y: 48 }, { x: -38, y: -28 }, { x: 38, y: -28 } ],
+  4: [ { x: 0, y: 48 }, { x: -42, y: 5 }, { x: 0, y: -48 }, { x: 42, y: 5 } ],
+  5: [ { x: 0, y: 48 }, { x: -40, y: 26 }, { x: -35, y: -32 }, { x: 35, y: -32 }, { x: 40, y: 26 } ],
+  6: [ { x: 0, y: 48 }, { x: -40, y: 20 }, { x: -42, y: -32 }, { x: 0, y: -48 }, { x: 42, y: -32 }, { x: 40, y: 20 } ],
+  7: [ { x: 0, y: 48 }, { x: -35, y: 32 }, { x: -42, y: -16 }, { x: -20, y: -45 }, { x: 20, y: -45 }, { x: 42, y: -16 }, { x: 35, y: 32 } ],
+  8: [ { x: 0, y: 48 }, { x: -30, y: 42 }, { x: -45, y: -5 }, { x: -28, y: -42 }, { x: 0, y: -48 }, { x: 28, y: -42 }, { x: 45, y: -5 }, { x: 30, y: 42 } ],
+  9: [ { x: 0, y: 48 }, { x: -26, y: 44 }, { x: -42, y: 8 }, { x: -40, y: -40 }, { x: -14, y: -50 }, { x: 14, y: -50 }, { x: 40, y: -40 }, { x: 42, y: 8 }, { x: 26, y: 44 } ],
 };
 
 const seatCoordinates = computed(() => {
@@ -195,8 +195,8 @@ const seatStyle = computed(() => {
 
 const dealerButtonStyle = computed(() => {
   return {
-    bottom: '-40px',
-    left: '57%',
+    bottom: '-35px',
+    left: '50%',
     transform: 'translateX(-50%)'
   };
 });
@@ -207,25 +207,25 @@ const betBoxStyle = computed(() => {
   // Lógica de posicionamiento de fichas por asiento individual
   switch (visualIndex) {
     case 0: // Asiento del Héroe (inferior central)
-      return { top: '-13%', left: '60%', transform: 'translateX(-50%)' };
+      return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
     case 1: // Jugador a la derecha del Héroe
-      return { top: '20%', right: '-60%', transform: 'translateY(-50%)' };
+      return { top: '50%', right: '-65px', transform: 'translateY(-50%)' };
     case 2:
-      return { top: '80%', right: '-70%', transform: 'translateY(-50%)' };
+      return { top: '50%', right: '-70px', transform: 'translateY(-50%)' };
     case 3:
-      return { bottom: '-10%', left: '130%', transform: 'translateX(-50%)' };
+      return { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' };
     case 4: // Jugador en el top
-      return { bottom: '-35%', left: '50%', transform: 'translateX(-50%)' };
+      return { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' };
     case 5: // Jugador en el top
-      return { bottom: '-35%', left: '50%', transform: 'translateX(-50%)' };
+      return { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' };
     case 6: // Asiento a la izquierda (superior)
-      return { top: '95%', left: '-50%', transform: 'translateY(-50%)' };
+      return { top: '50%', left: '-65px', transform: 'translateY(-50%)' };
     case 7: // Asiento a la izquierda (inferior)
-      return { top: '70%', left: '-55%', transform: 'translateY(-50%)' };
+      return { top: '50%', left: '-65px', transform: 'translateY(-50%)' };
     case 8:
-      return { top: '-15%', left: '50%', transform: 'translateX(-50%)' };
+      return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
     default: // Fallback por si acaso
-      return { top: '0', left: '105%' };
+      return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
   }
 });
 const notesPanelStyle = computed(() => {
@@ -239,7 +239,7 @@ const notesPanelStyle = computed(() => {
   position: absolute;
   z-index: 5;
   /* El tamaño del jugador es un porcentaje del tamaño de la mesa, haciéndolo responsive */
-  width: 18%; 
+  width: 18%;
   max-width: 150px; /* Evita que sea demasiado grande en pantallas enormes */
   height: 50%;
 }
@@ -261,25 +261,28 @@ const notesPanelStyle = computed(() => {
   background: linear-gradient(180deg, rgba(45, 55, 72, 0.95) 0%, rgba(26, 32, 44, 0.95) 100%);
   border: 1px solid rgba(74, 85, 104, 0.5);
   border-radius: 8px;
-  padding: 8px;
+  padding: 6px 4px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.05);
   text-align: center;
   z-index: 10;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .player-cards {
   position: absolute;
-  top: 6px;
-  left: 62%;
+  bottom: 100%;
+  left: 50%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
   gap: 5%;
-  width: 100%;
-  z-index: 1;
+  width: 95%;
+  z-index: 12;
+  margin-bottom: 0;
 }
 
 .card-placeholder {
@@ -292,28 +295,35 @@ const notesPanelStyle = computed(() => {
 
 .player-name {
   font-weight: 700;
-  /* Usamos clamp para un tamaño de fuente fluido */
-  font-size: clamp(0.7rem, 1.2vw, 1.1em);
+  /* Reduced font size for better fit */
+  font-size: clamp(0.55rem, 0.9vw, 0.75em);
   color: #E2E8F0;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Allow text wrapping for full visibility */
+  word-break: break-word;
+  hyphens: auto;
+  line-height: 1.1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-bottom: 4px;
+  gap: 3px;
+  margin-bottom: 2px;
+  text-align: center;
+  max-width: 100%;
 }
 
 .player-stack {
   font-family: 'Roboto Mono', monospace;
-  font-size: clamp(0.8rem, 1.4vw, 1.2em);
+  font-size: clamp(0.7rem, 1.2vw, 1em);
   font-weight: 700;
   color: #FFFFFF;
   background-color: rgba(0,0,0,0.3);
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 1px 4px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .active .player-info-panel {
@@ -327,19 +337,19 @@ const notesPanelStyle = computed(() => {
 
 .dealer-button {
   position: absolute;
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
   background: linear-gradient(145deg, #ffffff, #e6e6e6);
   color: #333;
   border-radius: 50%;
   font-weight: bold;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   display: flex;
   justify-content: center;
   align-items: center;
   border: 1px solid rgba(0,0,0,0.2);
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  z-index: 15;
+  z-index: 8;
 }
 
 .bet-box {
@@ -347,8 +357,8 @@ const notesPanelStyle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: -0px;
-  z-index: 9;
+  gap: 4px;
+  z-index: 11;
 }
 
 .bet-info {
@@ -430,8 +440,10 @@ const notesPanelStyle = computed(() => {
   gap: 5px;
 }
 .player-position-static {
-  font-size: 0.9em;
-  color: #a0aec0;
+  font-size: 0.85em;
+  color: #cbd5e0;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .edit-notes-btn, .notes-display-wrapper {
@@ -549,6 +561,92 @@ const notesPanelStyle = computed(() => {
   opacity: 1;
 }
 
+/* --- MEDIA QUERY PARA MÓVIL EN RETRATO (PORTRAIT) --- */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .player-container {
+    width: 24%;
+    max-width: 110px;
+    height: 45%;
+  }
+
+  .player-seat {
+    height: 65px; /* Increased to accommodate wrapped text */
+  }
+
+  .player-info-panel {
+    padding: 5px 3px;
+    border-radius: 8px;
+    min-height: 60px;
+  }
+
+  .player-cards {
+    bottom: 40%;
+    gap: 4%;
+    width: 90%;
+    margin-bottom: 0;
+    left: 55%;
+  }
+
+  .card-placeholder {
+    width: 68%;
+  }
+
+  .player-name {
+    font-size: clamp(0.5rem, 1.6vw, 0.7rem);
+    gap: 2px;
+    margin-bottom: 1px;
+    /* Ensure text wrapping in portrait mode */
+    flex-wrap: wrap;
+    max-width: 100%;
+    line-height: 1.1;
+  }
+
+  .player-position-static {
+    font-size: 0.85em;
+    font-weight: 600;
+  }
+
+  .player-stack {
+    font-size: clamp(0.65rem, 2vw, 0.85rem);
+    padding: 1px 3px;
+  }
+
+  .dealer-button {
+    width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
+    bottom: -32px;
+  }
+
+  .bet-box {
+    gap: 2px;
+  }
+
+  .bet-amount-text {
+    font-size: 0.55em;
+    padding: 2px 6px;
+  }
+
+  .all-in-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .edit-notes-btn, .notes-display-wrapper {
+    width: 28px;
+    height: 28px;
+    top: -6px;
+  }
+
+  .edit-notes-btn {
+    right: -24px;
+  }
+
+  .notes-display-wrapper {
+    left: -6px;
+  }
+}
+
 /* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
 @media screen and (max-width: 900px) and (orientation: landscape) {
   .player-container {
@@ -629,23 +727,24 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .player-info-panel {
-  padding: 4px;
+  padding: 3px 2px;
 }
 
 .is-9-max .player-name {
-  font-size: clamp(0.6rem, 1.1vw, 0.9em);
-  gap: 4px;
+  font-size: clamp(0.5rem, 0.9vw, 0.7em);
+  gap: 2px;
 }
 
 .is-9-max .player-stack {
-  font-size: clamp(0.7rem, 1.3vw, 1em);
+  font-size: clamp(0.65rem, 1.2vw, 0.9em);
 }
 
 .is-9-max .player-cards {
-  top: 6px; /* Sube un poco las cartas */
-  left: 60%;
+  bottom: 100%;
+  left: 50%;
   width: 90%;
-  gap: 2%;
+  gap: 3%;
+  margin-bottom: 0;
 }
 
 .is-9-max .card-placeholder {
@@ -660,11 +759,71 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .dealer-button {
-  width: 15px;
-  height: 15px;
-  font-size: 0.9rem;
+  width: 16px;
+  height: 16px;
+  font-size: 0.65rem;
   bottom: -30px;
-  top: 54px;
+}
+
+/* 9-max en retrato (portrait) */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .is-9-max .player-container {
+    width: 20%;
+    max-width: 95px;
+  }
+
+  .is-9-max .player-seat {
+    height: 58px; /* Increased to accommodate wrapped text in 9-max */
+  }
+
+  .is-9-max .player-info-panel {
+    padding: 4px 2px;
+    min-height: 55px;
+  }
+
+  .is-9-max .player-cards {
+    bottom: 100%;
+    gap: 2%;
+    width: 85%;
+    margin-bottom: 0;
+  }
+
+  .is-9-max .card-placeholder {
+    width: 58%;
+  }
+
+  .is-9-max .player-name {
+    font-size: clamp(0.45rem, 1.5vw, 0.65rem);
+    gap: 2px;
+    /* Ensure text wrapping in 9-max portrait mode */
+    flex-wrap: wrap;
+    max-width: 100%;
+    line-height: 1.1;
+  }
+
+  .is-9-max .player-position-static {
+    font-size: 0.8em;
+  }
+
+  .is-9-max .player-stack {
+    font-size: clamp(0.6rem, 1.8vw, 0.8rem);
+  }
+
+  .is-9-max .dealer-button {
+    width: 14px;
+    height: 14px;
+    font-size: 0.6rem;
+    bottom: -28px;
+  }
+
+  .is-9-max .bet-amount-text {
+    font-size: 0.5em;
+  }
+
+  .is-9-max .edit-notes-btn {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 @media screen and (max-width: 900px) and (orientation: landscape) {

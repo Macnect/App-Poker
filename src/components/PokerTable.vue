@@ -108,6 +108,36 @@ const heroIndex = computed(() => {
   transition: background-color 0.3s ease;
 }
 
+/* Portrait optimizations */
+@media screen and (orientation: portrait) {
+  .poker-table-container {
+    padding: 8px;
+  }
+
+  .poker-table {
+    aspect-ratio: 9 / 11;
+  }
+
+  .center-content {
+    width: 60%;
+    gap: clamp(8px, 1.5vh, 12px);
+  }
+
+  .pot {
+    font-size: clamp(0.8rem, 2.5vmin, 1.1rem);
+    padding: 0.4em 0.9em;
+  }
+
+  .board {
+    gap: 2.5%;
+    padding: 2%;
+  }
+
+  .card-placeholder {
+    width: 17%;
+  }
+}
+
 /* Landscape optimizations */
 @media screen and (orientation: landscape) {
   .poker-table-container {
