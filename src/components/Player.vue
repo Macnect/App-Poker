@@ -165,6 +165,70 @@ const PREDEFINED_LAYOUTS = {
   9: [ { x: 0, y: 48 }, { x: -30, y: 44 }, { x: -42, y: 8 }, { x: -40, y: -30 }, { x: -14, y: -48 }, { x: 14, y: -48 }, { x: 40, y: -30 }, { x: 42, y: 8 }, { x: 30, y: 44 } ],
 };
 
+// Posicionamiento de las apuestas para cada configuración de mesa
+const BET_PREDEFINED_LAYOUTS = {
+  2: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo centro)
+    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Oponente (arriba)
+  ],
+  3: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo centro) - visualIndex 0
+    { top: '50%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' }, // Izquierda - visualIndex 1 (hacia el centro)
+    { top: '50%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },  // Derecha - visualIndex 2 (hacia el centro)
+  ],
+  4: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { top: '50%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' }, // Izquierda
+    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba
+    { top: '50%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },  // Derecha
+  ],
+  5: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { bottom: '25%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
+    { top: '20%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
+    { top: '20%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
+    { bottom: '25%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+  ],
+  6: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { bottom: '25%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
+    { top: '15%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
+    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro
+    { top: '15%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
+    { bottom: '25%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+  ],
+  7: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { bottom: '15%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
+    { top: '40%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda medio
+    { top: 'calc(100% + 5px)', left: '30%', transform: 'translateX(-50%)' },     // Arriba izquierda
+    { top: 'calc(100% + 5px)', left: '70%', transform: 'translateX(-50%)' },     // Arriba derecha
+    { top: '40%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha medio
+    { bottom: '15%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+  ],
+  8: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { bottom: '10%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
+    { top: '50%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda medio
+    { top: '10%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
+    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro
+    { top: '10%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
+    { top: '50%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha medio
+    { bottom: '10%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+  ],
+  9: [
+    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo centro)
+    { bottom: 'calc(100% + 45px)', left: '30%', transform: 'translateX(-50%)' }, // Izquierda Hero
+    { bottom: '10%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda medio abajo
+    { top: '20%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
+    { top: 'calc(100% + 5px)', left: '30%', transform: 'translateX(-50%)' },     // Arriba izquierda
+    { top: 'calc(100% + 5px)', left: '70%', transform: 'translateX(-50%)' },     // Arriba derecha
+    { top: '20%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
+    { bottom: '10%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha medio abajo
+    { bottom: 'calc(100% + 45px)', left: '70%', transform: 'translateX(-50%)' }, // Derecha Hero
+  ],
+};
+
 const seatCoordinates = computed(() => {
   // Si el jugador tiene coordenadas personalizadas, úsalas
   if (props.player.x !== null && props.player.y !== null) {
@@ -204,29 +268,13 @@ const betBoxStyle = computed(() => {
   // El visualIndex [0] es siempre el Héroe en la parte inferior.
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
 
-  // Lógica de posicionamiento de fichas por asiento individual
-  switch (visualIndex) {
-    case 0: // Asiento del Héroe (inferior central)
-      return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
-    case 1: // Jugador a la derecha del Héroe
-      return { top: '50%', right: '-65px', transform: 'translateY(-50%)' };
-    case 2:
-      return { top: '50%', right: '-70px', transform: 'translateY(-50%)' };
-    case 3:
-      return { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' };
-    case 4: // Jugador en el top
-      return { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' };
-    case 5: // Jugador en el top
-      return { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' };
-    case 6: // Asiento a la izquierda (superior)
-      return { top: '50%', left: '-65px', transform: 'translateY(-50%)' };
-    case 7: // Asiento a la izquierda (inferior)
-      return { top: '50%', left: '-65px', transform: 'translateY(-50%)' };
-    case 8:
-      return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
-    default: // Fallback por si acaso
-      return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
+  // Usamos el sistema de layouts predefinidos para las apuestas
+  if (BET_PREDEFINED_LAYOUTS[props.playerCount]) {
+    return BET_PREDEFINED_LAYOUTS[props.playerCount][visualIndex];
   }
+
+  // Fallback por si no existe configuración para esta cantidad de jugadores
+  return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
 });
 </script>
 
