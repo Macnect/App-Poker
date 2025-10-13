@@ -168,4 +168,50 @@ button.option-item {
 button.option-item:active {
   transform: translateY(0);
 }
+
+/* Landscape optimizations */
+@media screen and (orientation: landscape) {
+  .display-options-wrapper {
+    padding: clamp(14px, 2vh, 22px);
+    gap: clamp(10px, 1.5vh, 16px);
+    width: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    justify-content: flex-start;
+  }
+
+  h3 {
+    font-size: clamp(1rem, 2.2vmin, 1.3rem);
+    margin: 0 0 0.5rem 0;
+  }
+
+  .options-row {
+    gap: 8px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .options-row label {
+    font-size: clamp(0.75rem, 1.6vmin, 0.9rem);
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+
+  .option-item {
+    height: clamp(32px, 4.5vh, 44px);
+    font-size: clamp(0.8rem, 1.8vmin, 1rem);
+    padding: 0 10px;
+  }
+
+  button.option-item {
+    min-width: 44px;
+    flex: 0 0 auto;
+  }
+
+  select.option-item {
+    flex: 1 1 auto;
+    min-width: 100px;
+  }
+}
 </style>

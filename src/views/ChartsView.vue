@@ -156,6 +156,12 @@ h2 {
     0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
+.filter-controls select option {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 8px;
+}
+
 .toggle-chart-btn {
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
   border: 1.5px solid rgba(212, 175, 55, 0.25);

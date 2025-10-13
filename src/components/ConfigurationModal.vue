@@ -306,4 +306,41 @@ h3 {
     font-size: 0.9rem;
   }
 }
+
+/* Landscape mode - optimized for horizontal screens with limited height */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .modal-overlay {
+    padding: 0.75rem;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .modal-content {
+    padding: 1.25rem 1.5rem;
+    max-width: min(70vw, 600px);
+    margin: auto 0;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .positions-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin: 1rem 0;
+  }
+
+  .positions-grid button {
+    padding: 8px 6px;
+    font-size: 0.85rem;
+    min-height: 42px;
+  }
+
+  .confirm-btn {
+    padding: 10px 16px;
+    font-size: 1rem;
+  }
+}
 </style>

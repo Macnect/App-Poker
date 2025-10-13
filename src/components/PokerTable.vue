@@ -83,18 +83,20 @@ const heroIndex = computed(() => {
 
 <style scoped>
 .poker-table-container {
-  width: 90%;
-  height: 90%;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 0;
   min-width: 0;
+  padding: 10px;
+  box-sizing: border-box;
 }
 
 .poker-table {
   position: relative;
-  width: 90%;
+  width: 100%;
   max-width: 100%;
   max-height: 100%;
   aspect-ratio: 16 / 9;
@@ -104,8 +106,34 @@ const heroIndex = computed(() => {
   border-width: clamp(8px, 1.2vmin, 15px);
   box-shadow: inset 0 0 clamp(15px, 2.5vmin, 30px) rgba(0, 0, 0, 0.6);
   transition: background-color 0.3s ease;
-  right: -15px;
-  top: 10px;
+}
+
+/* Landscape optimizations */
+@media screen and (orientation: landscape) {
+  .poker-table-container {
+    width: 100%;
+    height: 100%;
+    padding: 8px;
+  }
+
+  .poker-table {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .center-content {
+    gap: clamp(6px, 1.2vh, 10px);
+  }
+
+  .pot {
+    font-size: clamp(0.75rem, 2vmin, 1rem);
+    padding: 0.3em 0.8em;
+  }
+
+  .board {
+    gap: 1.5%;
+    padding: 1%;
+  }
 }
 
 .center-content {

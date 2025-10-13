@@ -122,9 +122,9 @@ const tripStore = useTripStore();
 const showMoreMenu = ref(false);
 const isLandscape = ref(false);
 
-// Allow landscape mode for specific views (ChartsView)
+// Allow landscape mode for specific views (ChartsView, CurrentHandView)
 const allowLandscape = computed(() => {
-  return currentView.value === 'ChartsView';
+  return currentView.value === 'ChartsView' || currentView.value === 'CurrentHandView';
 });
 
 // Drag/swipe state for more menu

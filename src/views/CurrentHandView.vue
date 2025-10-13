@@ -73,8 +73,8 @@
       <CardPicker v-if="gameStore.isCardPickerOpen" />
     </div>
     
-    <!-- Overlay que pide girar el dispositivo (se muestra en móvil vertical) -->
-    <RotateDeviceOverlay v-if="showRotateOverlay" />
+    <!-- Overlay que pide girar el dispositivo (DESHABILITADO - ahora funciona en ambas orientaciones) -->
+    <!-- <RotateDeviceOverlay v-if="showRotateOverlay" /> -->
 
     <ConfigurationModal
       v-if="showPositionModal"
@@ -92,7 +92,7 @@ import ActionPanel from '../components/ActionPanel.vue';
 import DisplayOptions from '../components/DisplayOptions.vue';
 import ConfigurationModal from '../components/ConfigurationModal.vue';
 import CardPicker from '../components/CardPicker.vue';
-import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
+// import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue'; // DESHABILITADO
 
 const gameStore = useGameStore();
 const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
@@ -105,15 +105,13 @@ const selectedCurrency = ref('$');
 const selectedSpecialRule = ref('Ninguno');
 const selectedBombPotBB = ref(2);
 
-const showRotateOverlay = ref(false);
+// const showRotateOverlay = ref(false); // ELIMINADO - ya no se usa
 const showAllCurrencies = ref(false);
 const saveButtonText = ref('Guardar cambios');
 
-const checkOrientation = () => {
-  const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-  showRotateOverlay.value = handIsActive.value && !isPortrait && isCoarsePointer;
-};
+// const checkOrientation = () => { // ELIMINADO - ya no se necesita
+//   showRotateOverlay.value = false;
+// };
 
 // Guardar configuración en localStorage
 function saveConfiguration() {
@@ -154,9 +152,9 @@ function loadConfiguration() {
   }
 }
 
-watch(handIsActive, () => {
-  checkOrientation();
-});
+// watch(handIsActive, () => { // ELIMINADO - ya no se necesita checkOrientation
+//   checkOrientation();
+// });
 
 const currencies = ref([
   { symbol: '$', name: 'USD - Dólar estadounidense' },
@@ -258,13 +256,13 @@ function handleKeyDown(event) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
-  window.addEventListener('resize', checkOrientation);
-  checkOrientation();
+  // window.addEventListener('resize', checkOrientation); // ELIMINADO
+  // checkOrientation(); // ELIMINADO
   loadConfiguration(); // Cargar configuración guardada al iniciar
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkOrientation);
+  // window.removeEventListener('resize', checkOrientation); // ELIMINADO
   window.removeEventListener('keydown', handleKeyDown);
   gameStore.pauseReplay();
 });
@@ -295,7 +293,8 @@ onUnmounted(() => {
   flex-direction: column;
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   overflow-x: hidden;
-  overflow-y: auto; /* Permite scroll solo si el contenido excede la altura */
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 /* ========================================
@@ -677,8 +676,9 @@ select option:checked {
 }
 
 /* ========================================
-   HAND EDITOR LAYOUT - Grid System
-   ======================================== */
+    HAND EDITOR LAYOUT - Grid System
+    ======================================== */
+/* Default: vertical stacking for portrait mode */
 .hand-editor-content {
   width: 100%;
   max-width: 100vw;
@@ -686,11 +686,26 @@ select option:checked {
   display: grid;
   grid-template-rows: 1fr auto;
   grid-template-columns: 100%;
+  grid-template-areas:
+    "table"
+    "controls";
   gap: 15px;
   padding: 15px;
   box-sizing: border-box;
-  overflow-x: hidden;
-  overflow-y: hidden;
+  overflow: hidden;
+}
+
+/* Explicit grid area assignments for child components */
+.hand-editor-content > :nth-child(1) {
+  grid-area: table;
+  min-height: 0;
+  min-width: 0;
+}
+
+.hand-editor-content > :nth-child(2) {
+  grid-area: controls;
+  min-height: 0;
+  min-width: 0;
 }
 
 .rotate-device-prompt {
@@ -698,23 +713,101 @@ select option:checked {
 }
 
 /* ========================================
-   RESPONSIVE DESIGN - Mobile & Tablet
-   ======================================== */
+    RESPONSIVE DESIGN - Mobile & Tablet
+    ======================================== */
 
-/* Mobile portrait - hide editor, show rotation prompt */
-@media (hover: none) and (pointer: coarse) and (orientation: portrait) {
+/* Landscape mode (including mobile) - horizontal layout */
+@media screen and (orientation: landscape) {
   .hand-editor-content {
-    /* display: none; */
+    grid-template-columns: 1fr minmax(300px, 360px);
+    grid-template-rows: 100%;
+    grid-template-areas: "table controls";
+    gap: 12px;
+    padding: 12px;
+    align-items: stretch;
+  }
+
+  /* Ensure table area uses all available space */
+  .hand-editor-content > :nth-child(1) {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Ensure controls area is properly sized */
+  .hand-editor-content > :nth-child(2) {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 }
 
-/* Mobile landscape - side-by-side layout */
-@media screen and (orientation: landscape) and (max-height: 600px) {
-  .hand-editor-content {
-    grid-template-columns: minmax(0, 1fr) minmax(280px, 350px);
-    grid-template-rows: 100%;
+/* Landscape mode - Configuration panel optimizations */
+@media screen and (orientation: landscape) {
+  .configuration-panel {
+    padding: 2rem 1.5rem 1.5rem 1.5rem;
+    margin: 0.5rem auto;
+    gap: 12px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+    margin-bottom: 0;
+  }
+
+  .config-item {
     gap: 10px;
-    padding: 10px;
+  }
+
+  label {
+    font-size: 0.85rem;
+  }
+
+  select,
+  input[type="number"] {
+    padding: 12px 16px;
+    font-size: 1rem;
+    width: 240px;
+  }
+
+  #currency-select {
+    width: 320px;
+    padding-left: 20px;
+  }
+
+  .blinds-inline-container {
+    gap: 12px;
+  }
+
+  .blind-input {
+    width: 95px;
+    padding: 12px 16px;
+    font-size: 1.1rem;
+  }
+
+  .blind-separator {
+    font-size: 1.6rem;
+  }
+
+  .start-hand-btn {
+    padding: 14px 38px;
+    font-size: 1.15rem;
+    margin-top: 10px;
+  }
+
+  .save-icon-btn {
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .save-icon {
+    width: 20px;
+    height: 20px;
   }
 }
 

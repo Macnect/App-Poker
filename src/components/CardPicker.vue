@@ -205,4 +205,39 @@ function selectCard(card) {
     font-size: 0.95rem;
   }
 }
+
+/* Landscape mode optimizations for better fit on short screens */
+@media screen and (orientation: landscape) and (max-height: 600px) {
+  .modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .card-picker-content {
+    padding: 1rem;
+    gap: 0.5rem;
+    margin: auto;
+    max-height: 100%;
+  }
+
+  .suit-row {
+    gap: 0.4rem;
+  }
+
+  .card {
+    width: clamp(32px, 5vw, 42px);
+    height: clamp(45px, 7vw, 60px);
+    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  }
+
+  .suit-icon {
+    font-size: clamp(0.8rem, 1.8vw, 1.1rem);
+  }
+
+  .close-btn {
+    margin-top: 0.5rem;
+    padding: 8px 20px;
+  }
+}
 </style>

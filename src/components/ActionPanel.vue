@@ -195,7 +195,7 @@ function handleWheelScroll(event) {
   border-radius: 16px;
   padding: clamp(8px, 1.2vw, 18px);
   width: 70%;
-  margin-left: 16%;
+  margin: 0 auto;
 
   /* Multi-layer shadow for depth */
   box-shadow:
@@ -501,10 +501,69 @@ button:disabled, .grid-slider:disabled {
   }
 }
 
-@media screen and (orientation: landscape) and (max-height: 600px) {
+/* Landscape optimizations - Vertical stacked layout */
+@media screen and (orientation: landscape) {
   .action-panel-wrapper {
-    margin-left: auto;
-    margin-right: 0;
+    width: 100%;
+    margin: 0;
+    padding: clamp(12px, 1.8vh, 20px);
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .actions-grid {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto auto auto auto auto;
+    gap: clamp(6px, 1vh, 10px);
+    grid-template-areas:
+      "turn-info  turn-info"
+      "fold       call"
+      "raise      input"
+      "slider     slider"
+      "quick-bets quick-bets"
+      "save-hand  save-hand"
+      "prev-action next-action"
+      "color-select bbs-toggle";
+  }
+
+  .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
+    height: clamp(32px, 4.5vh, 44px);
+    font-size: clamp(0.75rem, 1.5vmin, 0.95rem);
+    padding: 0 12px;
+  }
+
+  .grid-turn-info {
+    font-size: clamp(0.8rem, 1.8vmin, 1rem);
+    padding: 0.5em;
+  }
+
+  .grid-quick-bets {
+    grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
+    gap: clamp(3px, 0.5vw, 5px);
+  }
+
+  .grid-quick-bets button {
+    padding: clamp(6px, 1.2vmin, 10px);
+    font-size: clamp(0.6rem, 1.3vmin, 0.8rem);
+  }
+
+  .btn-allin {
+    font-size: clamp(0.8rem, 1.5vmin, 1rem) !important;
+  }
+
+  .grid-slider {
+    height: clamp(10px, 1.8vh, 14px);
+  }
+
+  .grid-slider::-webkit-slider-thumb {
+    height: calc(clamp(10px, 1.8vh, 14px) + 12px);
+    width: clamp(16px, 2vmin, 20px);
   }
 }
 </style>
