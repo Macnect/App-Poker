@@ -295,7 +295,7 @@ const notesPanelStyle = computed(() => {
 
 .player-position {
   font-weight: 600;
-  font-size: clamp(0.6rem, 1vw, 0.8em);
+  font-size: clamp(0.75rem, 1.3vw, 1em);
   color: #A0AEC0;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   line-height: 1;
@@ -322,7 +322,7 @@ const notesPanelStyle = computed(() => {
 
 .player-stack {
   font-family: 'Roboto Mono', monospace;
-  font-size: clamp(0.7rem, 1.2vw, 1em);
+  font-size: clamp(0.85rem, 1.4vw, 1.1em);
   font-weight: 700;
   color: #FFFFFF;
   background-color: rgba(0,0,0,0.3);
@@ -594,7 +594,7 @@ const notesPanelStyle = computed(() => {
   }
 
   .player-position {
-    font-size: clamp(0.55rem, 1.4vw, 0.7rem);
+    font-size: clamp(0.7rem, 1.8vw, 0.85rem);
     margin-bottom: 1px;
   }
 
@@ -608,7 +608,7 @@ const notesPanelStyle = computed(() => {
   }
 
   .player-stack {
-    font-size: clamp(0.65rem, 2vw, 0.85rem);
+    font-size: clamp(0.8rem, 2.2vw, 1rem);
     padding: 1px 3px;
   }
 
@@ -691,7 +691,7 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .player-position {
-  font-size: clamp(0.5rem, 0.85vw, 0.65em);
+  font-size: clamp(0.65rem, 1vw, 0.8em);
 }
 
 .is-9-max .player-name {
@@ -700,7 +700,7 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .player-stack {
-  font-size: clamp(0.65rem, 1.2vw, 0.9em);
+  font-size: clamp(0.75rem, 1.3vw, 1em);
 }
 
 .is-9-max .player-cards {
@@ -757,7 +757,7 @@ const notesPanelStyle = computed(() => {
   }
 
   .is-9-max .player-position {
-    font-size: clamp(0.5rem, 1.3vw, 0.6rem);
+    font-size: clamp(0.65rem, 1.6vw, 0.75rem);
     margin-bottom: 1px;
   }
 
@@ -771,7 +771,7 @@ const notesPanelStyle = computed(() => {
   }
 
   .is-9-max .player-stack {
-    font-size: clamp(0.6rem, 1.8vw, 0.8rem);
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
   }
 
   .is-9-max .dealer-button {
