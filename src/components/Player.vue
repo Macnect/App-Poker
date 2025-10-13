@@ -24,6 +24,7 @@
 
       <div class="player-info-panel">
         <div class="player-info">
+          <div class="player-position">{{ player.position }}</div>
           <div class="player-name">
             <span v-if="player.tag" class="player-tag" :style="{ backgroundColor: player.tag }"></span>
             <div v-if="gameStore.isPreActionPhase" class="editable-name-wrapper">
@@ -33,9 +34,8 @@
                 @change="gameStore.updatePlayerName(player.id, $event.target.value)"
                 class="player-input player-name-input"
               />
-              <span class="player-position-static">({{ player.position }})</span>
             </div>
-            <span v-else>{{ player.name }} ({{ player.position }})</span>
+            <span v-else>{{ player.name }}</span>
           </div>
           <div class="player-stack">
             <div v-if="gameStore.isPreActionPhase" class="stack-input-wrapper">
@@ -293,13 +293,21 @@ const notesPanelStyle = computed(() => {
   position: relative;
 }
 
+.player-position {
+  font-weight: 600;
+  font-size: clamp(0.6rem, 1vw, 0.8em);
+  color: #A0AEC0;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  line-height: 1;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
 .player-name {
   font-weight: 700;
-  /* Reduced font size for better fit */
-  font-size: clamp(0.55rem, 0.9vw, 0.75em);
+  font-size: clamp(0.75rem, 1.2vw, 1em);
   color: #E2E8F0;
   text-shadow: 0 1px 2px rgba(0,0,0,0.5);
-  /* Allow text wrapping for full visibility */
   word-break: break-word;
   hyphens: auto;
   line-height: 1.1;
@@ -438,12 +446,6 @@ const notesPanelStyle = computed(() => {
   justify-content: center;
   align-items: center;
   gap: 5px;
-}
-.player-position-static {
-  font-size: 0.85em;
-  color: #cbd5e0;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 .edit-notes-btn, .notes-display-wrapper {
@@ -591,19 +593,18 @@ const notesPanelStyle = computed(() => {
     width: 68%;
   }
 
+  .player-position {
+    font-size: clamp(0.55rem, 1.4vw, 0.7rem);
+    margin-bottom: 1px;
+  }
+
   .player-name {
-    font-size: clamp(0.5rem, 1.6vw, 0.7rem);
+    font-size: clamp(0.65rem, 1.8vw, 0.85rem);
     gap: 2px;
     margin-bottom: 1px;
-    /* Ensure text wrapping in portrait mode */
     flex-wrap: wrap;
     max-width: 100%;
     line-height: 1.1;
-  }
-
-  .player-position-static {
-    font-size: 0.85em;
-    font-weight: 600;
   }
 
   .player-stack {
@@ -675,52 +676,11 @@ const notesPanelStyle = computed(() => {
     transform: scale(0.75) translateY(-50%); /* Hacemos más pequeña la info de apuesta */
   }
   /* Ocultamos elementos no esenciales para maximizar el espacio */
-  .edit-notes-btn, .notes-display-wrapper, .player-tag, .player-position-static {
+  .edit-notes-btn, .notes-display-wrapper, .player-tag {
     display: none;
   }
 }
 /* --- ESTILOS PARA 9+ JUGADORES (MÁS COMPACTO) --- */
-.is-9-max .player-seat {
-  height: 50px;
-}
-
-.is-9-max .player-info-panel {
-  padding: 4px;
-}
-
-.is-9-max .player-name {
-  font-size: clamp(0.6rem, 1.1vw, 0.9em);
-}
-
-.is-9-max .player-stack {
-  font-size: clamp(0.7rem, 1.3vw, 1em);
-}
-
-.is-9-max .player-cards {
-  top: -20px;
-  gap: 1%;
-  width: 80%;
-  left: 50%;
-}
-
-.is-9-max .card-placeholder {
-  width: 65%;
-}
-
-@media screen and (max-width: 900px) and (orientation: landscape) {
-  .is-9-max .player-seat {
-    height: 40px;
-    bottom: 10px;
-  }
-  .is-9-max .player-cards {
-    top: -50%;
-  }
-    .is-9-max .player-name, .is-9-max .player-stack {
-    font-size: 0.7rem;
-  }
-}
-
-/* --- ESTILOS PARA 9 JUGADORES (MÁS COMPACTO) --- */
 .is-9-max .player-seat {
   height: 50px;
   width: 100%;
@@ -730,8 +690,12 @@ const notesPanelStyle = computed(() => {
   padding: 3px 2px;
 }
 
+.is-9-max .player-position {
+  font-size: clamp(0.5rem, 0.85vw, 0.65em);
+}
+
 .is-9-max .player-name {
-  font-size: clamp(0.5rem, 0.9vw, 0.7em);
+  font-size: clamp(0.6rem, 1vw, 0.8em);
   gap: 2px;
 }
 
@@ -792,17 +756,18 @@ const notesPanelStyle = computed(() => {
     width: 58%;
   }
 
+  .is-9-max .player-position {
+    font-size: clamp(0.5rem, 1.3vw, 0.6rem);
+    margin-bottom: 1px;
+  }
+
   .is-9-max .player-name {
-    font-size: clamp(0.45rem, 1.5vw, 0.65rem);
+    font-size: clamp(0.55rem, 1.6vw, 0.75rem);
     gap: 2px;
     /* Ensure text wrapping in 9-max portrait mode */
     flex-wrap: wrap;
     max-width: 100%;
     line-height: 1.1;
-  }
-
-  .is-9-max .player-position-static {
-    font-size: 0.8em;
   }
 
   .is-9-max .player-stack {
