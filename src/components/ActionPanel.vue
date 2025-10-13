@@ -193,7 +193,7 @@ function handleWheelScroll(event) {
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
   border: 1px solid rgba(212, 175, 55, 0.15);
   border-radius: 16px;
-  padding: clamp(8px, 1.2vw, 18px);
+  padding: clamp(6px, 1vw, 12px);
   width: 70%;
   margin: 0 auto;
 
@@ -214,14 +214,15 @@ function handleWheelScroll(event) {
 .actions-grid {
   width: 100%;
   display: grid;
-  gap: clamp(6px, 0.8vw, 10px);
+  gap: clamp(4px, 0.6vw, 8px);
   align-items: center;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto auto auto auto;
   grid-template-areas:
     "fold       call       turn-info  turn-info    color-select bbs-toggle"
     "raise      input      slider     slider       slider       slider"
-    "quick-bets quick-bets quick-bets save-hand    prev-action  next-action";
+    "quick-bets quick-bets quick-bets quick-bets   quick-bets   quick-bets"
+    "save-hand  save-hand  save-hand  save-hand    prev-action  next-action";
 }
 
 /* Grid areas assignment */
@@ -255,14 +256,14 @@ function handleWheelScroll(event) {
    PREMIUM BUTTON STYLING
    ======================================== */
 .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
-  height: clamp(28px, 6vmin, 55px);
-  font-size: clamp(0.85rem, 1.8vmin, 1.1rem);
+  height: clamp(26px, 5vmin, 48px);
+  font-size: clamp(0.8rem, 1.6vmin, 1rem);
   font-weight: 700;
-  border-radius: 10px;
+  border-radius: 8px;
   color: white;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 0 18px;
+  padding: 0 12px;
   border: 1.5px solid rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
@@ -319,21 +320,25 @@ function handleWheelScroll(event) {
    ======================================== */
 .grid-quick-bets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-  gap: clamp(3px, 0.6vw, 6px);
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: auto auto;
+  gap: clamp(3px, 0.5vw, 5px);
+  width: 100%;
+  padding: 0;
 }
 
 .grid-quick-bets button {
-  padding: clamp(6px, 1.2vmin, 12px);
+  padding: clamp(4px, 1vmin, 8px) clamp(3px, 0.6vw, 8px);
   font-size: clamp(0.7rem, 1.5vmin, 0.9rem);
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 6px;
   background: var(--btn-grey);
   color: white;
   cursor: pointer;
   border: 1.5px solid rgba(0, 0, 0, 0.3);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 0;
 
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3),
@@ -395,9 +400,9 @@ function handleWheelScroll(event) {
 
 .btn-allin {
   background: var(--btn-purple) !important;
-  grid-column: 1 / -1;
-  font-size: clamp(0.9rem, 1.8vmin, 1.2rem) !important;
   letter-spacing: 0.05em;
+  font-weight: 700;
+  grid-column: span 2;
 }
 
 .btn-allin:hover {
@@ -488,7 +493,7 @@ button:disabled, .grid-slider:disabled {
 @media (max-width: 900px) {
   .actions-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto 1fr auto;
+    grid-template-rows: auto auto auto auto auto auto auto;
     grid-template-areas:
       "turn-info  turn-info"
       "fold       call"
@@ -497,7 +502,7 @@ button:disabled, .grid-slider:disabled {
       "quick-bets quick-bets"
       "save-hand  save-hand"
       "prev-action next-action"
-      "bbs-toggle color-select";
+      "color-select bbs-toggle";
   }
 }
 
@@ -519,7 +524,7 @@ button:disabled, .grid-slider:disabled {
   .actions-grid {
     width: 100%;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto auto auto;
     gap: clamp(6px, 1vh, 10px);
     grid-template-areas:
       "turn-info  turn-info"
