@@ -140,13 +140,73 @@ const sliderStyle = computed(() => {
   const max = maxSliderValue.value;
   const current = raiseAmount.value;
   if (max <= min) {
-    return { '--slider-fill-percentage': '100%' };
+    return {
+      '--slider-fill-percentage': '100%',
+      '--slider-active-color': '#dc2626',
+      'background': 'linear-gradient(to right, #dc2626 100%, rgba(31, 41, 55, 0.8) 100%)'
+    };
   }
   const percentage = ((current - min) / (max - min)) * 100;
+
+  // Calculate progressive color based on percentage with smoother transitions
+  let color;
+  if (percentage < 20) {
+    // Green to Lime transition (0-20%)
+    const ratio = percentage / 20;
+    color = interpolateColor('#10b981', '#84cc16', ratio);
+  } else if (percentage < 35) {
+    // Lime to Yellow transition (20-35%)
+    const ratio = (percentage - 20) / 15;
+    color = interpolateColor('#84cc16', '#facc15', ratio);
+  } else if (percentage < 50) {
+    // Yellow to Amber transition (35-50%)
+    const ratio = (percentage - 35) / 15;
+    color = interpolateColor('#facc15', '#f59e0b', ratio);
+  } else if (percentage < 65) {
+    // Amber to Orange transition (50-65%)
+    const ratio = (percentage - 50) / 15;
+    color = interpolateColor('#f59e0b', '#fb923c', ratio);
+  } else if (percentage < 80) {
+    // Orange to Deep Orange transition (65-80%)
+    const ratio = (percentage - 65) / 15;
+    color = interpolateColor('#fb923c', '#f97316', ratio);
+  } else if (percentage < 90) {
+    // Deep Orange to Red transition (80-90%)
+    const ratio = (percentage - 80) / 10;
+    color = interpolateColor('#f97316', '#ef4444', ratio);
+  } else {
+    // Red to Deep Red (90-100%)
+    const ratio = (percentage - 90) / 10;
+    color = interpolateColor('#ef4444', '#dc2626', ratio);
+  }
+
   return {
-    '--slider-fill-percentage': `${percentage}%`
+    '--slider-fill-percentage': `${percentage}%`,
+    '--slider-active-color': color,
+    'background': `linear-gradient(to right, ${color} ${percentage}%, rgba(31, 41, 55, 0.8) ${percentage}%)`
   };
 });
+
+// Helper function to interpolate between two hex colors
+function interpolateColor(color1, color2, ratio) {
+  const hex = (color) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : null;
+  };
+
+  const c1 = hex(color1);
+  const c2 = hex(color2);
+
+  const r = Math.round(c1.r + (c2.r - c1.r) * ratio);
+  const g = Math.round(c1.g + (c2.g - c1.g) * ratio);
+  const b = Math.round(c1.b + (c2.b - c1.b) * ratio);
+
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
 
 const betOrRaiseLabel = computed(() => (gameStore.currentBet > 0 ? t('actionPanel.raise') : t('actionPanel.bet')));
 const isCallDisabled = computed(() => !gameStore.activePlayer || amountToCall.value > gameStore.activePlayer.stack);
@@ -580,10 +640,14 @@ button:disabled, .grid-slider:disabled {
   appearance: none;
   width: 95%;
   height: clamp(14px, 2.2vmin, 18px);
-  background: transparent;
   outline: none;
   border-radius: 10px;
   cursor: pointer;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  transition: background 0.2s ease;
 }
 
 .grid-slider::-webkit-slider-runnable-track {
@@ -593,12 +657,13 @@ button:disabled, .grid-slider:disabled {
   border-radius: 10px;
   border: 1.5px solid rgba(0, 0, 0, 0.3);
   background: linear-gradient(to right,
-    var(--slider-color-active) var(--slider-fill-percentage),
+    var(--slider-active-color) var(--slider-fill-percentage),
     var(--slider-color-inactive) var(--slider-fill-percentage)
   );
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3) inset,
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  transition: background 0.2s ease;
 }
 
 .grid-slider::-webkit-slider-thumb {
@@ -618,6 +683,44 @@ button:disabled, .grid-slider:disabled {
 }
 
 .grid-slider::-webkit-slider-thumb:hover {
+  background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 100%);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.5),
+    0 0 0 2px rgba(212, 175, 55, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+}
+
+/* Firefox slider styling */
+.grid-slider::-moz-range-track {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border-radius: 10px;
+  border: 1.5px solid rgba(0, 0, 0, 0.3);
+  background: linear-gradient(to right,
+    var(--slider-active-color) var(--slider-fill-percentage),
+    var(--slider-color-inactive) var(--slider-fill-percentage)
+  );
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  transition: background 0.2s ease;
+}
+
+.grid-slider::-moz-range-thumb {
+  border: 2px solid rgba(0, 0, 0, 0.4);
+  height: calc(clamp(14px, 2.2vmin, 18px) + 16px);
+  width: clamp(18px, 2.5vmin, 24px);
+  border-radius: 6px;
+  background: linear-gradient(145deg, #f9fafb 0%, #e5e7eb 100%);
+  cursor: pointer;
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  transition: all 0.2s ease;
+}
+
+.grid-slider::-moz-range-thumb:hover {
   background: linear-gradient(145deg, #ffffff 0%, #f3f4f6 100%);
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.5),
