@@ -184,25 +184,35 @@ function selectCard(card) {
 }
 
 @media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0.25rem;
+  }
   .card-picker-content {
-    padding: 0.75rem;
-    gap: 0.5rem;
+    padding: 0.4rem;
+    gap: 0.3rem;
+    max-width: 100%;
+    width: 100%;
   }
   .suit-row {
-    gap: 0.25rem;
+    gap: 0.15rem;
+    justify-content: space-between;
   }
   .card {
-    width: clamp(28px, 6vw, 40px);
-    height: clamp(40px, 8.4vw, 56px);
-    font-size: clamp(1rem, 3vw, 1.5rem);
-    border-radius: 6px;
+    /* Aprovecha al máximo el ancho: 13 cards + 12 gaps */
+    /* 100vw - padding modal (0.25rem × 2) - padding content (0.4rem × 2) */
+    width: calc((100vw - 0.5rem - 0.8rem - (12 * 0.15rem)) / 13);
+    height: calc(((100vw - 0.5rem - 0.8rem - (12 * 0.15rem)) / 13) * 1.4);
+    font-size: clamp(0.9rem, 2.8vw, 1.6rem);
+    border-radius: 5px;
+    border-width: 1.5px;
   }
   .suit-icon {
-    font-size: clamp(0.7rem, 2vw, 1rem);
+    font-size: clamp(0.65rem, 2vw, 1.1rem);
   }
   .close-btn {
     padding: 10px 20px;
     font-size: 0.95rem;
+    margin-top: 0.5rem;
   }
 }
 
