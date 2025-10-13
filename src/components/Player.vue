@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div v-if="isNotesPanelOpen" class="notes-panel" :style="notesPanelStyle" ref="notesPanelRef">
+    <div v-if="isNotesPanelOpen" class="notes-panel notes-panel-centered" ref="notesPanelRef">
       <textarea
         :value="player.notes"
         @input="gameStore.updatePlayerNotes(player.id, $event.target.value)"
@@ -155,14 +155,14 @@ const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.play
 // Las coordenadas ahora son porcentajes del radio de la mesa (ej: x: 50 es el borde derecho).
 // La posición [0] es siempre la inferior central (la vista del Héroe).
 const PREDEFINED_LAYOUTS = {
-  2: [ { x: 0, y: 48 }, { x: 0, y: -48 } ],
-  3: [ { x: 0, y: 48 }, { x: -38, y: -28 }, { x: 38, y: -28 } ],
-  4: [ { x: 0, y: 48 }, { x: -42, y: 5 }, { x: 0, y: -48 }, { x: 42, y: 5 } ],
-  5: [ { x: 0, y: 48 }, { x: -40, y: 26 }, { x: -35, y: -32 }, { x: 35, y: -32 }, { x: 40, y: 26 } ],
+  2: [ { x: 50, y: -8 }, { x:-50, y: -8 } ],
+  3: [ { x: 0, y: 48 }, { x: -50, y: -8 }, { x: 50, y: -8 } ],
+  4: [ { x: 0, y: 48 }, { x: -50, y: -8 }, { x: 0, y: -48 }, { x: 50, y: -8 } ],
+  5: [ { x: 0, y: 48 }, { x: -50, y: 15 }, { x: -50, y: -40 }, { x: 50, y: -40 }, { x: 50, y: 15 } ],
   6: [ { x: 0, y: 48 }, { x: -40, y: 20 }, { x: -42, y: -32 }, { x: 0, y: -48 }, { x: 42, y: -32 }, { x: 40, y: 20 } ],
-  7: [ { x: 0, y: 48 }, { x: -35, y: 32 }, { x: -42, y: -16 }, { x: -20, y: -45 }, { x: 20, y: -45 }, { x: 42, y: -16 }, { x: 35, y: 32 } ],
-  8: [ { x: 0, y: 48 }, { x: -30, y: 42 }, { x: -45, y: -5 }, { x: -28, y: -42 }, { x: 0, y: -48 }, { x: 28, y: -42 }, { x: 45, y: -5 }, { x: 30, y: 42 } ],
-  9: [ { x: 0, y: 48 }, { x: -26, y: 44 }, { x: -42, y: 8 }, { x: -40, y: -40 }, { x: -14, y: -50 }, { x: 14, y: -50 }, { x: 40, y: -40 }, { x: 42, y: 8 }, { x: 26, y: 44 } ],
+  7: [ { x: 0, y: 48 }, { x: -40, y: 32 }, { x: -50, y: -16 }, { x: -20, y: -45 }, { x: 20, y: -45 }, { x: 50, y: -16 }, { x:40, y: 32 } ],
+  8: [ { x: 0, y: 48 }, { x: -40, y: 42 }, { x: -50, y: 0 }, { x: -40, y: -42 }, { x: 0, y: -48 }, { x: 40, y: -42 }, { x: 50, y: 0 }, { x: 40, y: 42 } ],
+  9: [ { x: 0, y: 48 }, { x: -30, y: 44 }, { x: -42, y: 8 }, { x: -40, y: -30 }, { x: -14, y: -48 }, { x: 14, y: -48 }, { x: 40, y: -30 }, { x: 42, y: 8 }, { x: 30, y: 44 } ],
 };
 
 const seatCoordinates = computed(() => {
@@ -227,9 +227,6 @@ const betBoxStyle = computed(() => {
     default: // Fallback por si acaso
       return { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' };
   }
-});
-const notesPanelStyle = computed(() => {
-  return { top: '10%', left: '50%', transform: 'translateX(-50%)' };
 });
 </script>
 
@@ -450,20 +447,23 @@ const notesPanelStyle = computed(() => {
 
 .edit-notes-btn, .notes-display-wrapper {
   position: absolute;
-  top: -4px;
-  right: -26px;
+  top: 2px;
+  right: -8px;
   z-index: 15;
 }
 
 .edit-notes-btn {
   background: rgba(45, 55, 72, 0.9);
-  border: 3px solid rgba(74, 85, 104, 0.5);
+  border: 1.5px solid rgba(74, 85, 104, 0.5);
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  padding: 2px;
+  width: 22px;
+  height: 22px;
+  padding: 3px;
   cursor: pointer;
   color: #cbd5e0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .edit-notes-btn:hover {
   background: rgba(74, 85, 104, 1);
@@ -476,11 +476,40 @@ const notesPanelStyle = computed(() => {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 10px;
-  z-index: 20;
+  z-index: 9999; /* Z-index muy alto para estar sobre todo */
   display: flex;
   flex-direction: column;
   gap: 10px;
   box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  max-width: 90vw;
+}
+
+.notes-panel-centered {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+@media screen and (max-width: 768px) {
+  .notes-panel {
+    width: 280px;
+    padding: 12px;
+  }
+
+  .notes-panel textarea {
+    height: 120px;
+    font-size: 1rem;
+  }
+
+  .tags-container {
+    gap: 8px;
+  }
+
+  .tag-selector {
+    width: 28px;
+    height: 28px;
+  }
 }
 .notes-panel textarea {
   width: 100%;
@@ -634,13 +663,14 @@ const notesPanelStyle = computed(() => {
   }
 
   .edit-notes-btn, .notes-display-wrapper {
-    width: 28px;
-    height: 28px;
-    top: -6px;
+    width: 20px;
+    height: 20px;
+    top: 2px;
   }
 
   .edit-notes-btn {
-    right: -24px;
+    right: -6px;
+    padding: 2px;
   }
 
   .notes-display-wrapper {
@@ -716,10 +746,11 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .edit-notes-btn {
-  width: 26px;
-  height: 26px;
-  top: -8px;
-  right: -25px;
+  width: 20px;
+  height: 20px;
+  top: 2px;
+  right: -8px;
+  padding: 2px;
 }
 
 .is-9-max .dealer-button {
@@ -786,8 +817,11 @@ const notesPanelStyle = computed(() => {
   }
 
   .is-9-max .edit-notes-btn {
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
+    top: 2px;
+    right: -6px;
+    padding: 2px;
   }
 }
 
