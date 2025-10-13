@@ -88,20 +88,23 @@ const heroIndex = computed(() => {
   height: 100%;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 0;
   min-width: 0;
-  padding: 10px;
+  padding: 15px;
+  padding-top: 8px;
   box-sizing: border-box;
 }
 
 .poker-table {
   position: relative;
-  width: 100%;
-  max-width: 100%;
-  max-height: 100%;
+  /* Reduce table size to 85% for better spacing */
+  width: 85%;
+  max-width: 85%;
+  max-height: 85%;
   aspect-ratio: 16 / 9;
-  border-radius: 50%;
+  /* Oval shape like a real poker table - wider than tall */
+  border-radius: 50% / 40%;
   border-style: solid;
   border-color: #5a3a22;
   border-width: clamp(8px, 1.2vmin, 15px);
@@ -112,11 +115,18 @@ const heroIndex = computed(() => {
 /* Portrait optimizations */
 @media screen and (orientation: portrait) {
   .poker-table-container {
-    padding: 8px;
+    padding: 12px;
+    padding-top: 6px;
   }
 
   .poker-table {
     aspect-ratio: 9 / 11;
+    /* Slightly larger in portrait since more vertical space */
+    width: 90%;
+    max-width: 90%;
+    max-height: 90%;
+    /* Oval shape for portrait - slightly less curved vertically */
+    border-radius: 45% / 50%;
   }
 
   .center-content {
@@ -144,12 +154,15 @@ const heroIndex = computed(() => {
   .poker-table-container {
     width: 100%;
     height: 100%;
-    padding: 8px;
+    padding: 12px;
+    padding-top: 6px;
   }
 
   .poker-table {
-    width: 100%;
-    max-width: 100%;
+    /* Smaller in landscape to prevent overlap with action panel */
+    width: 85%;
+    max-width: 85%;
+    max-height: 85%;
   }
 
   .center-content {

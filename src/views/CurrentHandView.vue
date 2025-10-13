@@ -688,8 +688,8 @@ select option:checked {
   grid-template-areas:
     "table"
     "controls";
-  gap: 15px;
-  padding: 15px;
+  gap: 20px;
+  padding: 16px;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -721,8 +721,8 @@ select option:checked {
     grid-template-columns: 1fr minmax(300px, 360px);
     grid-template-rows: 100%;
     grid-template-areas: "table controls";
-    gap: 12px;
-    padding: 12px;
+    gap: 16px;
+    padding: 14px;
     align-items: stretch;
   }
 
