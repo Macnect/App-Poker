@@ -706,8 +706,8 @@ const notesPanelStyle = computed(() => {
 .is-9-max .player-cards {
   bottom: 100%;
   left: 50%;
-  width: 90%;
-  gap: 3%;
+  width: 95%;
+  gap: 5%;
   margin-bottom: 0;
 }
 
@@ -746,9 +746,9 @@ const notesPanelStyle = computed(() => {
   }
 
   .is-9-max .player-cards {
-    bottom: 100%;
-    gap: 2%;
-    width: 85%;
+    bottom: 40%;
+    gap: 4%;
+    width: 90%;
     margin-bottom: 0;
   }
 
@@ -794,9 +794,6 @@ const notesPanelStyle = computed(() => {
 @media screen and (max-width: 900px) and (orientation: landscape) {
   .is-9-max .player-seat {
     height: 40px;
-  }
-  .is-9-max .player-cards {
-    top: -60%;
   }
 }
 </style>
