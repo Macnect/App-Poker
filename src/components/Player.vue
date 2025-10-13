@@ -691,16 +691,16 @@ const notesPanelStyle = computed(() => {
 }
 
 .is-9-max .player-position {
-  font-size: clamp(0.55rem, 0.9vw, 0.7em);
+  font-size: clamp(0.65rem, 1.1vw, 0.85em);
 }
 
 .is-9-max .player-name {
-  font-size: clamp(0.55rem, 0.95vw, 0.75em);
+  font-size: clamp(0.7rem, 1.1vw, 0.9em);
   gap: 2px;
 }
 
 .is-9-max .player-stack {
-  font-size: clamp(0.65rem, 1.15vw, 0.85em);
+  font-size: clamp(0.75rem, 1.25vw, 0.95em);
 }
 
 .is-9-max .player-cards {
@@ -757,12 +757,12 @@ const notesPanelStyle = computed(() => {
   }
 
   .is-9-max .player-position {
-    font-size: clamp(0.55rem, 1.4vw, 0.65rem);
+    font-size: clamp(0.6rem, 1.6vw, 0.75rem);
     margin-bottom: 1px;
   }
 
   .is-9-max .player-name {
-    font-size: clamp(0.5rem, 1.5vw, 0.7rem);
+    font-size: clamp(0.6rem, 1.7vw, 0.8rem);
     gap: 2px;
     /* Ensure text wrapping in 9-max portrait mode */
     flex-wrap: wrap;
@@ -771,7 +771,7 @@ const notesPanelStyle = computed(() => {
   }
 
   .is-9-max .player-stack {
-    font-size: clamp(0.6rem, 1.85vw, 0.8rem);
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
   }
 
   .is-9-max .dealer-button {
