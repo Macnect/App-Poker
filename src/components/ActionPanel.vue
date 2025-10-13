@@ -1,52 +1,62 @@
 <template>
-  <div class="action-panel-wrapper">
-    
-    <div class="actions-grid">
-      <div class="grid-turn-info">{{ $t('actionPanel.turnOf') }} <strong>{{ gameStore.activePlayer?.name }}</strong></div>
-      <button @click="gameStore.performAction('fold')" class="grid-fold btn-fold">{{ $t('actionPanel.fold') }}</button>
-      <button @click="handleCheckCall" :disabled="isCallDisabled" class="grid-call btn-call">{{ checkOrCallLabel.toUpperCase() }}</button>
-      
-      <button @click="handleBetRaise" :disabled="isRaiseDisabled" class="grid-raise btn-raise">{{ betOrRaiseLabel.toUpperCase() }}</button>
-      
-      <input type="number" v-model="displayRaiseAmount" class="grid-input" />
-      <div v-if="isAllIn" class="all-in-indicator">▲</div>
-      
-      <input 
-        type="range" 
-        :min="minRaiseValue" 
-        :max="maxSliderValue"
-        :step="gameStore.bigBlind"
-        v-model.number="raiseAmount"
-        class="grid-slider"
-        @wheel="handleWheelScroll"
-        :style="sliderStyle" 
-      />
+  <div class="action-panel-container">
+    <div class="action-panel-wrapper">
+      <div class="actions-grid">
+        <div class="grid-turn-info">{{ $t('actionPanel.turnOf') }} <strong>{{ gameStore.activePlayer?.name }}</strong></div>
+        <button @click="gameStore.performAction('fold')" class="grid-fold btn-fold">{{ $t('actionPanel.fold') }}</button>
+        <button @click="handleCheckCall" :disabled="isCallDisabled" class="grid-call btn-call">{{ checkOrCallLabel.toUpperCase() }}</button>
 
-      <div class="grid-quick-bets">
-        <button @click="setRaiseAmountByPot(0.25)">25%</button>
-        <button @click="setRaiseAmountByPot(0.33)">33%</button>
-        <button @click="setRaiseAmountByPot(0.50)">50%</button>
-        <button @click="setRaiseAmountByPot(0.75)">75%</button>
-        <button @click="setRaiseAmountByPot(1)">{{ $t('actionPanel.pot') }}</button>
-        <button @click="setRaiseAmountByPot(1.5)">150%</button>
-        <button @click="setRaiseAmountToAllIn" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
+        <button @click="handleBetRaise" :disabled="isRaiseDisabled" class="grid-raise btn-raise">{{ betOrRaiseLabel.toUpperCase() }}</button>
+
+        <input type="number" v-model="displayRaiseAmount" class="grid-input" />
+        <div v-if="isAllIn" class="all-in-indicator">▲</div>
+
+        <input
+          type="range"
+          :min="minRaiseValue"
+          :max="maxSliderValue"
+          :step="gameStore.bigBlind"
+          v-model.number="raiseAmount"
+          class="grid-slider"
+          @wheel="handleWheelScroll"
+          :style="sliderStyle"
+        />
+
+        <div class="grid-quick-bets">
+          <button @click="setRaiseAmountByPot(0.25)">25%</button>
+          <button @click="setRaiseAmountByPot(0.33)">33%</button>
+          <button @click="setRaiseAmountByPot(0.50)">50%</button>
+          <button @click="setRaiseAmountByPot(0.75)">75%</button>
+          <button @click="setRaiseAmountByPot(1)">{{ $t('actionPanel.pot') }}</button>
+          <button @click="setRaiseAmountByPot(1.5)">150%</button>
+          <button @click="setRaiseAmountToAllIn" class="btn-allin">{{ $t('actionPanel.allIn') }}</button>
+        </div>
+
+        <button @click="gameStore.navigateHistory(-1)" class="grid-prev btn-nav" v-if="gameStore.gamePhase !== 'replay'">◀</button>
+        <button @click="gameStore.navigateHistory(1)" class="grid-next btn-nav" v-if="gameStore.gamePhase !== 'replay'">▶</button>
       </div>
+    </div>
 
-      <select class="grid-color-select" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
-        <option value="#28563a">Verde</option>
-        <option value="#3a4c8a">Azul</option>
-        <option value="#8a3a3a">Rojo</option>
-        <option value="#553c9a">Morado</option>
-        <option value="#b7791f">Oro</option>
-        <option value="#1A202C">Negro</option>
-        <option value="#4A5568">Gris</option>
+    <!-- Botones circulares externos -->
+    <div class="external-controls">
+      <select class="color-select-round" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" title="Color de mesa">
+        <option value="#28563a">🟢</option>
+        <option value="#3a4c8a">🔵</option>
+        <option value="#8a3a3a">🔴</option>
+        <option value="#553c9a">🟣</option>
+        <option value="#b7791f">🟡</option>
+        <option value="#1A202C">⚫</option>
+        <option value="#4A5568">⚪</option>
       </select>
-      <button class="grid-bbs-toggle" @click="gameStore.toggleDisplayMode()">
-        {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
+      <button class="bbs-toggle-round" @click="gameStore.toggleDisplayMode()" :title="gameStore.displayInBBs ? 'Cambiar a ' + gameStore.currency : 'Cambiar a BBs'">
+        {{ gameStore.displayInBBs ? gameStore.currency : 'BB' }}
       </button>
-      <button @click="gameStore.saveCurrentHand()" class="grid-save btn-save-hand">Guardar Mano</button>
-      <button @click="gameStore.navigateHistory(-1)" class="grid-prev btn-nav" v-if="gameStore.gamePhase !== 'replay'">◀</button>
-      <button @click="gameStore.navigateHistory(1)" class="grid-next btn-nav" v-if="gameStore.gamePhase !== 'replay'">▶</button>
+      <button class="save-hand-round" @click="handleSaveHand" :title="handSaved ? '✓ Guardado' : 'Guardar Mano'">
+        <svg v-if="!handSaved" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="save-icon">
+          <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+        </svg>
+        <span v-if="handSaved" class="saved-indicator">✓</span>
+      </button>
     </div>
   </div>
 </template>
@@ -61,6 +71,16 @@ const { t } = useI18n();
 const props = defineProps({ modelValue: String });
 const emit = defineEmits(['update:modelValue']);
 const gameStore = useGameStore();
+
+const handSaved = ref(false);
+
+async function handleSaveHand() {
+  await gameStore.saveCurrentHand();
+  handSaved.value = true;
+  setTimeout(() => {
+    handSaved.value = false;
+  }, 2000);
+}
 
 const amountToCall = computed(() => {
   if (!gameStore.activePlayer) return 0;
@@ -179,7 +199,17 @@ function handleWheelScroll(event) {
    ActionPanel - Premium Control Panel
    ======================================== */
 
+.action-panel-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 75%;
+  margin: 0 auto;
+}
+
 .action-panel-wrapper {
+  flex: 1;
+  max-width: calc(100% - 112px); /* Panel más estrecho para dejar espacio a 3 botones */
   /* Premium button colors - more vibrant and sophisticated */
   --btn-red: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   --btn-green: linear-gradient(135deg, #047857 0%, #059669 100%);
@@ -194,8 +224,6 @@ function handleWheelScroll(event) {
   border: 1px solid rgba(212, 175, 55, 0.15);
   border-radius: 16px;
   padding: clamp(6px, 1vw, 12px);
-  width: 70%;
-  margin: 0 auto;
 
   /* Multi-layer shadow for depth */
   box-shadow:
@@ -219,10 +247,10 @@ function handleWheelScroll(event) {
   grid-template-columns: repeat(6, 1fr);
   grid-template-rows: auto auto auto auto;
   grid-template-areas:
-    "fold       call       turn-info  turn-info    color-select bbs-toggle"
+    "fold       call       turn-info  turn-info    turn-info    turn-info"
     "raise      input      slider     slider       slider       slider"
     "quick-bets quick-bets quick-bets quick-bets   quick-bets   quick-bets"
-    "save-hand  save-hand  save-hand  save-hand    prev-action  next-action";
+    "prev-action prev-action prev-action next-action next-action next-action";
 }
 
 /* Grid areas assignment */
@@ -246,16 +274,13 @@ function handleWheelScroll(event) {
 .grid-input { grid-area: input; }
 .grid-slider { grid-area: slider; }
 .grid-quick-bets { grid-area: quick-bets; }
-.grid-color-select { grid-area: color-select; }
-.grid-bbs-toggle { grid-area: bbs-toggle; }
-.grid-save { grid-area: save-hand; }
 .grid-prev { grid-area: prev-action; }
 .grid-next { grid-area: next-action; }
 
 /* ========================================
    PREMIUM BUTTON STYLING
    ======================================== */
-.grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
+.grid-fold, .grid-call, .grid-raise, .grid-input, .btn-nav {
   height: clamp(26px, 5vmin, 48px);
   font-size: clamp(0.8rem, 1.6vmin, 1rem);
   font-weight: 700;
@@ -277,14 +302,14 @@ function handleWheelScroll(event) {
     0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 
-.grid-fold:hover, .grid-call:hover, .grid-raise:hover, .grid-color-select:hover, .grid-bbs-toggle:hover, .grid-save:hover, .btn-nav:hover {
+.grid-fold:hover, .grid-call:hover, .grid-raise:hover, .btn-nav:hover {
   transform: translateY(-2px);
   box-shadow:
     0 4px 8px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.12) inset;
 }
 
-.grid-fold:active, .grid-call:active, .grid-raise:active, .grid-color-select:active, .grid-bbs-toggle:active, .grid-save:active, .btn-nav:active {
+.grid-fold:active, .grid-call:active, .grid-raise:active, .btn-nav:active {
   transform: translateY(0);
 }
 
@@ -357,17 +382,138 @@ function handleWheelScroll(event) {
   transform: translateY(0);
 }
 
-/* Select dropdowns premium styling */
-.grid-color-select, .grid-bbs-toggle {
-  background: var(--btn-grey);
-  font-weight: 600;
+/* ========================================
+   EXTERNAL CONTROLS - Round Buttons
+   ======================================== */
+.external-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.grid-color-select option {
+.color-select-round,
+.bbs-toggle-round {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 0.95) 100%);
+  color: white;
+  font-size: clamp(0.75rem, 1.5vmin, 0.95rem);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.color-select-round {
+  font-size: 1.5rem;
+  padding: 0;
+  text-align: center;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.color-select-round option {
   background-color: #1f2937;
-  color: #f9fafb;
-  padding: 12px 16px;
-  font-weight: 500;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.color-select-round:hover,
+.bbs-toggle-round:hover {
+  transform: scale(1.1);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+.color-select-round:active,
+.bbs-toggle-round:active {
+  transform: scale(1.05);
+}
+
+.save-hand-round {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+  color: #d4af37;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 8px rgba(212, 175, 55, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.save-hand-round .save-icon {
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.2));
+  transition: all 0.3s ease;
+}
+
+.save-hand-round:hover {
+  transform: scale(1.1);
+  border-color: rgba(212, 175, 55, 0.6);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%);
+  box-shadow:
+    0 4px 16px rgba(212, 175, 55, 0.2),
+    0 0 20px rgba(212, 175, 55, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+
+.save-hand-round:hover .save-icon {
+  filter: drop-shadow(0 4px 8px rgba(212, 175, 55, 0.3));
+}
+
+.save-hand-round:active {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(212, 175, 55, 0.25) 100%);
+}
+
+.save-hand-round .saved-indicator {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #10b981;
+  text-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  animation: popInSuccess 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popInSuccess {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.3) rotate(10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.save-hand-round:has(.saved-indicator) {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow:
+    0 4px 16px rgba(16, 185, 129, 0.3),
+    0 0 20px rgba(16, 185, 129, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset;
 }
 
 /* ========================================
@@ -408,14 +554,6 @@ function handleWheelScroll(event) {
 .btn-allin:hover {
   background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
   filter: brightness(1.15);
-}
-
-.btn-save-hand {
-  background: var(--btn-green);
-}
-
-.btn-save-hand:hover {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
 }
 
 .btn-nav {
@@ -490,24 +628,55 @@ button:disabled, .grid-slider:disabled {
 /* ========================================
    RESPONSIVE DESIGN
    ======================================== */
-@media (max-width: 900px) {
+@media (max-width: 768px) {
+  .action-panel-container {
+    width: 90%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .action-panel-wrapper {
+    max-width: 100%;
+  }
+
+  .external-controls {
+    flex-direction: row;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .color-select-round,
+  .bbs-toggle-round {
+    width: 50px;
+    height: 50px;
+  }
+
   .actions-grid {
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto;
     grid-template-areas:
       "turn-info  turn-info"
       "fold       call"
       "raise      input"
       "slider     slider"
       "quick-bets quick-bets"
-      "save-hand  save-hand"
-      "prev-action next-action"
-      "color-select bbs-toggle";
+      "prev-action next-action";
+  }
+
+  .save-hand-round {
+    width: 50px;
+    height: 50px;
   }
 }
 
 /* Landscape optimizations - Vertical stacked layout */
 @media screen and (orientation: landscape) {
+  .action-panel-container {
+    width: 100%;
+    flex-direction: row;
+    gap: 8px;
+  }
+
   .action-panel-wrapper {
     width: 100%;
     margin: 0;
@@ -521,10 +690,28 @@ button:disabled, .grid-slider:disabled {
     overflow-x: hidden;
   }
 
+  .external-controls {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: clamp(12px, 1.8vh, 20px);
+  }
+
+  .color-select-round,
+  .bbs-toggle-round,
+  .save-hand-round {
+    width: 45px;
+    height: 45px;
+  }
+
+  .save-hand-round .save-icon {
+    width: 20px;
+    height: 20px;
+  }
+
   .actions-grid {
     width: 100%;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto auto auto auto;
+    grid-template-rows: auto auto auto auto auto;
     gap: clamp(6px, 1vh, 10px);
     grid-template-areas:
       "turn-info  turn-info"
@@ -532,12 +719,10 @@ button:disabled, .grid-slider:disabled {
       "raise      input"
       "slider     slider"
       "quick-bets quick-bets"
-      "save-hand  save-hand"
-      "prev-action next-action"
-      "color-select bbs-toggle";
+      "prev-action next-action";
   }
 
-  .grid-fold, .grid-call, .grid-raise, .grid-input, .grid-color-select, .grid-bbs-toggle, .grid-save, .btn-nav {
+  .grid-fold, .grid-call, .grid-raise, .grid-input, .btn-nav {
     height: clamp(32px, 4.5vh, 44px);
     font-size: clamp(0.75rem, 1.5vmin, 0.95rem);
     padding: 0 12px;

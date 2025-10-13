@@ -1,40 +1,39 @@
 <template>
-  <!-- Se ha eliminado la lógica de arrastre y el posicionamiento absoluto -->
-  <div class="display-options-wrapper">
-    <h3>Opciones Replay</h3>
-    <div class="options-row">
-      <label for="table-color-select">Color Mesa:</label>
-      <select id="table-color-select" class="option-item" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)">
-        <option value="#28563a">Verde</option>
-        <option value="#3a4c8a">Azul</option>
-        <option value="#8a3a3a">Rojo</option>
-        <option value="#553c9a">Morado</option>
-        <option value="#b7791f">Oro</option>
-        <option value="#1A202C">Negro</option>
-        <option value="#4A5568">Gris</option>
+  <div class="display-options-container">
+    <div class="display-options-wrapper">
+      <h3>Opciones Replay</h3>
+      <div class="options-row">
+        <label>Controles:</label>
+        <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
+        <button class="option-item" @click="gameStore.toggleReplay()">
+          {{ gameStore.isReplaying ? '⏸️' : '▶️' }}
+        </button>
+        <button class="option-item" @click="gameStore.navigateHistory(1)">▶</button>
+      </div>
+      <div class="options-row">
+        <label for="replay-speed-select">Velocidad:</label>
+        <select id="replay-speed-select" class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
+          <option value="2000">1x</option>
+          <option value="1000">2x</option>
+          <option value="500">4x</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Botones circulares externos -->
+    <div class="external-controls">
+      <select class="color-select-round" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" title="Color de mesa">
+        <option value="#28563a">🟢</option>
+        <option value="#3a4c8a">🔵</option>
+        <option value="#8a3a3a">🔴</option>
+        <option value="#553c9a">🟣</option>
+        <option value="#b7791f">🟡</option>
+        <option value="#1A202C">⚫</option>
+        <option value="#4A5568">⚪</option>
       </select>
-    </div>
-     <div class="options-row">
-       <label>Modo Display:</label>
-      <button class="option-item" @click="gameStore.toggleDisplayMode()">
-        {{ gameStore.displayInBBs ? gameStore.currency : 'BBs' }}
+      <button class="bbs-toggle-round" @click="gameStore.toggleDisplayMode()" :title="gameStore.displayInBBs ? 'Cambiar a ' + gameStore.currency : 'Cambiar a BBs'">
+        {{ gameStore.displayInBBs ? gameStore.currency : 'BB' }}
       </button>
-    </div>
-    <div class="options-row">
-       <label>Controles:</label>
-      <button class="option-item" @click="gameStore.navigateHistory(-1)">◀</button>
-      <button class="option-item" @click="gameStore.toggleReplay()">
-        {{ gameStore.isReplaying ? '⏸️' : '▶️' }}
-      </button>
-      <button class="option-item" @click="gameStore.navigateHistory(1)">▶</button>
-    </div>
-     <div class="options-row">
-       <label for="replay-speed-select">Velocidad:</label>
-       <select id="replay-speed-select" class="option-item" @change="gameStore.setReplaySpeed($event.target.value)">
-        <option value="2000">1x</option>
-        <option value="1000">2x</option>
-        <option value="500">4x</option>
-      </select>
     </div>
   </div>
 </template>
@@ -58,7 +57,17 @@ const gameStore = useGameStore();
 /* Tipografía premium */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
+.display-options-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 75%;
+  margin: 0 auto;
+}
+
 .display-options-wrapper {
+  flex: 1;
+  max-width: calc(100% - 62px); /* Panel más estrecho para dejar espacio a los botones */
   font-family: 'Poppins', sans-serif;
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   border-radius: 14px;
@@ -212,6 +221,107 @@ button.option-item:active {
   select.option-item {
     flex: 1 1 auto;
     min-width: 100px;
+  }
+
+  .display-options-container {
+    width: 100%;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .external-controls {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-top: clamp(14px, 2vh, 22px);
+  }
+
+  .color-select-round,
+  .bbs-toggle-round {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+/* ========================================
+   EXTERNAL CONTROLS - Round Buttons
+   ======================================== */
+.external-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.color-select-round,
+.bbs-toggle-round {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.8) 0%, rgba(31, 41, 55, 0.95) 100%);
+  color: white;
+  font-size: clamp(0.75rem, 1.5vmin, 0.95rem);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.color-select-round {
+  font-size: 1.5rem;
+  padding: 0;
+  text-align: center;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.color-select-round option {
+  background-color: #1f2937;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.color-select-round:hover,
+.bbs-toggle-round:hover {
+  transform: scale(1.1);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+    0 0 20px rgba(212, 175, 55, 0.1);
+}
+
+.color-select-round:active,
+.bbs-toggle-round:active {
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  .display-options-container {
+    width: 90%;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .display-options-wrapper {
+    max-width: 100%;
+  }
+
+  .external-controls {
+    flex-direction: row;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .color-select-round,
+  .bbs-toggle-round {
+    width: 50px;
+    height: 50px;
   }
 }
 </style>
