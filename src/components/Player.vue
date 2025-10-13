@@ -168,13 +168,13 @@ const PREDEFINED_LAYOUTS = {
 // Posicionamiento de las apuestas para cada configuración de mesa
 const BET_PREDEFINED_LAYOUTS = {
   2: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo centro)
-    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Oponente (arriba)
+    { bottom: 'calc(-70% + 45px)', left: '-20%', transform: 'translateX(-50%)' }, // Hero (abajo centro)
+    { top: 'calc(96% + 5px)', left: '120%', transform: 'translateX(-50%)' },     // Oponente (arriba)
   ],
   3: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo centro) - visualIndex 0
-    { top: '50%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' }, // Izquierda - visualIndex 1 (hacia el centro)
-    { top: '50%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },  // Derecha - visualIndex 2 (hacia el centro)
+    { bottom: 'calc(20% + 45px)', left: '130%', transform: 'translateX(-50%)' }, // Hero (abajo centro) - visualIndex 0
+    { top: '120%', right: '-40%', transform: 'translate(50%, -50%)', marginRight: '10px' }, // Izquierda - visualIndex 1 (hacia el centro)
+    { top: '0%', left: '-70%', transform: 'translate(0%, 280%)', marginLeft: '10px' },  // Derecha - visualIndex 2 (hacia el centro)
   ],
   4: [
     { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
