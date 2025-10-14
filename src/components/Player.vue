@@ -89,7 +89,8 @@
   </div>
 
   <!-- Panel de notas usando Teleport para renderizarlo en el centro de la mesa -->
-  <Teleport to="#poker-table-main">
+  <!-- Only render Teleport when target exists to prevent mount/unmount errors -->
+  <Teleport v-if="teleportTarget" to="#poker-table-main">
     <div v-if="isNotesPanelOpen" class="notes-panel notes-panel-centered" ref="notesPanelRef">
       <textarea
         :value="player.notes"
@@ -118,6 +119,7 @@ import ChipStack from './ChipStack.vue';
 
 const notesPanelRef = ref(null);
 const editBtnRef = ref(null);
+const teleportTarget = ref(null);
 
 const tagColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
 
@@ -131,6 +133,11 @@ const props = defineProps({
 const gameStore = useGameStore();
 
 const isNotesPanelOpen = computed(() => gameStore.openNotesPanelPlayerId === props.player.id);
+
+// Check if teleport target exists to prevent errors
+function checkTeleportTarget() {
+  teleportTarget.value = document.querySelector('#poker-table-main');
+}
 
 function handleCardClick(playerId, cardIndex) {
   if (gameStore.gamePhase === 'replay') return;
@@ -150,6 +157,15 @@ function handleClickOutside(event) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+  checkTeleportTarget();
+  // Re-check teleport target when DOM updates
+  const observer = new MutationObserver(checkTeleportTarget);
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Clean up observer on unmount
+  onUnmounted(() => {
+    observer.disconnect();
+  });
 });
 
 onUnmounted(() => {

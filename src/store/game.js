@@ -162,8 +162,18 @@ export const useGameStore = defineStore('game', () => {
     bombPotBB.value = handData.bomb_pot_bb || 2;
     history.value = deepCopy(handData.historial);
     currentActionIndex.value = 0;
-    gamePhase.value = 'replay';
+    gamePhase.value = 'replay'; // IMPORTANT: Always keep 'replay' when loading saved hands
     isPreActionPhase.value = false;
+    // Restaurar estado del juego desde el snapshot inicial (excepto gamePhase)
+    if (initialState.gamePhase !== undefined) {
+      // NO restaurar gamePhase - debe permanecer como 'replay'
+      dealerPosition.value = initialState.dealerPosition;
+      activePlayerIndex.value = initialState.activePlayerIndex;
+      currentBet.value = initialState.currentBet;
+      minRaise.value = initialState.minRaise;
+      lastRaiserIndex.value = initialState.lastRaiserIndex;
+      lastRaiseAmount.value = initialState.lastRaiseAmount;
+    }
   }
   
   // --- RESTO DE FUNCIONES (sin cambios en su mayoría) ---
@@ -203,6 +213,19 @@ export const useGameStore = defineStore('game', () => {
     players.value = deepCopy(stateToRestore.players);
     board.value = deepCopy(stateToRestore.board);
     pots.value = deepCopy(stateToRestore.pots);
+    // Restaurar estado del juego (con backward compatibility)
+    if (stateToRestore.gamePhase !== undefined) {
+      // NO restaurar gamePhase si estamos en modo replay
+      if (gamePhase.value !== 'replay') {
+        gamePhase.value = stateToRestore.gamePhase;
+      }
+      dealerPosition.value = stateToRestore.dealerPosition;
+      activePlayerIndex.value = stateToRestore.activePlayerIndex;
+      currentBet.value = stateToRestore.currentBet;
+      minRaise.value = stateToRestore.minRaise;
+      lastRaiserIndex.value = stateToRestore.lastRaiserIndex;
+      lastRaiseAmount.value = stateToRestore.lastRaiseAmount;
+    }
   }
   function toggleReplay() {
     if (isReplaying.value) {
@@ -570,6 +593,14 @@ export const useGameStore = defineStore('game', () => {
       board: deepCopy(board.value),
       pots: deepCopy(pots.value),
       description: actionDescription,
+      // Estado del juego
+      gamePhase: gamePhase.value,
+      dealerPosition: dealerPosition.value,
+      activePlayerIndex: activePlayerIndex.value,
+      currentBet: currentBet.value,
+      minRaise: minRaise.value,
+      lastRaiserIndex: lastRaiserIndex.value,
+      lastRaiseAmount: lastRaiseAmount.value,
     };
     if(currentActionIndex.value < history.value.length - 1) {
       history.value.splice(currentActionIndex.value + 1);
@@ -585,6 +616,19 @@ export const useGameStore = defineStore('game', () => {
       players.value = deepCopy(stateToRestore.players);
       board.value = deepCopy(stateToRestore.board);
       pots.value = deepCopy(stateToRestore.pots);
+      // Restaurar estado del juego (con backward compatibility)
+      if (stateToRestore.gamePhase !== undefined) {
+        // NO restaurar gamePhase si estamos en modo replay
+        if (gamePhase.value !== 'replay') {
+          gamePhase.value = stateToRestore.gamePhase;
+        }
+        dealerPosition.value = stateToRestore.dealerPosition;
+        activePlayerIndex.value = stateToRestore.activePlayerIndex;
+        currentBet.value = stateToRestore.currentBet;
+        minRaise.value = stateToRestore.minRaise;
+        lastRaiserIndex.value = stateToRestore.lastRaiserIndex;
+        lastRaiseAmount.value = stateToRestore.lastRaiseAmount;
+      }
     }
   }
   function openCardPicker(target) {
