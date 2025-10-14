@@ -1,6 +1,6 @@
 <template>
   <div class="poker-table-container">
-    <div class="poker-table" :style="{ backgroundColor: settingsStore.tableColor }">
+    <div class="poker-table" id="poker-table-main" :style="{ backgroundColor: settingsStore.tableColor }">
       
       <div class="center-content" :style="{ '--board-x': gameStore.tableLayout.board.x + '%', '--board-y': gameStore.tableLayout.board.y + '%' }">
         <div class="pot">

@@ -69,24 +69,6 @@
       </div>
     </div>
 
-    <div v-if="isNotesPanelOpen" class="notes-panel notes-panel-centered" ref="notesPanelRef">
-      <textarea
-        :value="player.notes"
-        @input="gameStore.updatePlayerNotes(player.id, $event.target.value)"
-        placeholder="Notas sobre el jugador..."
-      ></textarea>
-      <div class="tags-container">
-        <div
-          v-for="color in tagColors"
-          :key="color"
-          class="tag-selector"
-          :class="{ selected: player.tag === color }"
-          :style="{ backgroundColor: color }"
-          @click="gameStore.updatePlayerTag(player.id, color)"
-        ></div>
-      </div>
-    </div>
-
     <div
       v-if="player.betThisRound > 0"
       class="bet-box"
@@ -105,6 +87,27 @@
     </div>
 
   </div>
+
+  <!-- Panel de notas usando Teleport para renderizarlo en el centro de la mesa -->
+  <Teleport to="#poker-table-main">
+    <div v-if="isNotesPanelOpen" class="notes-panel notes-panel-centered" ref="notesPanelRef">
+      <textarea
+        :value="player.notes"
+        @input="gameStore.updatePlayerNotes(player.id, $event.target.value)"
+        placeholder="Notas sobre el jugador..."
+      ></textarea>
+      <div class="tags-container">
+        <div
+          v-for="color in tagColors"
+          :key="color"
+          class="tag-selector"
+          :class="{ selected: player.tag === color }"
+          :style="{ backgroundColor: color }"
+          @click="gameStore.updatePlayerTag(player.id, color)"
+        ></div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -526,7 +529,6 @@ const betBoxStyle = computed(() => {
   color: white;
 }
 .notes-panel {
-  position: absolute;
   width: 220px;
   background-color: #2d3748;
   border: 1px solid var(--border-color);
@@ -541,16 +543,25 @@ const betBoxStyle = computed(() => {
 }
 
 .notes-panel-centered {
-  position: fixed !important;
+  position: absolute !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
 }
 
 @media screen and (max-width: 768px) {
   .notes-panel {
     width: 280px;
     padding: 12px;
+  }
+
+  .notes-panel-centered {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
   }
 
   .notes-panel textarea {
