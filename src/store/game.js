@@ -229,8 +229,10 @@ export const useGameStore = defineStore('game', () => {
     displayInBBs.value = false;
     isPreActionPhase.value = true;
     const positions = getPositions(numPlayers);
+
     for (let i = 0; i < numPlayers; i++) {
       const isHero = positions[i] === newHeroPosition;
+
       players.value.push({
         id: i,
         name: isHero ? 'Hero' : `Jugador ${i + 1}`,

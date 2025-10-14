@@ -87,7 +87,11 @@
       </div>
     </div>
 
-    <div v-if="player.betThisRound > 0" class="bet-box" :style="betBoxStyle">
+    <div
+      v-if="player.betThisRound > 0"
+      class="bet-box"
+      :style="betBoxStyle"
+    >
       <ChipStack :amount="player.betThisRound" :bigBlind="gameStore.bigBlind" />
       <div class="bet-info">
         <div class="bet-amount-container">
@@ -172,60 +176,60 @@ const BET_PREDEFINED_LAYOUTS = {
     { top: 'calc(96% + 5px)', left: '120%', transform: 'translateX(-50%)' },     // Oponente (arriba)
   ],
   3: [
-    { bottom: 'calc(20% + 45px)', left: '130%', transform: 'translateX(-50%)' }, // Hero (abajo centro) - visualIndex 0
-    { top: '120%', right: '-40%', transform: 'translate(50%, -50%)', marginRight: '10px' }, // Izquierda - visualIndex 1 (hacia el centro)
+    { bottom: 'calc(45% + 45px)', left: '55%', transform: 'translateX(-50%)' }, // Hero (abajo centro) - visualIndex 0
+    { top: '120%', right: '-40%', transform: 'translate(50%, -60%)', marginRight: '10px' }, // Izquierda - visualIndex 1 (hacia el centro)
     { top: '0%', left: '-70%', transform: 'translate(0%, 280%)', marginLeft: '10px' },  // Derecha - visualIndex 2 (hacia el centro)
   ],
   4: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
-    { top: '50%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' }, // Izquierda
-    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba
-    { top: '50%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },  // Derecha
+    { bottom: 'calc(45% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { top: '120%', right: '-40%', transform: 'translate(50%, -60%)', marginRight: '10px' }, // Izquierda
+    { top: 'calc(90% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba
+    { top: '120%', left: '-40%', transform: 'translate(-50%, -60%)', marginLeft: '10px' },  // Derecha
   ],
   5: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
-    { bottom: '25%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
-    { top: '20%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
-    { top: '20%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
-    { bottom: '25%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+    { bottom: 'calc(45% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { bottom: '5%', right: '-60%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
+    { top: '110%', right: '-40%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
+    { top: '110%', left: '-40%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
+    { bottom: '5%', left: '-60%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
   ],
   6: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
-    { bottom: '25%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
-    { top: '15%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
-    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro
-    { top: '15%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
-    { bottom: '25%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+    { top: 'calc(-52% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo) - apuesta arriba del jugador
+    { bottom: '15%', left: '120%', transform: 'translate(-50%, 0)', marginLeft: '10px' },     // Izquierda abajo - apuesta a la derecha
+    { top: '115%', left: '30%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },     // Izquierda arriba - apuesta a la derecha
+    { bottom: 'calc(-30% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro - apuesta debajo del jugador
+    { top: '115%', right: '30%', transform: 'translate(50%, -50%)', marginRight: '10px' },      // Derecha arriba - apuesta a la izquierda
+    { bottom: '15%', right: '120%', transform: 'translate(50%, 0)', marginRight: '10px' },      // Derecha abajo - apuesta a la izquierda
   ],
   7: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
-    { bottom: '15%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
-    { top: '40%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda medio
-    { top: 'calc(100% + 5px)', left: '30%', transform: 'translateX(-50%)' },     // Arriba izquierda
-    { top: 'calc(100% + 5px)', left: '70%', transform: 'translateX(-50%)' },     // Arriba derecha
-    { top: '40%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha medio
-    { bottom: '15%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+    { bottom: 'calc(45% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { bottom: '30%', right: '-50%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
+    { top: '110%', right: '0%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda medio
+    { top: 'calc(95% + 5px)', left: '30%', transform: 'translateX(-50%)' },     // Arriba izquierda
+    { top: 'calc(95% + 5px)', left: '70%', transform: 'translateX(-50%)' },     // Arriba derecha
+    { top: '110%', left: '0%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha medio
+    { bottom: '30%', left: '-40%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
   ],
   8: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
-    { bottom: '10%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
-    { top: '50%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda medio
-    { top: '10%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
-    { top: 'calc(100% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro
-    { top: '10%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
-    { top: '50%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha medio
-    { bottom: '10%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
+    { bottom: 'calc(45% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo)
+    { bottom: '60%', right: '-50%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda abajo
+    { top: '90%', right: '-50%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda medio
+    { top: '115%', right: '-15%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
+    { top: 'calc(90% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro
+    { top: '115%', left: '-15%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
+    { top: '90%', left: '-50%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha medio
+    { bottom: '60%', left: '-50%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha abajo
   ],
   9: [
-    { bottom: 'calc(100% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo centro)
-    { bottom: 'calc(100% + 45px)', left: '30%', transform: 'translateX(-50%)' }, // Izquierda Hero
-    { bottom: '10%', right: '100%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda medio abajo
-    { top: '20%', right: '100%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
-    { top: 'calc(100% + 5px)', left: '30%', transform: 'translateX(-50%)' },     // Arriba izquierda
-    { top: 'calc(100% + 5px)', left: '70%', transform: 'translateX(-50%)' },     // Arriba derecha
-    { top: '20%', left: '100%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
-    { bottom: '10%', left: '100%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha medio abajo
-    { bottom: 'calc(100% + 45px)', left: '70%', transform: 'translateX(-50%)' }, // Derecha Hero
+    { bottom: 'calc(45% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo centro)
+    { bottom: 'calc(35% + 45px)', left: '120%', transform: 'translateX(-50%)' }, // Izquierda Hero
+    { bottom: '0%', right: '-40%', transform: 'translate(50%, 0)', marginRight: '10px' },     // Izquierda medio abajo
+    { top: '80%', right: '-40%', transform: 'translate(50%, -50%)', marginRight: '10px' },     // Izquierda arriba
+    { top: 'calc(90% + 5px)', left: '80%', transform: 'translateX(-50%)' },     // Arriba izquierda
+    { top: 'calc(90% + 5px)', left: '35%', transform: 'translateX(-50%)' },     // Arriba derecha
+    { top: '80%', left: '-40%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },      // Derecha arriba
+    { bottom: '0%', left: '-40%', transform: 'translate(-50%, 0)', marginLeft: '10px' },      // Derecha medio abajo
+    { bottom: 'calc(35% + 45px)', left: '-20%', transform: 'translateX(-50%)' }, // Derecha Hero
   ],
 };
 
@@ -412,6 +416,7 @@ const betBoxStyle = computed(() => {
   align-items: center;
   gap: 4px;
   z-index: 11;
+  transition: all 0.2s ease;
 }
 
 .bet-info {

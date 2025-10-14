@@ -47,20 +47,18 @@ const stackDetails = computed(() => {
   const primaryChip = chipDenominations.find(chip => props.amount >= chip.value) || chipDenominations[chipDenominations.length - 1];
   const betInBBs = props.amount / props.bigBlind;
 
-  // --- LÓGICA DE CANTIDAD DE FICHAS AJUSTADA ---
+  // --- NUEVA LÓGICA: MÁXIMO 5 FICHAS CON PROGRESIÓN SUAVE ---
   let count;
-  if (betInBBs <= 1) {       // Apuestas mínimas (ciegas, limps)
+  if (betInBBs <= 0.5) {       // Apuestas muy pequeñas (limps, antes)
+    count = 1;
+  } else if (betInBBs <= 3) {  // Ciegas y apuestas pequeñas
     count = 2;
-  } else if (betInBBs <= 5) { // Apuestas de continuación pequeñas
+  } else if (betInBBs <= 10) { // Apuestas estándar, c-bets
+    count = 3;
+  } else if (betInBBs <= 30) { // Subidas grandes, 3-bets, apuestas de turn/river
     count = 4;
-  } else if (betInBBs <= 15) { // Subidas estándar, 3-bets
-    count = 6;
-  } else if (betInBBs <= 40) { // Apuestas grandes en el turn/river
-    count = 8;
-  } else if (betInBBs <= 100) { // Botes muy grandes
-    count = 10;
-  } else {                   // All-ins enormes
-    count = 12; // Máximo de 12 fichas para mantenerlo visualmente limpio
+  } else {                     // Apuestas muy grandes, all-ins
+    count = 5;
   }
 
   return {
