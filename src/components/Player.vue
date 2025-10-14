@@ -700,6 +700,7 @@ const betBoxStyle = computed(() => {
   gap: 10px;
   box-shadow: 0 5px 20px rgba(0,0,0,0.5);
   max-width: 90vw;
+  pointer-events: auto; /* Enable interactions inside portal */
 }
 
 .notes-panel-centered {
@@ -809,7 +810,9 @@ const betBoxStyle = computed(() => {
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
   min-width: 200px;
-  max-width: min(300px, calc(100vw - 40px));
+  max-width: min(300px, 80vw);
+  max-height: 60vh;
+  overflow-y: auto;
   background-color: #1a202c;
   color: #fff;
   text-align: left;
@@ -828,6 +831,29 @@ const betBoxStyle = computed(() => {
     0 0 0 1px rgba(255, 255, 255, 0.1) inset,
     0 0 25px rgba(212, 175, 55, 0.2);
   animation: tooltipFadeIn 0.25s ease;
+  pointer-events: auto;
+  /* Styled scrollbar for dark theme */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.5) rgba(26, 32, 44, 0.3);
+}
+
+/* Webkit scrollbar styling for Chrome/Safari */
+.notes-tooltip-centered::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notes-tooltip-centered::-webkit-scrollbar-track {
+  background: rgba(26, 32, 44, 0.3);
+  border-radius: 4px;
+}
+
+.notes-tooltip-centered::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.5);
+  border-radius: 4px;
+}
+
+.notes-tooltip-centered::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.7);
 }
 
 @keyframes tooltipFadeIn {
@@ -930,7 +956,8 @@ const betBoxStyle = computed(() => {
     font-size: 1.05rem;
     padding: 14px 16px;
     min-width: 220px;
-    max-width: calc(100vw - 30px);
+    max-width: 75vw;
+    max-height: 50vh;
     line-height: 1.6;
     border-radius: 10px;
   }
@@ -987,7 +1014,8 @@ const betBoxStyle = computed(() => {
     font-size: 0.9rem;
     padding: 10px 12px;
     min-width: 200px;
-    max-width: calc(100vw - 30px);
+    max-width: 70vw;
+    max-height: 45vh;
     line-height: 1.4;
   }
 
