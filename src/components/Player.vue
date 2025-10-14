@@ -262,10 +262,13 @@ const seatStyle = computed(() => {
 
 
 const dealerButtonStyle = computed(() => {
+  // Posicionamos el dealer button siempre justo debajo del stack (player-info-panel)
+  // Lo acercamos más para que toque el panel sin tapar el texto
   return {
-    bottom: '-35px',
+    top: '100%',
     left: '50%',
-    transform: 'translateX(-50%)'
+    transform: 'translate(-50%, -3px)',
+    marginTop: '0'
   };
 });
 const betBoxStyle = computed(() => {
@@ -698,7 +701,6 @@ const betBoxStyle = computed(() => {
     width: 16px;
     height: 16px;
     font-size: 0.65rem;
-    bottom: -32px;
   }
 
   .bet-box {
@@ -753,7 +755,6 @@ const betBoxStyle = computed(() => {
     width: 18px;
     height: 18px;
     font-size: 0.7rem;
-    bottom: -25px; /* Acercamos el botón de dealer */
   }
   .bet-box {
     transform: scale(0.75) translateY(-50%); /* Hacemos más pequeña la info de apuesta */
@@ -810,7 +811,6 @@ const betBoxStyle = computed(() => {
   width: 16px;
   height: 16px;
   font-size: 0.65rem;
-  bottom: -30px;
 }
 
 /* 9-max en retrato (portrait) */
@@ -862,7 +862,6 @@ const betBoxStyle = computed(() => {
     width: 14px;
     height: 14px;
     font-size: 0.6rem;
-    bottom: -28px;
   }
 
   .is-9-max .bet-amount-text {
