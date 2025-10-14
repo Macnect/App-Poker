@@ -139,11 +139,33 @@ h3 {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.option-item:hover {
+button.option-item:hover {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border-color: rgba(212, 175, 55, 0.4);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+select.option-item:hover {
+  background: linear-gradient(135deg, #252f3f 0%, #131824 100%);
+  border-color: rgba(212, 175, 55, 0.25);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.option-item:focus {
+  outline: none;
+}
+
+button.option-item:focus-visible {
+  outline: 2px solid rgba(212, 175, 55, 0.5);
+  outline-offset: 2px;
+}
+
+select.option-item:focus {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: rgba(212, 175, 55, 0.2);
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 select.option-item {
