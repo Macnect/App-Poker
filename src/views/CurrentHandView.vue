@@ -73,8 +73,8 @@
       <CardPicker v-if="gameStore.isCardPickerOpen" />
     </div>
     
-    <!-- Overlay que pide girar el dispositivo (DESHABILITADO - ahora funciona en ambas orientaciones) -->
-    <!-- <RotateDeviceOverlay v-if="showRotateOverlay" /> -->
+    <!-- Overlay que pide girar el dispositivo (se muestra en móvil horizontal) -->
+    <RotateDeviceOverlay v-if="showRotateOverlay" />
 
     <ConfigurationModal
       v-if="showPositionModal"
@@ -92,7 +92,7 @@ import ActionPanel from '../components/ActionPanel.vue';
 import DisplayOptions from '../components/DisplayOptions.vue';
 import ConfigurationModal from '../components/ConfigurationModal.vue';
 import CardPicker from '../components/CardPicker.vue';
-// import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue'; // DESHABILITADO
+import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 
 const gameStore = useGameStore();
 const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
@@ -104,13 +104,15 @@ const selectedCurrency = ref('$');
 const selectedSpecialRule = ref('Ninguno');
 const selectedBombPotBB = ref(2);
 
-// const showRotateOverlay = ref(false); // ELIMINADO - ya no se usa
+const showRotateOverlay = ref(false);
 const showAllCurrencies = ref(false);
 const saveButtonText = ref('Guardar cambios');
 
-// const checkOrientation = () => { // ELIMINADO - ya no se necesita
-//   showRotateOverlay.value = false;
-// };
+const checkOrientation = () => {
+  const isPortrait = window.matchMedia('(orientation: portrait)').matches;
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  showRotateOverlay.value = !isPortrait && isCoarsePointer;
+};
 
 // Guardar configuración en localStorage
 function saveConfiguration() {
@@ -150,10 +152,6 @@ function loadConfiguration() {
     }
   }
 }
-
-// watch(handIsActive, () => { // ELIMINADO - ya no se necesita checkOrientation
-//   checkOrientation();
-// });
 
 const currencies = ref([
   { symbol: '$', name: 'USD - Dólar estadounidense' },
@@ -255,13 +253,13 @@ function handleKeyDown(event) {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
-  // window.addEventListener('resize', checkOrientation); // ELIMINADO
-  // checkOrientation(); // ELIMINADO
+  window.addEventListener('resize', checkOrientation);
+  checkOrientation();
   loadConfiguration(); // Cargar configuración guardada al iniciar
 });
 
 onUnmounted(() => {
-  // window.removeEventListener('resize', checkOrientation); // ELIMINADO
+  window.removeEventListener('resize', checkOrientation);
   window.removeEventListener('keydown', handleKeyDown);
   gameStore.pauseReplay();
 });
