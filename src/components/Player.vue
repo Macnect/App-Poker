@@ -405,8 +405,8 @@ const betBoxStyle = computed(() => {
 .player-position {
   font-weight: 600;
   font-size: clamp(0.65rem, 1.1vw, 0.85em);
-  color: #A0AEC0;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  color: #d4af37;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.7);
   line-height: 1;
   text-align: center;
   margin-bottom: 2px;
