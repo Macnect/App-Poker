@@ -1,6 +1,9 @@
 <template>
   <div class="modal-overlay" @click.self="gameStore.closeCardPicker()">
     <div class="card-picker-content">
+      <div v-if="gameStore.isFlopMultiSelect" class="flop-indicator">
+        Seleccionando Flop: {{ gameStore.flopSelectIndex + 1 }} de 3
+      </div>
       <div v-for="suit in deck" :key="suit.name" class="suit-row">
         <div
           v-for="card in suit.cards"
@@ -87,6 +90,28 @@ function selectCard(card) {
     0 8px 24px rgba(0, 0, 0, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.05);
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flop-indicator {
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0a0e1a;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
 }
 
 @keyframes slideUp {
@@ -192,6 +217,10 @@ function selectCard(card) {
     gap: 0.3rem;
     max-width: 100%;
     width: 100%;
+  }
+  .flop-indicator {
+    font-size: 0.95rem;
+    padding: 0.6rem 0.8rem;
   }
   .suit-row {
     gap: 0.15rem;
