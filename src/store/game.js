@@ -160,7 +160,11 @@ export const useGameStore = defineStore('game', () => {
     currency.value = handData.moneda;
     specialRule.value = handData.regla_especial || 'Ninguno';
     bombPotBB.value = handData.bomb_pot_bb || 2;
-    history.value = deepCopy(handData.historial);
+
+    // Consolidar snapshots del flop para que aparezcan las 3 cartas a la vez
+    const consolidatedHistory = consolidateFlopSnapshots(deepCopy(handData.historial));
+    history.value = consolidatedHistory;
+
     currentActionIndex.value = 0;
     gamePhase.value = 'replay'; // IMPORTANT: Always keep 'replay' when loading saved hands
     isPreActionPhase.value = false;
@@ -174,6 +178,68 @@ export const useGameStore = defineStore('game', () => {
       lastRaiserIndex.value = initialState.lastRaiserIndex;
       lastRaiseAmount.value = initialState.lastRaiseAmount;
     }
+  }
+
+  // Función para consolidar snapshots consecutivos del flop
+  function consolidateFlopSnapshots(historial) {
+    const consolidated = [];
+    let i = 0;
+
+    while (i < historial.length) {
+      const current = historial[i];
+
+      // Detectar si este snapshot es el inicio de una secuencia de flop
+      // Buscar 3 snapshots consecutivos donde el board pasa de 0 a 1, de 1 a 2, y de 2 a 3 cartas
+      if (i + 2 < historial.length) {
+        const prev = i > 0 ? historial[i - 1] : { board: ['', '', '', '', ''] };
+        const snap1 = historial[i];
+        const snap2 = historial[i + 1];
+        const snap3 = historial[i + 2];
+
+        const prevFlopCount = prev.board?.slice(0, 3).filter(c => c).length || 0;
+        const snap1FlopCount = snap1.board?.slice(0, 3).filter(c => c).length || 0;
+        const snap2FlopCount = snap2.board?.slice(0, 3).filter(c => c).length || 0;
+        const snap3FlopCount = snap3.board?.slice(0, 3).filter(c => c).length || 0;
+
+        // Verificar que estamos pasando de 0 cartas a 1, luego a 2, luego a 3
+        // Y que solo cambia el board (cartas del flop), no las cartas de jugadores
+        if (prevFlopCount === 0 &&
+            snap1FlopCount === 1 &&
+            snap2FlopCount === 2 &&
+            snap3FlopCount === 3 &&
+            arePlayersCardsUnchanged(prev, snap1, snap2, snap3)) {
+
+          // Consolidar los 3 snapshots en uno solo
+          const consolidatedSnapshot = deepCopy(snap3);
+          const flopCards = snap3.board.slice(0, 3);
+          consolidatedSnapshot.description = `Se asignan las cartas del flop: ${flopCards.join(', ')}.`;
+          consolidated.push(consolidatedSnapshot);
+          i += 3; // Saltar los 3 snapshots
+          continue;
+        }
+      }
+
+      // Si no es una secuencia de flop, añadir el snapshot tal cual
+      consolidated.push(current);
+      i++;
+    }
+
+    return consolidated;
+  }
+
+  // Función auxiliar para verificar que las cartas de los jugadores no cambiaron
+  function arePlayersCardsUnchanged(snap1, snap2, snap3, snap4) {
+    const getPlayerCards = (snapshot) => {
+      if (!snapshot || !snapshot.players) return '';
+      return snapshot.players.map(p => p.cards.join('')).join('|');
+    };
+
+    const cards1 = getPlayerCards(snap1);
+    const cards2 = getPlayerCards(snap2);
+    const cards3 = getPlayerCards(snap3);
+    const cards4 = getPlayerCards(snap4);
+
+    return cards1 === cards2 && cards2 === cards3 && cards3 === cards4;
   }
   
   // --- RESTO DE FUNCIONES (sin cambios en su mayoría) ---
@@ -279,6 +345,7 @@ export const useGameStore = defineStore('game', () => {
         tag: null,
         x: null,
         y: null,
+        lastAction: null,
       });
     }
     dealerPosition.value = players.value.find((p,i) => i === 0).id
@@ -354,21 +421,25 @@ export const useGameStore = defineStore('game', () => {
     switch (action) {
       case 'fold':
         player.inHand = false;
+        player.lastAction = null;
         actionDescription = `${player.name} se retira.`;
         break;
       case 'check':
         if (currentBet.value > player.betThisRound) return;
+        player.lastAction = 'check';
         actionDescription = `${player.name} pasa.`;
         break;
       case 'call':
         const callAmount = currentBet.value - player.betThisRound;
         postBet(player.id, callAmount);
+        player.lastAction = 'call';
         actionDescription = `${player.name} iguala.`;
         break;
       case 'all-in':
         const allInAmount = player.stack;
         const newTotalBet = player.betThisRound + allInAmount;
         postBet(player.id, allInAmount);
+        player.lastAction = 'all-in';
         actionDescription = `${player.name} va All-In por ${newTotalBet}.`;
         if (newTotalBet > currentBet.value) {
             players.value.forEach(p => { if(p.inHand && !p.isAllIn) p.hasActedThisRound = false; });
@@ -390,6 +461,7 @@ export const useGameStore = defineStore('game', () => {
         minRaise.value = totalBet + raiseDifference;
         lastRaiseAmount.value = currentBet.value;
         currentBet.value = totalBet;
+        player.lastAction = action === 'bet' ? 'bet' : 'raise';
         actionDescription = `${player.name} ${action === 'bet' ? 'apuesta' : 'sube a'} ${totalBet}.`;
         break;
     }
@@ -502,9 +574,10 @@ export const useGameStore = defineStore('game', () => {
          collectBetsAndCreatePots();
       }
     }
-    players.value.forEach(p => { 
+    players.value.forEach(p => {
         p.betThisRound = 0;
         p.hasActedThisRound = false;
+        p.lastAction = null;
     });
     currentBet.value = 0;
     minRaise.value = bigBlind.value;
@@ -666,13 +739,15 @@ export const useGameStore = defineStore('game', () => {
       if (isFlopMultiSelect.value) {
         // Modo selección múltiple de flop
         board.value[flopSelectIndex.value] = cardId;
-        recordState(`Se asigna la carta ${cardId} al flop.`);
+        // No registrar estado hasta que se completen las 3 cartas
 
         flopSelectIndex.value++;
 
-        // Si completamos las 3 cartas del flop, cerrar el picker
+        // Si completamos las 3 cartas del flop, cerrar el picker y registrar estado
         if (flopSelectIndex.value >= 3) {
           closeCardPicker();
+          // Registrar un solo estado con las 3 cartas del flop
+          recordState(`Se asignan las cartas del flop: ${board.value[0]}, ${board.value[1]}, ${board.value[2]}.`);
         }
       } else {
         // Modo normal: asignar a la posición específica

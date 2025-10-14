@@ -86,6 +86,13 @@
       </div>
     </div>
 
+    <div
+      v-if="showCheckIndicator && player.inHand"
+      class="check-indicator"
+    >
+      Check
+    </div>
+
   </div>
 
   <!-- Panel de notas usando Teleport para renderizarlo en el centro de la mesa -->
@@ -112,7 +119,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../store/game'
 import PlayingCard from './PlayingCard.vue';
 import ChipStack from './ChipStack.vue';
@@ -120,6 +127,8 @@ import ChipStack from './ChipStack.vue';
 const notesPanelRef = ref(null);
 const editBtnRef = ref(null);
 const teleportTarget = ref(null);
+const showCheckIndicator = ref(false);
+let checkIndicatorTimeout = null;
 
 const tagColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
 
@@ -133,6 +142,29 @@ const props = defineProps({
 const gameStore = useGameStore();
 
 const isNotesPanelOpen = computed(() => gameStore.openNotesPanelPlayerId === props.player.id);
+
+// Watch for check action and auto-hide after 2 seconds
+watch(() => props.player.lastAction, (newAction) => {
+  // Clear any existing timeout
+  if (checkIndicatorTimeout) {
+    clearTimeout(checkIndicatorTimeout);
+    checkIndicatorTimeout = null;
+  }
+
+  if (newAction === 'check') {
+    // Show the indicator
+    showCheckIndicator.value = true;
+
+    // Auto-hide after 2 seconds
+    checkIndicatorTimeout = setTimeout(() => {
+      showCheckIndicator.value = false;
+      checkIndicatorTimeout = null;
+    }, 2000);
+  } else {
+    // Hide immediately for any other action
+    showCheckIndicator.value = false;
+  }
+});
 
 // Check if teleport target exists to prevent errors
 function checkTeleportTarget() {
@@ -170,6 +202,12 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+
+  // Clean up check indicator timeout
+  if (checkIndicatorTimeout) {
+    clearTimeout(checkIndicatorTimeout);
+    checkIndicatorTimeout = null;
+  }
 });
 
 const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.player.id);
@@ -470,6 +508,33 @@ const betBoxStyle = computed(() => {
   height: 40px;
 }
 
+.check-indicator {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #d4af37;
+  font-weight: bold;
+  font-size: 0.7em;
+  padding: 3px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  z-index: 13;
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 .is-hero .player-info-panel {
   border-color: #68d391;
   animation: hero-glow 2s infinite ease-in-out;
@@ -758,6 +823,11 @@ const betBoxStyle = computed(() => {
   .notes-display-wrapper {
     left: -6px;
   }
+
+  .check-indicator {
+    font-size: 0.6em;
+    padding: 2px 6px;
+  }
 }
 
 /* --- MEDIA QUERY PARA MÓVIL/TABLET EN HORIZONTAL --- */
@@ -789,6 +859,11 @@ const betBoxStyle = computed(() => {
   /* Ocultamos elementos no esenciales para maximizar el espacio */
   .edit-notes-btn, .notes-display-wrapper, .player-tag {
     display: none;
+  }
+
+  .check-indicator {
+    font-size: 0.55em;
+    padding: 2px 5px;
   }
 }
 /* --- ESTILOS PARA 9+ JUGADORES (MÁS COMPACTO) --- */
@@ -901,6 +976,11 @@ const betBoxStyle = computed(() => {
     top: 2px;
     right: -6px;
     padding: 2px;
+  }
+
+  .is-9-max .check-indicator {
+    font-size: 0.55em;
+    padding: 2px 5px;
   }
 }
 
