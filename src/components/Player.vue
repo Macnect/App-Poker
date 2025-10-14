@@ -61,10 +61,11 @@
       </button>
 
       <div
-        v-if="!gameStore.isPreActionPhase && player.notes"
+        v-if="player.notes && !gameStore.isPreActionPhase"
         class="notes-display-wrapper"
         ref="notesDisplayRef"
-        @click.stop="toggleTooltip"
+        @click.stop.prevent="toggleTooltip"
+        @touchstart.stop.prevent="toggleTooltip"
         @mouseenter.passive="handleMouseEnter"
         @mouseleave.passive="handleMouseLeave"
       >
@@ -775,7 +776,11 @@ const betBoxStyle = computed(() => {
   position: absolute;
   top: -4px;
   left: -8px;
-  z-index: 9998; /* Muy alto para estar sobre todo excepto modales */
+  z-index: 9998 !important; /* Muy alto para estar sobre todo excepto modales */
+  pointer-events: auto !important;
+  display: block !important;
+  cursor: pointer;
+  touch-action: manipulation; /* Mejora respuesta táctil en móvil */
 }
 .notes-display-icon {
   width: 20px;
@@ -789,6 +794,8 @@ const betBoxStyle = computed(() => {
   position: relative;
   z-index: 9998;
   transition: all 0.2s ease;
+  pointer-events: auto;
+  display: block;
 }
 
 .notes-display-icon:hover {
@@ -809,23 +816,23 @@ const betBoxStyle = computed(() => {
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  min-width: 200px;
-  max-width: min(300px, 80vw);
-  max-height: 60vh;
+  min-width: 250px;
+  max-width: min(500px, 85vw);
+  max-height: 70vh;
   overflow-y: auto;
   background-color: #1a202c;
   color: #fff;
   text-align: left;
-  border-radius: 8px;
-  padding: 12px 14px;
+  border-radius: 10px;
+  padding: 16px 18px;
   z-index: 9999;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 500;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  border: 2px solid rgba(212, 175, 55, 0.5);
   box-shadow:
     0 10px 40px rgba(0,0,0,0.8),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset,
@@ -834,26 +841,33 @@ const betBoxStyle = computed(() => {
   pointer-events: auto;
   /* Styled scrollbar for dark theme */
   scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 55, 0.5) rgba(26, 32, 44, 0.3);
+  scrollbar-color: rgba(212, 175, 55, 0.6) rgba(26, 32, 44, 0.4);
 }
 
 /* Webkit scrollbar styling for Chrome/Safari */
 .notes-tooltip-centered::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 .notes-tooltip-centered::-webkit-scrollbar-track {
-  background: rgba(26, 32, 44, 0.3);
-  border-radius: 4px;
+  background: rgba(26, 32, 44, 0.5);
+  border-radius: 5px;
+  margin: 4px 0;
 }
 
 .notes-tooltip-centered::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.5);
-  border-radius: 4px;
+  background: rgba(212, 175, 55, 0.6);
+  border-radius: 5px;
+  border: 2px solid rgba(26, 32, 44, 0.3);
 }
 
 .notes-tooltip-centered::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.7);
+  background: rgba(212, 175, 55, 0.8);
+  border: 2px solid rgba(26, 32, 44, 0.2);
+}
+
+.notes-tooltip-centered::-webkit-scrollbar-thumb:active {
+  background: rgba(212, 175, 55, 1);
 }
 
 @keyframes tooltipFadeIn {
@@ -953,13 +967,13 @@ const betBoxStyle = computed(() => {
 
   /* Tooltip de notas en móvil - más grande y legible */
   .notes-tooltip-centered {
-    font-size: 1.05rem;
-    padding: 14px 16px;
-    min-width: 220px;
-    max-width: 75vw;
-    max-height: 50vh;
-    line-height: 1.6;
-    border-radius: 10px;
+    font-size: 1.1rem;
+    padding: 16px 18px;
+    min-width: 260px;
+    max-width: 85vw;
+    max-height: 60vh;
+    line-height: 1.7;
+    border-radius: 12px;
   }
 
   .notes-display-icon {
@@ -1011,12 +1025,12 @@ const betBoxStyle = computed(() => {
 
   /* Tooltip de notas en landscape - ajustado para pantalla horizontal */
   .notes-tooltip-centered {
-    font-size: 0.9rem;
-    padding: 10px 12px;
-    min-width: 200px;
-    max-width: 70vw;
-    max-height: 45vh;
-    line-height: 1.4;
+    font-size: 0.95rem;
+    padding: 12px 14px;
+    min-width: 220px;
+    max-width: 75vw;
+    max-height: 55vh;
+    line-height: 1.5;
   }
 
   .notes-display-icon {
