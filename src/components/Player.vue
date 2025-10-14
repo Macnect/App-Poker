@@ -6,14 +6,14 @@
           <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
           <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="100" height="140" rx="8" fill="#4A5568"/>
-            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
+            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="300">+</text>
           </svg>
         </div>
         <div class="card-placeholder" @click="handleCardClick(player.id, 1)">
           <PlayingCard v-if="player.cards[1]" :cardId="player.cards[1]" />
           <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="100" height="140" rx="8" fill="#4A5568"/>
-            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
+            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="300">+</text>
           </svg>
         </div>
     </div>
@@ -671,7 +671,7 @@ const betBoxStyle = computed(() => {
   border-radius: 50%;
   width: 22px;
   height: 22px;
-  padding: 3px;
+  padding: 2px;
   cursor: pointer;
   color: #22c55e;
   display: flex;
@@ -771,25 +771,25 @@ const betBoxStyle = computed(() => {
   z-index: 9998; /* Muy alto para estar sobre todo excepto modales */
 }
 .notes-display-icon {
-  width: 24px;
-  height: 24px;
-  color: #a0aec0;
+  width: 20px;
+  height: 20px;
+  color: #d4af37;
   cursor: pointer;
   background-color: rgba(45, 55, 72, 0.95);
   border-radius: 50%;
   padding: 3px;
-  border: 1.5px solid rgba(74, 85, 104, 0.6);
+  border: 1.5px solid rgba(212, 175, 55, 0.6);
   position: relative;
   z-index: 9998;
   transition: all 0.2s ease;
 }
 
 .notes-display-icon:hover {
-  color: #d4af37;
+  color: #ffd700;
   background-color: rgba(55, 65, 81, 1);
-  border-color: rgba(212, 175, 55, 0.5);
+  border-color: rgba(255, 215, 0, 0.8);
   transform: scale(1.1);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .notes-display-icon:active {
@@ -904,18 +904,18 @@ const betBoxStyle = computed(() => {
     height: 32px;
   }
 
-  .edit-notes-btn, .notes-display-wrapper {
+  .edit-notes-btn {
     width: 20px;
     height: 20px;
     top: 2px;
-  }
-
-  .edit-notes-btn {
     right: -6px;
-    padding: 2px;
+    padding: 1.5px;
   }
 
   .notes-display-wrapper {
+    width: 18px;
+    height: 18px;
+    top: 2px;
     left: -6px;
   }
 
@@ -930,8 +930,8 @@ const betBoxStyle = computed(() => {
   }
 
   .notes-display-icon {
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     transition: transform 0.2s ease;
   }
 
@@ -986,8 +986,8 @@ const betBoxStyle = computed(() => {
   }
 
   .notes-display-icon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
   }
 
   .check-indicator {
@@ -1031,11 +1031,11 @@ const betBoxStyle = computed(() => {
 }
 
 .is-9-max .edit-notes-btn {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   top: 2px;
   right: -8px;
-  padding: 2px;
+  padding: 1.5px;
 }
 
 .is-9-max .dealer-button {
@@ -1104,7 +1104,7 @@ const betBoxStyle = computed(() => {
     height: 18px;
     top: 2px;
     right: -6px;
-    padding: 2px;
+    padding: 1.5px;
   }
 
   .is-9-max .check-indicator {

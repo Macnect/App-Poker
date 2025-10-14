@@ -20,7 +20,7 @@
             <PlayingCard v-if="gameStore.board[index]" :cardId="gameStore.board[index]" />
             <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect width="100" height="140" rx="8" fill="#374151"/>
-              <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="bold">+</text>
+              <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="300">+</text>
             </svg>
           </div>
         </div>
