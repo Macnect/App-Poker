@@ -816,8 +816,15 @@ export const useGameStore = defineStore('game', () => {
     if (player) {
       player.notes = newNotes;
     }
-    if (isPreActionPhase.value && history.value.length > 0) {
-      history.value[0].players = deepCopy(players.value);
+    // Actualizar las notas en TODOS los snapshots del historial
+    // para que persistan durante el replay
+    if (history.value.length > 0) {
+      history.value.forEach(snapshot => {
+        const snapshotPlayer = snapshot.players.find(p => p.id === playerId);
+        if (snapshotPlayer) {
+          snapshotPlayer.notes = newNotes;
+        }
+      });
     }
   }
 
@@ -826,8 +833,16 @@ export const useGameStore = defineStore('game', () => {
     if (player) {
       player.tag = player.tag === newTag ? null : newTag;
     }
-    if (isPreActionPhase.value && history.value.length > 0) {
-      history.value[0].players = deepCopy(players.value);
+    // Actualizar el tag en TODOS los snapshots del historial
+    // para que persista durante el replay
+    if (history.value.length > 0) {
+      const finalTag = player.tag;
+      history.value.forEach(snapshot => {
+        const snapshotPlayer = snapshot.players.find(p => p.id === playerId);
+        if (snapshotPlayer) {
+          snapshotPlayer.tag = finalTag;
+        }
+      });
     }
   }
 

@@ -60,11 +60,17 @@
         </svg>
       </button>
 
-      <div v-if="!gameStore.isPreActionPhase && player.notes" class="notes-display-wrapper">
+      <div
+        v-if="!gameStore.isPreActionPhase && player.notes"
+        class="notes-display-wrapper"
+        ref="notesDisplayRef"
+        @click.stop="toggleTooltip"
+        @mouseenter.passive="handleMouseEnter"
+        @mouseleave.passive="handleMouseLeave"
+      >
         <svg class="notes-display-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
         </svg>
-        <div class="notes-tooltip">{{ player.notes }}</div>
       </div>
     </div>
 
@@ -115,10 +121,22 @@
       </div>
     </div>
   </Teleport>
+
+  <!-- Tooltip de notas usando Teleport para renderizarlo centrado en la mesa -->
+  <Teleport v-if="teleportTarget" to="#poker-table-main">
+    <div
+      v-if="isTooltipVisible && player.notes"
+      class="notes-tooltip-centered"
+      ref="tooltipRef"
+      @click.stop
+    >
+      {{ player.notes }}
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useGameStore } from '../store/game'
 import PlayingCard from './PlayingCard.vue';
 import ChipStack from './ChipStack.vue';
@@ -127,7 +145,11 @@ const notesPanelRef = ref(null);
 const editBtnRef = ref(null);
 const teleportTarget = ref(null);
 const showCheckIndicator = ref(false);
+const notesDisplayRef = ref(null);
+const tooltipRef = ref(null);
+const isTooltipVisible = ref(false);
 let checkIndicatorTimeout = null;
+let tooltipClickedManually = false;
 
 const tagColors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
 
@@ -186,8 +208,51 @@ function handleClickOutside(event) {
   }
 }
 
+function handleMouseEnter() {
+  // Solo mostrar con hover si NO fue clickeado manualmente (desktop con mouse)
+  if (!tooltipClickedManually) {
+    isTooltipVisible.value = true;
+  }
+}
+
+function handleMouseLeave() {
+  // Solo ocultar con hover si NO fue clickeado manualmente
+  if (!tooltipClickedManually) {
+    isTooltipVisible.value = false;
+  }
+}
+
+function toggleTooltip(event) {
+  event.stopPropagation();
+  event.preventDefault();
+
+  if (tooltipClickedManually && isTooltipVisible.value) {
+    // Ya está abierto y fue clickeado antes, cerrarlo
+    tooltipClickedManually = false;
+    isTooltipVisible.value = false;
+  } else {
+    // Abrirlo y marcarlo como clickeado manualmente
+    tooltipClickedManually = true;
+    isTooltipVisible.value = true;
+  }
+}
+
+// Cerrar tooltip al hacer click fuera
+function handleClickOutsideTooltip(event) {
+  if (isTooltipVisible.value &&
+      notesDisplayRef.value &&
+      !notesDisplayRef.value.contains(event.target) &&
+      tooltipRef.value &&
+      !tooltipRef.value.contains(event.target)) {
+    isTooltipVisible.value = false;
+    tooltipClickedManually = false;
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+  document.addEventListener('click', handleClickOutsideTooltip);
+
   checkTeleportTarget();
   // Re-check teleport target when DOM updates
   const observer = new MutationObserver(checkTeleportTarget);
@@ -201,6 +266,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener('click', handleClickOutsideTooltip);
 
   // Clean up check indicator timeout
   if (checkIndicatorTimeout) {
@@ -702,42 +768,71 @@ const betBoxStyle = computed(() => {
   position: absolute;
   top: -4px;
   left: -8px;
-  z-index: 15;
+  z-index: 9998; /* Muy alto para estar sobre todo excepto modales */
 }
 .notes-display-icon {
   width: 24px;
   height: 24px;
   color: #a0aec0;
   cursor: pointer;
-  background-color: rgba(45, 55, 72, 0.9);
+  background-color: rgba(45, 55, 72, 0.95);
   border-radius: 50%;
-  padding: 2px;
-  border: 1px solid rgba(74, 85, 104, 0.5);
+  padding: 3px;
+  border: 1.5px solid rgba(74, 85, 104, 0.6);
+  position: relative;
+  z-index: 9998;
+  transition: all 0.2s ease;
 }
-.notes-display-wrapper .notes-tooltip {
-  visibility: hidden;
-  opacity: 0;
-  width: 200px;
+
+.notes-display-icon:hover {
+  color: #d4af37;
+  background-color: rgba(55, 65, 81, 1);
+  border-color: rgba(212, 175, 55, 0.5);
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+}
+
+.notes-display-icon:active {
+  transform: scale(0.95);
+}
+
+/* Tooltip de notas centrado en la mesa */
+.notes-tooltip-centered {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  min-width: 200px;
+  max-width: min(300px, calc(100vw - 40px));
   background-color: #1a202c;
   color: #fff;
   text-align: left;
-  border-radius: 6px;
-  padding: 8px;
-  position: absolute;
-  z-index: 25;
-  bottom: 125%;
-  left: 50%;
-  margin-left: -100px;
-  transition: opacity 0.3s;
-  font-size: 0.9rem;
-  font-weight: normal;
+  border-radius: 8px;
+  padding: 12px 14px;
+  z-index: 9999;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.5;
   white-space: pre-wrap;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 25px rgba(212, 175, 55, 0.2);
+  animation: tooltipFadeIn 0.25s ease;
 }
-.notes-display-wrapper:hover .notes-tooltip {
-  visibility: visible;
-  opacity: 1;
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 /* --- MEDIA QUERY PARA MÓVIL EN RETRATO (PORTRAIT) --- */
@@ -824,6 +919,26 @@ const betBoxStyle = computed(() => {
     left: -6px;
   }
 
+  /* Tooltip de notas en móvil - más grande y legible */
+  .notes-tooltip-centered {
+    font-size: 1.05rem;
+    padding: 14px 16px;
+    min-width: 220px;
+    max-width: calc(100vw - 30px);
+    line-height: 1.6;
+    border-radius: 10px;
+  }
+
+  .notes-display-icon {
+    width: 26px;
+    height: 26px;
+    transition: transform 0.2s ease;
+  }
+
+  .notes-display-icon:active {
+    transform: scale(0.9);
+  }
+
   .check-indicator {
     font-size: 0.6em;
     padding: 2px 6px;
@@ -856,9 +971,23 @@ const betBoxStyle = computed(() => {
   .bet-box {
     transform: scale(0.75) translateY(-50%); /* Hacemos más pequeña la info de apuesta */
   }
-  /* Ocultamos elementos no esenciales para maximizar el espacio */
-  .edit-notes-btn, .notes-display-wrapper, .player-tag {
+  /* Ocultamos el botón de edición para maximizar el espacio, pero mantenemos visible las notas en modo lectura */
+  .edit-notes-btn, .player-tag {
     display: none;
+  }
+
+  /* Tooltip de notas en landscape - ajustado para pantalla horizontal */
+  .notes-tooltip-centered {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+    min-width: 200px;
+    max-width: calc(100vw - 30px);
+    line-height: 1.4;
+  }
+
+  .notes-display-icon {
+    width: 20px;
+    height: 20px;
   }
 
   .check-indicator {
