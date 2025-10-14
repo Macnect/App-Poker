@@ -22,7 +22,7 @@
       
       <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
 
-      <div class="player-info-panel" :style="player.tag ? { background: player.tag + '99', backgroundImage: 'none' } : {}">
+      <div class="player-info-panel" :style="player.name === 'Hero' ? { background: '#68d39199', backgroundImage: 'none' } : (player.tag ? { background: player.tag + '99', backgroundImage: 'none' } : {})">
         <div class="player-info">
           <div class="player-position">{{ player.position }}</div>
           <div class="player-name">
@@ -443,8 +443,25 @@ const betBoxStyle = computed(() => {
 }
 
 .active .player-info-panel {
-  border-color: #f6e05e;
-  box-shadow: 0 0 30px rgba(246, 224, 94, 0.5), 0 4px 15px rgba(0, 0, 0, 0.4);
+  border-color: #ffd700;
+  border-width: 2px;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.7),
+              0 0 12px rgba(255, 215, 0, 0.5) inset,
+              0 4px 15px rgba(0, 0, 0, 0.4);
+  animation: active-player-pulse 2s infinite ease-in-out;
+}
+
+@keyframes active-player-pulse {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.7),
+                0 0 12px rgba(255, 215, 0, 0.5) inset,
+                0 4px 15px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(255, 215, 0, 0.85),
+                0 0 18px rgba(255, 215, 0, 0.65) inset,
+                0 4px 15px rgba(0, 0, 0, 0.4);
+  }
 }
 
 .faded {
@@ -536,16 +553,7 @@ const betBoxStyle = computed(() => {
 
 .is-hero .player-info-panel {
   border-color: #68d391;
-  animation: hero-glow 2s infinite ease-in-out;
-}
-
-@keyframes hero-glow {
-  0%, 100% {
-    box-shadow: 0 0 8px #68d391, 0 0 10px #68d391 inset, 0 4px 15px rgba(0, 0, 0, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 20px #68d391, 0 0 15px #68d391 inset, 0 4px 15px rgba(0, 0, 0, 0.4);
-  }
+  box-shadow: 0 0 15px #68d391, 0 0 12px #68d391 inset, 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
 .player-input {
