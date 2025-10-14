@@ -131,7 +131,7 @@ const heroIndex = computed(() => {
 
   .center-content {
     width: 60%;
-    gap: clamp(8px, 1.5vh, 12px);
+    gap: clamp(4px, 1vh, 8px);
   }
 
   .pot {
@@ -166,7 +166,7 @@ const heroIndex = computed(() => {
   }
 
   .center-content {
-    gap: clamp(6px, 1.2vh, 10px);
+    gap: clamp(3px, 0.8vh, 6px);
   }
 
   .pot {
@@ -188,7 +188,7 @@ const heroIndex = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(5px, 1.5vh, 15px);
+  gap: clamp(3px, 0.8vh, 6px);
   width: 55%;
 }
 
