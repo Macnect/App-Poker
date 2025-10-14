@@ -22,11 +22,10 @@
       
       <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
 
-      <div class="player-info-panel">
+      <div class="player-info-panel" :style="player.tag ? { background: player.tag + '99', backgroundImage: 'none' } : {}">
         <div class="player-info">
           <div class="player-position">{{ player.position }}</div>
           <div class="player-name">
-            <span v-if="player.tag" class="player-tag" :style="{ backgroundColor: player.tag }"></span>
             <div v-if="gameStore.isPreActionPhase" class="editable-name-wrapper">
               <input
                 type="text"
@@ -55,7 +54,7 @@
         </div>
       </div>
       
-      <button v-if="gameStore.isPreActionPhase" @click="gameStore.toggleNotesPanel(player.id)" class="edit-notes-btn" ref="editBtnRef">
+      <button v-if="gameStore.gamePhase !== 'replay'" @click="gameStore.toggleNotesPanel(player.id)" class="edit-notes-btn" ref="editBtnRef">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
         </svg>
@@ -600,7 +599,7 @@ const betBoxStyle = computed(() => {
   height: 22px;
   padding: 3px;
   cursor: pointer;
-  color: #cbd5e0;
+  color: #22c55e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -690,13 +689,6 @@ const betBoxStyle = computed(() => {
 .tag-selector.selected {
   border-color: white;
   box-shadow: 0 0 5px white;
-}
-.player-tag {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.5);
 }
 .notes-display-wrapper {
   position: absolute;
