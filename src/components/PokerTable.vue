@@ -4,9 +4,9 @@
       
       <div class="center-content" :style="{ '--board-x': gameStore.tableLayout.board.x + '%', '--board-y': gameStore.tableLayout.board.y + '%' }">
         <div class="pot">
-          Bote: 
+          Bote:
           <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ gameStore.totalPot }}</span>
-          <span v-else>{{ (gameStore.totalPot / gameStore.bigBlind).toFixed(1) }}</span>
+          <span v-else>{{ formatBBs(gameStore.totalPot / gameStore.bigBlind) }}</span>
         </div>
 
         <div class="board">
@@ -80,6 +80,12 @@ const heroIndex = computed(() => {
   const index = gameStore.players.findIndex(p => p.name === 'Hero');
   return index !== -1 ? index : 0;
 });
+
+// Format BBs to hide .0 decimals but show other decimals
+function formatBBs(value) {
+  const formatted = value.toFixed(1);
+  return formatted.endsWith('.0') ? formatted.slice(0, -2) : formatted;
+}
 </script>
 
 <style scoped>

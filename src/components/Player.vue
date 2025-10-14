@@ -48,7 +48,7 @@
             </div>
             <span v-else>
               <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.stack }}</span>
-              <span v-else>{{ (player.stack / gameStore.bigBlind).toFixed(1) }} BBs</span>
+              <span v-else>{{ formatBBs(player.stack / gameStore.bigBlind) }}</span>
             </span>
           </div>
         </div>
@@ -84,7 +84,7 @@
         <div class="bet-amount-container">
           <div class="bet-amount-text">
             <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
-            <span v-else>{{ (player.betThisRound / gameStore.bigBlind).toFixed(1) }}</span>
+            <span v-else>{{ formatBBs(player.betThisRound / gameStore.bigBlind) }}</span>
           </div>
         </div>
         <img v-if="player.isAllIn" src="/icons/all-in-icon.svg" alt="All-in" class="all-in-icon" />
@@ -276,6 +276,12 @@ onUnmounted(() => {
 });
 
 const isActivePlayer = computed(() => gameStore.activePlayerIndex === props.player.id);
+
+// Format BBs to hide .0 decimals but show other decimals
+function formatBBs(value) {
+  const formatted = value.toFixed(1);
+  return formatted.endsWith('.0') ? formatted.slice(0, -2) : formatted;
+}
 
 // --- LÓGICA DE POSICIONAMIENTO DE ASIENTOS (MODIFICADA PARA RESPONSIVE) ---
 // Las coordenadas ahora son porcentajes del radio de la mesa (ej: x: 50 es el borde derecho).
