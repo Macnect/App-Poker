@@ -459,6 +459,7 @@ h2 {
   height: 63px;
   border-radius: 6px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
 }
 
 .cards-display :deep(.rank) {
@@ -765,23 +766,23 @@ h2 {
 
   .cards-display {
     flex: 1;
-    gap: 4px;
+    gap: 3px;
     overflow-x: auto;
     max-width: 100%;
   }
 
   .cards-display :deep(.playing-card) {
-    width: 38px;
-    height: 53px;
+    width: 32px;
+    height: 45px;
     flex-shrink: 0;
   }
 
   .cards-display :deep(.rank) {
-    font-size: 1.2rem;
+    font-size: 1.05rem;
   }
 
   .cards-display :deep(.suit-icon) {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 
   .hero-hand-preview {
@@ -803,23 +804,43 @@ h2 {
   }
 }
 
-/* Ajustes adicionales para pantallas muy pequeñas */
-@media (max-width: 360px) {
+/* Ajustes para pantallas pequeñas */
+@media (max-width: 480px) {
   .cards-display :deep(.playing-card) {
-    width: 34px;
-    height: 48px;
+    width: 30px;
+    height: 42px;
   }
 
   .cards-display :deep(.rank) {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .cards-display :deep(.suit-icon) {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
   }
 
   .cards-display {
     gap: 3px;
+  }
+}
+
+/* Ajustes adicionales para pantallas muy pequeñas */
+@media (max-width: 360px) {
+  .cards-display :deep(.playing-card) {
+    width: 28px;
+    height: 39px;
+  }
+
+  .cards-display :deep(.rank) {
+    font-size: 1rem;
+  }
+
+  .cards-display :deep(.suit-icon) {
+    font-size: 0.75rem;
+  }
+
+  .cards-display {
+    gap: 2px;
   }
 
   .hero-hand-preview {
