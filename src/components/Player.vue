@@ -339,7 +339,7 @@ const BET_PREDEFINED_LAYOUTS = {
     { top: 'calc(-52% + 45px)', left: '50%', transform: 'translateX(-50%)' }, // Hero (abajo) - apuesta arriba del jugador
     { bottom: '15%', left: '120%', transform: 'translate(-50%, 0)', marginLeft: '10px' },     // Izquierda abajo - apuesta a la derecha
     { top: '115%', left: '30%', transform: 'translate(-50%, -50%)', marginLeft: '10px' },     // Izquierda arriba - apuesta a la derecha
-    { bottom: 'calc(-30% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro - apuesta debajo del jugador
+    { bottom: 'calc(-23% + 5px)', left: '50%', transform: 'translateX(-50%)' },     // Arriba centro - apuesta debajo del jugador
     { top: '115%', right: '30%', transform: 'translate(50%, -50%)', marginRight: '10px' },      // Derecha arriba - apuesta a la izquierda
     { bottom: '15%', right: '120%', transform: 'translate(50%, 0)', marginRight: '10px' },      // Derecha abajo - apuesta a la izquierda
   ],
