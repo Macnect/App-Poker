@@ -468,16 +468,17 @@ const betBoxStyle = computed(() => {
 
 /* Omaha cards - same positioning as Hold'em with overlapping */
 .player-cards.omaha-cards {
-  gap: 0; /* Remove gap for overlapping */
+  gap: 1%; /* Small gap between cards */
   margin-bottom: 5px; /* Cards higher above player panel to avoid covering position text */
+  width: 110%; /* Wider container for 4 larger cards */
 }
 
 .player-cards.omaha-cards .card-placeholder {
-  width: 52%; /* Larger cards for better readability */
+  width: 24%; /* Larger cards so text fits inside properly */
 }
 
 .player-cards.omaha-cards .card-placeholder:not(:first-child) {
-  margin-left: -14%; /* Adjusted overlap to maintain compact layout */
+  margin-left: 0;
   position: relative;
 }
 
@@ -938,7 +939,7 @@ const betBoxStyle = computed(() => {
   }
 
   .player-cards {
-    bottom: 40%;
+    bottom: 38%;
     gap: 4%;
     width: 90%;
     margin-bottom: 0;
@@ -946,16 +947,17 @@ const betBoxStyle = computed(() => {
   }
 
   .player-cards.omaha-cards {
-    gap: 0;
+    gap: 0%; /* Small gap between cards */
     margin-bottom: 5px; /* Cards higher above player panel to avoid covering position text */
+    width: 170%; /* Much wider container to allow larger cards */
   }
 
   .player-cards.omaha-cards .card-placeholder {
-    width: 50%; /* Larger cards for better readability on mobile */
+    width: 25%; /* Larger cards so text fits inside properly on mobile */
   }
 
   .player-cards.omaha-cards .card-placeholder:not(:first-child) {
-    margin-left: -14%; /* Adjusted overlap to maintain compact layout */
+    margin-left: -8%; /* Small overlap between cards */
   }
 
   .card-placeholder {
@@ -1178,16 +1180,17 @@ const betBoxStyle = computed(() => {
   }
 
   .is-9-max .player-cards.omaha-cards {
-    gap: 0;
+    gap: 1%; /* Small gap between cards */
     margin-bottom: 5px; /* Cards higher above player panel to avoid covering position text */
+    width: 100%; /* Wider container for 4 larger cards in 9-max */
   }
 
   .is-9-max .player-cards.omaha-cards .card-placeholder {
-    width: 48%; /* Larger cards for better readability in 9-max */
+    width: 23%; /* Larger cards so text fits inside properly in 9-max */
   }
 
   .is-9-max .player-cards.omaha-cards .card-placeholder:not(:first-child) {
-    margin-left: -14%; /* Adjusted overlap to maintain compact layout */
+    margin-left: 0;
   }
 
   .is-9-max .card-placeholder {
