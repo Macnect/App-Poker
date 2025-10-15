@@ -499,15 +499,15 @@ const betBoxStyle = computed(() => {
 .player-cards.omaha-cards .card-placeholder:nth-child(3) { z-index: 2; }
 .player-cards.omaha-cards .card-placeholder:nth-child(4) { z-index: 1; }
 
-/* Pineapple cards - 3 cards positioned similarly to Hold'em */
+/* Pineapple cards - 3 cards same size as Hold'em */
 .player-cards.pineapple-cards {
-  gap: 3%;
+  gap: 2%;
   margin-bottom: 0;
-  width: 100%;
+  width: 135%; /* Wider container for 3 large cards */
 }
 
 .player-cards.pineapple-cards .card-placeholder {
-  width: 28%;
+  width: 32%; /* Same visual size as Hold'em cards */
 }
 
 .card-placeholder {
@@ -984,11 +984,11 @@ const betBoxStyle = computed(() => {
 
   .player-cards.pineapple-cards {
     gap: 2%;
-    width: 95%;
+    width: 130%;
   }
 
   .player-cards.pineapple-cards .card-placeholder {
-    width: 30%;
+    width: 31%;
   }
 
   .card-placeholder {
@@ -1226,11 +1226,11 @@ const betBoxStyle = computed(() => {
 
   .is-9-max .player-cards.pineapple-cards {
     gap: 2%;
-    width: 90%;
+    width: 125%;
   }
 
   .is-9-max .player-cards.pineapple-cards .card-placeholder {
-    width: 28%;
+    width: 30%;
   }
 
   .is-9-max .card-placeholder {
