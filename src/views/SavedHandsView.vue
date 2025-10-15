@@ -240,8 +240,16 @@ function getHeroFromHand(hand) { if (!hand.historial || hand.historial.length ==
 function getBoardFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board.filter(card => card); }
 function getBoard2FromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board2 ? finalState.board2.filter(card => card) : []; }
 function isDoubleBoardBombPot(hand) { return hand.bomb_pot_type === 'double' && hand.regla_especial === 'Bomb Pot'; }
-function getGameVariantLabel(hand) { return hand.game_variant === 'omaha' ? 'Omaha' : "Hold'em"; }
-function getGameVariantClass(hand) { return hand.game_variant === 'omaha' ? 'variant-omaha' : 'variant-holdem'; }
+function getGameVariantLabel(hand) {
+  if (hand.game_variant === 'omaha') return 'Omaha';
+  if (hand.game_variant === 'pineapple') return 'Pineapple';
+  return "Hold'em";
+}
+function getGameVariantClass(hand) {
+  if (hand.game_variant === 'omaha') return 'variant-omaha';
+  if (hand.game_variant === 'pineapple') return 'variant-pineapple';
+  return 'variant-holdem';
+}
 function confirmDelete(handId) { selectedHandId.value = handId; showModal.value = true; }
 function closeModal() { showModal.value = false; selectedHandId.value = null; }
 async function deleteAndClose() {
@@ -514,6 +522,12 @@ h2 {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.7) 0%, rgba(126, 34, 206, 0.8) 100%);
   color: white;
   border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.variant-pineapple {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.7) 0%, rgba(219, 39, 119, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(236, 72, 153, 0.3);
 }
 
 .bomb-pot-badge {
