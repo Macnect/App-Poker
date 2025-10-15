@@ -28,7 +28,12 @@
       <li v-for="session in filteredSessions" :key="session.id">
         
         <div class="session-header">
-          <span class="location">{{ session.ubicacion || 'Partida Privada' }}</span>
+          <div class="session-title">
+            <span class="location">{{ session.ubicacion || 'Partida Privada' }}</span>
+            <span class="game-variant-badge" :class="getGameVariantClass(session.tipo_juego)">
+              {{ formatGameType(session.tipo_juego) }}
+            </span>
+          </div>
           <!-- Formateamos la fecha que viene de la base de datos -->
           <span class="date">{{ new Date(session.fecha + 'T12:00:00').toLocaleDateString() }}</span>
         </div>
@@ -166,6 +171,21 @@ function formatDuration(totalSeconds) {
   if (hours > 0) result += `${hours}h `;
   if (minutes > 0) result += `${minutes}m`;
   return result.trim();
+}
+
+function formatGameType(gameType) {
+  const gameTypeMap = {
+    'holdem': 'Hold\'em',
+    'omaha': 'Omaha',
+    'pineapple': 'Pineapple'
+  };
+  return gameTypeMap[gameType] || 'Hold\'em';
+}
+
+function getGameVariantClass(gameType) {
+  if (gameType === 'omaha') return 'variant-omaha';
+  if (gameType === 'pineapple') return 'variant-pineapple';
+  return 'variant-holdem';
 }
 
 function getResultClass(result) {
@@ -360,9 +380,17 @@ h2 {
 .session-header {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: flex-start;
   border-bottom: 1px solid rgba(212, 175, 55, 0.2);
   padding-bottom: 1rem;
+  gap: 1rem;
+}
+
+.session-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .location {
@@ -376,8 +404,39 @@ h2 {
   font-size: 0.95rem;
   color: rgba(212, 175, 55, 0.7);
   flex-shrink: 0;
-  margin-left: 1rem;
   font-weight: 500;
+}
+
+.game-variant-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.variant-holdem {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.7) 0%, rgba(37, 99, 235, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.variant-omaha {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.7) 0%, rgba(126, 34, 206, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.variant-pineapple {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.7) 0%, rgba(219, 39, 119, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(236, 72, 153, 0.3);
 }
 
 .session-result {
@@ -683,11 +742,23 @@ h2 {
   .sessions-list li {
     padding: 1rem;
   }
+  .session-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .session-title {
+    width: 100%;
+  }
   .location {
     font-size: 1.2rem;
   }
   .date {
     font-size: 0.85rem;
+  }
+  .game-variant-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
   }
   .result-amount {
     font-size: 2.2rem;

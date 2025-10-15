@@ -22,6 +22,7 @@ export const useSessionStore = defineStore('session', () => {
     location: '',
     currency: '$',
     initialStack: 200,
+    gameType: 'holdem',
   });
 
   const savedSessions = ref([]);
@@ -161,6 +162,7 @@ export const useSessionStore = defineStore('session', () => {
         total_gastos: ensureFloat(sessionState.value.totalExpenses),
         stack_final: ensureFloat(finalStack),
         resultado: result,
+        tipo_juego: sessionState.value.gameType,
       };
       
       await apiAddSession(sessionData);
@@ -356,6 +358,10 @@ export const useSessionStore = defineStore('session', () => {
     initialStack: computed({
       get: () => sessionState.value.initialStack,
       set: (val) => { sessionState.value.initialStack = val; saveStateToLocalStorage(); }
+    }),
+    gameType: computed({
+      get: () => sessionState.value.gameType,
+      set: (val) => { sessionState.value.gameType = val; saveStateToLocalStorage(); }
     }),
     // ==========================================================
     // ===> FIN DEL CAMBIO                                     <===

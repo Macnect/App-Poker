@@ -55,6 +55,14 @@
         <fieldset class="config-fieldset" :disabled="sessionStore.isActive">
           <div class="config-grid">
             <div class="config-item">
+              <label for="game-type">Tipo de Juego</label>
+              <select id="game-type" v-model="sessionStore.gameType">
+                <option value="holdem">No-Limit Hold'em</option>
+                <option value="omaha">Pot Limit Omaha</option>
+                <option value="pineapple">Crazy Pineapple</option>
+              </select>
+            </div>
+            <div class="config-item">
               <label for="player-count">Jugadores</label>
               <select id="player-count" v-model.number="sessionStore.playerCount">
                 <option v-for="n in 8" :key="n" :value="n + 1">{{ n + 1 }} Jugadores</option>
@@ -222,7 +230,8 @@ function saveConfiguration() {
     bigBlind: bigBlind.value,
     location: sessionStore.location,
     currency: sessionStore.currency,
-    initialStack: sessionStore.initialStack
+    initialStack: sessionStore.initialStack,
+    gameType: sessionStore.gameType
   };
 
   localStorage.setItem('liveSessionConfiguration', JSON.stringify(config));
@@ -245,6 +254,7 @@ function loadConfiguration() {
       sessionStore.location = config.location || '';
       sessionStore.currency = config.currency || '$';
       sessionStore.initialStack = config.initialStack || 200;
+      sessionStore.gameType = config.gameType || 'holdem';
 
       // Cargar ciegas separadas
       if (config.smallBlind !== undefined && config.bigBlind !== undefined) {
