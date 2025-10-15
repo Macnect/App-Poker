@@ -3,12 +3,17 @@
     <h2>Manos Guardadas</h2>
 
     <div class="filters-container">
-      <div class="filter-group">
-        <button v-if="selectedDate" @click="selectedDate = null" class="clear-btn">Mostrar Todas las Manos</button>
-      </div>
-      <div class="filter-group">
-        <button @click="toggleHandStrengthSort" class="sort-btn">
-          {{ sortKey === 'strength' ? 'Ordenar por Fecha' : 'Ordenar por Mano de Héroe' }}
+      <div class="filter-group date-filter-group">
+        <label for="date-picker">Filtrar por Fecha:</label>
+        <input
+          id="date-picker"
+          type="date"
+          v-model="datePickerValue"
+          @change="onDatePickerChange"
+          class="date-input"
+        />
+        <button v-if="selectedDate" @click="clearDateFilter" class="clear-date-btn" title="Limpiar filtro">
+          ✕
         </button>
       </div>
     </div>
@@ -166,7 +171,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '../store/game'
 import { useAuthStore } from '../store/useAuthStore'
 import PlayingCard from '../components/PlayingCard.vue';
@@ -179,7 +184,7 @@ const emit = defineEmits(['switch-view']);
 const isLoading = computed(() => !authStore.isInitialized);
 
 const selectedDate = ref(null);
-const sortKey = ref('date');
+const datePickerValue = ref('');
 
 const showModal = ref(false);
 const showToast = ref(false);
@@ -192,23 +197,6 @@ const checkOrientation = () => {
   const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
   showRotateOverlay.value = !isPortrait && isCoarsePointer;
 };
-
-const HAND_STRENGTH_MAP = { 'AA': 1, 'KK': 2, 'QQ': 3, 'AKs': 4, 'JJ': 5, 'AQs': 6, 'KQs': 7, 'AJs': 8, 'KJs': 9, 'TT': 10, 'AKo': 11, 'ATs': 12, 'QJs': 13, 'KTs': 14, 'QTs': 15, 'JTs': 16, '99': 17, 'AQo': 18, 'A9s': 19, 'K9s': 20, 'Q9s': 21, 'J9s': 22, 'T9s': 23, 'A8s': 24, '88': 25, 'K8s': 26, 'Q8s': 27, 'J8s': 28, 'AJo': 29, 'A5s': 30, 'T8s': 31, '98s': 32, 'A7s': 33, 'A4s': 34, 'K7s': 35, '77': 36, 'A3s': 37, 'Q7s': 38, 'A6s': 39, 'KJo': 40, 'A2s': 41, 'K6s': 42, '87s': 43, 'T7s': 44, 'K5s': 45, '66': 46, 'ATo': 47, 'J7s': 48, 'Q6s': 49, 'K4s': 50, '97s': 51, '76s': 52, 'K3s': 53, 'Q5s': 54, '55': 55, 'K2s': 56, 'J6s': 57, 'T6s': 58, 'Q4s': 59, '86s': 60, 'Q3s': 61, '65s': 62, 'KTo': 63, 'A9o': 64, 'Q2s': 65, '44': 66, 'J5s': 67, '96s': 68, 'J4s': 69, '75s': 70, 'QJo': 71, 'A8o': 72, 'T5s': 73, 'J3s': 74, '54s': 75, '85s': 76, 'K9o': 77, 'Q9o': 78, '33': 79, 'J2s': 80, '64s': 81, 'T4s': 82, 'J9o': 83, 'T9o': 84, 'A7o': 85, 'K8o': 86, '95s': 87, '22': 88, '74s': 89, 'T3s': 90, '53s': 91, 'Q8o': 92, 'A5o': 93, '84s': 94, 'A4o': 95, 'K7o': 96, 'J8o': 97, 'T2s': 98, 'A6o': 99, '98o': 100, '43s': 101, 'A3o': 102, 'K6o': 103, '63s': 104, 'T8o': 105, 'A2o': 106, 'Q7o': 107, 'J7o': 108, 'K5o': 109, '87o': 110, '52s': 111, 'K4o': 112, 'T7o': 113, '76o': 114, 'Q6o': 115, '94s': 116, 'K3o': 117, 'J6o': 118, '83s': 119, 'K2o': 120, 'Q5o': 121, '97o': 122, '73s': 123, '42s': 124, 'T6o': 125, '65o': 126, 'Q4o': 127, 'J5o': 128, '86o': 129, 'Q3o': 130, 'J4o': 131, '96o': 132, '75o': 133, 'T5o': 134, 'Q2o': 135, '62s': 136, 'J3o': 137, '82s': 138, '54o': 139, '85o': 140, 'J2o': 141, '93s': 142, 'T4o': 143, '64o': 144, '95o': 145, '72s': 146, 'T3o': 147, '74o': 148, '53o': 149, '84o': 150, 'T2o': 151, '43o': 152, '92s': 153, '63o': 154, '83o': 155, '73o': 156, '52o': 157, '94o': 158, '42o': 159, '82o': 160, '62o': 161, '93o': 162, '72o': 163, '92o': 164, };
-const RANK_ORDER = 'AKQJT98765432';
-
-function getHandRank(cards) {
-  if (!cards || cards.length < 2 || !cards[0] || !cards[1]) return 999;
-  const rank1 = cards[0].charAt(0), suit1 = cards[0].charAt(1);
-  const rank2 = cards[1].charAt(0), suit2 = cards[1].charAt(1);
-  const isSuited = suit1 === suit2, isPair = rank1 === rank2;
-  const [r1, r2] = [RANK_ORDER.indexOf(rank1), RANK_ORDER.indexOf(rank2)].sort((a,b) => a - b);
-  const highRank = RANK_ORDER[r1], lowRank = RANK_ORDER[r2];
-  let handKey;
-  if (isPair) handKey = `${highRank}${lowRank}`;
-  else if (isSuited) handKey = `${highRank}${lowRank}s`;
-  else handKey = `${highRank}${lowRank}o`;
-  return HAND_STRENGTH_MAP[handKey] || 999;
-}
 
 const groupedHands = computed(() => {
   const groups = {};
@@ -226,16 +214,33 @@ const filteredAndSortedHands = computed(() => {
   if (selectedDate.value) {
     hands = hands.filter(hand => hand.fecha.split('T')[0] === selectedDate.value);
   }
-  if (sortKey.value === 'strength') {
-    hands.sort((a, b) => getHandRank(getHeroFromHand(a)?.cards) - getHandRank(getHeroFromHand(b)?.cards));
-  } else {
-    hands.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-  }
+  hands.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   return hands;
 });
 
-function toggleHandStrengthSort() { sortKey.value = sortKey.value === 'strength' ? 'date' : 'strength'; }
+// Sincronizar el date picker con selectedDate (cuando se hace clic en encabezados de fecha)
+watch(selectedDate, (newDate) => {
+  if (newDate) {
+    datePickerValue.value = newDate;
+  } else {
+    datePickerValue.value = '';
+  }
+});
+
 function loadHandForReplay(hand) { gameStore.loadHand(hand); emit('switch-view', 'CurrentHandView'); }
+
+function onDatePickerChange() {
+  if (datePickerValue.value) {
+    selectedDate.value = datePickerValue.value;
+  } else {
+    selectedDate.value = null;
+  }
+}
+
+function clearDateFilter() {
+  selectedDate.value = null;
+  datePickerValue.value = '';
+}
 function getHeroFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return null; const finalState = hand.historial[hand.historial.length - 1]; return finalState.players.find(p => p.name === 'Hero'); }
 function getBoardFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board.filter(card => card); }
 function getBoard2FromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board2 ? finalState.board2.filter(card => card) : []; }
@@ -332,12 +337,84 @@ h2 {
   gap: 10px;
 }
 
+.date-filter-group {
+  flex: 1;
+  min-width: 280px;
+}
+
 .filter-group label {
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   color: #d1d5db;
   letter-spacing: 0.025em;
-  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.date-input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 10px;
+  border: 1.5px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
+  color: #f9fafb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.date-input:hover {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* Estilos para el calendario del date picker */
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(10deg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.date-input::-webkit-calendar-picker-indicator:hover {
+  filter: invert(0.9) sepia(1) saturate(6) hue-rotate(10deg);
+  transform: scale(1.1);
+}
+
+.clear-date-btn {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1.5px solid rgba(220, 38, 38, 0.3);
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.6) 0%, rgba(185, 28, 28, 0.8) 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.clear-date-btn:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.8) 0%, rgba(185, 28, 28, 1) 100%);
+  transform: scale(1.05);
+  box-shadow:
+    0 4px 8px rgba(220, 38, 38, 0.4),
+    0 0 12px rgba(220, 38, 38, 0.2);
 }
 
 .sort-btn, .clear-btn {
@@ -918,6 +995,28 @@ h2 {
 
   .filters-container {
     padding: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .date-filter-group {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .filter-group label {
+    font-size: 0.85rem;
+  }
+
+  .date-input {
+    padding: 9px 12px;
+    font-size: 0.95rem;
+  }
+
+  .clear-date-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
   }
 
   .date-header {
