@@ -26,6 +26,10 @@
       No se encontraron manos.
     </div>
     <div v-else-if="selectedDate" class="hands-container">
+      <div class="selected-date-header">
+        <h3>{{ formattedSelectedDate }}</h3>
+        <p>{{ filteredAndSortedHands.length }} {{ filteredAndSortedHands.length === 1 ? 'mano' : 'manos' }}</p>
+      </div>
       <ul class="hands-list">
         <li v-for="hand in filteredAndSortedHands" :key="hand.id">
           <div class="hand-info">
@@ -215,6 +219,17 @@ const filteredAndSortedHands = computed(() => {
   }
   hands.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   return hands;
+});
+
+const formattedSelectedDate = computed(() => {
+  if (!selectedDate.value) return '';
+  const date = new Date(selectedDate.value + 'T00:00:00');
+  return date.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 });
 
 // Sincronizar el date picker con selectedDate (cuando se hace clic en encabezados de fecha)
@@ -411,6 +426,38 @@ h2 {
   background: linear-gradient(135deg, rgba(113, 128, 150, 0.8) 0%, rgba(74, 85, 104, 1) 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   SELECTED DATE HEADER - Premium
+   ======================================== */
+.selected-date-header {
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  animation: cardSlideIn 0.5s ease-out;
+}
+
+.selected-date-header h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #d4af37;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 0.025em;
+  text-transform: capitalize;
+}
+
+.selected-date-header p {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin: 0;
 }
 
 /* ========================================
