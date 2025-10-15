@@ -45,7 +45,7 @@
         </div>
 
         <!-- Board único para otros modos -->
-        <div v-else class="board">
+        <div v-else class="board" :class="{ 'omaha-board': gameStore.gameVariant === 'omaha' }">
           <div
             v-for="(card, index) in 5"
             :key="`board-${index}`"
@@ -348,5 +348,25 @@ function formatBBs(value) {
   background: rgba(212, 175, 55, 0.1);
   border-radius: 6px;
   border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+/* Estilos para board en Omaha - más pequeño */
+.omaha-board {
+  transform: scale(0.88);
+  transform-origin: center center;
+}
+
+/* Ajustes para Omaha en portrait */
+@media screen and (orientation: portrait) {
+  .omaha-board {
+    transform: scale(0.90);
+  }
+}
+
+/* Ajustes para Omaha en landscape */
+@media screen and (orientation: landscape) {
+  .omaha-board {
+    transform: scale(0.86);
+  }
 }
 </style>
