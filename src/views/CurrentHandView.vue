@@ -19,7 +19,7 @@
         <label for="game-variant-select">Tipo de Juego:</label>
         <select id="game-variant-select" v-model="selectedGameVariant">
           <option value="holdem">No-Limit Hold'em</option>
-          <option value="omaha">Omaha</option>
+          <option value="omaha">Pot Limit Omaha</option>
         </select>
       </div>
       <div class="config-item">

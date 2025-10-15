@@ -98,11 +98,56 @@ const checkOrCallLabel = computed(() => {
 
 const maxSliderValue = computed(() => {
     if (!gameStore.activePlayer) return 0;
-    return gameStore.activePlayer.stack + gameStore.activePlayer.betThisRound;
+    const playerMaxStack = gameStore.activePlayer.stack + gameStore.activePlayer.betThisRound;
+
+    // Si es Pot Limit Omaha, aplicar reglas PLO
+    if (gameStore.gameVariant === 'omaha') {
+        // P = pot antes de la acción actual (sin contar la apuesta que enfrentamos)
+        const P = gameStore.totalPot;
+
+        // b = cantidad que debemos igualar (call)
+        const b = gameStore.currentBet - gameStore.activePlayer.betThisRound;
+
+        let maxPotLimitBet;
+
+        if (b === 0) {
+            // Caso A: Abriendo la acción (no hay apuesta previa)
+            // Máximo = P + BB
+            maxPotLimitBet = P + gameStore.bigBlind;
+        } else {
+            // Caso B: Hay una apuesta que debemos igualar
+            // Máximo total = P + 2*b (que es call + raise máxima)
+            maxPotLimitBet = P + (2 * b);
+        }
+
+        // Retornar el menor entre el stack del jugador y el límite de pot
+        return Math.min(playerMaxStack, maxPotLimitBet);
+    }
+
+    // Para No-Limit Hold'em, no hay límite (solo el stack del jugador)
+    return playerMaxStack;
 });
 
 const minRaiseValue = computed(() => {
   if (!gameStore.activePlayer) return 0;
+
+  // Si es Pot Limit Omaha, aplicar reglas PLO para el mínimo
+  if (gameStore.gameVariant === 'omaha') {
+      const b = gameStore.currentBet - gameStore.activePlayer.betThisRound;
+
+      if (b === 0) {
+          // Abriendo la acción: mínimo = 2 * BB
+          const minOpen = 2 * gameStore.bigBlind;
+          return Math.min(minOpen, maxSliderValue.value);
+      } else {
+          // Hay una apuesta: mínimo = call + tamaño de la subida anterior
+          const previousRaise = gameStore.currentBet - (gameStore.lastRaiseAmount || 0);
+          const minRaise = gameStore.currentBet + previousRaise;
+          return Math.min(minRaise, maxSliderValue.value);
+      }
+  }
+
+  // Para No-Limit Hold'em, usar la lógica original
   const raiseDifference = gameStore.currentBet - (gameStore.lastRaiseAmount || 0);
   const min = gameStore.currentBet + Math.max(raiseDifference, gameStore.bigBlind);
   return Math.min(min, maxSliderValue.value);
