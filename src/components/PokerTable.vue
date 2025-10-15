@@ -137,11 +137,11 @@ function formatBBs(value) {
 
   .center-content {
     width: 60%;
-    gap: clamp(4px, 1vh, 8px);
+    gap: clamp(2px, 0.5vh, 5px);
   }
 
   .pot {
-    font-size: clamp(0.8rem, 2.5vmin, 1.1rem);
+    font-size: clamp(0.65rem, 2vmin, 0.9rem);
     padding: 0.4em 0.9em;
   }
 
@@ -172,11 +172,11 @@ function formatBBs(value) {
   }
 
   .center-content {
-    gap: clamp(3px, 0.8vh, 6px);
+    gap: clamp(2px, 0.4vh, 4px);
   }
 
   .pot {
-    font-size: clamp(0.75rem, 2vmin, 1rem);
+    font-size: clamp(0.6rem, 1.6vmin, 0.85rem);
     padding: 0.3em 0.8em;
   }
 
@@ -194,12 +194,12 @@ function formatBBs(value) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(3px, 0.8vh, 6px);
+  gap: clamp(2px, 0.4vh, 4px);
   width: 55%;
 }
 
 .pot {
-  font-size: clamp(0.9rem, 2.5vmin, 1.3rem);
+  font-size: clamp(0.7rem, 2vmin, 1rem);
   font-weight: bold;
   color: white;
   background-color: rgba(0, 0, 0, 0.4);
