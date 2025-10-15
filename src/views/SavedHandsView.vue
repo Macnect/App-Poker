@@ -215,7 +215,14 @@ const groupedHands = computed(() => {
 const filteredAndSortedHands = computed(() => {
   let hands = [...gameStore.savedHands];
   if (selectedDate.value) {
-    hands = hands.filter(hand => hand.fecha.split('T')[0] === selectedDate.value);
+    // Filtrar por día natural completo (00:00:00 hasta 23:59:59.999)
+    const startOfDay = new Date(selectedDate.value + 'T00:00:00');
+    const endOfDay = new Date(selectedDate.value + 'T23:59:59.999');
+
+    hands = hands.filter(hand => {
+      const handDate = new Date(hand.fecha);
+      return handDate >= startOfDay && handDate <= endOfDay;
+    });
   }
   hands.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   return hands;
@@ -494,7 +501,7 @@ h2 {
 
 .date-header {
   cursor: pointer;
-  color: #d1d5db;
+  color: #d4af37;
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
@@ -502,10 +509,11 @@ h2 {
   border-bottom: 1.5px solid rgba(212, 175, 55, 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing: 0.025em;
+  text-transform: capitalize;
 }
 
 .date-header:hover {
-  color: #d4af37;
+  color: #f0d060;
   border-bottom-color: rgba(212, 175, 55, 0.5);
   transform: translateX(5px);
 }
