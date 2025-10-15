@@ -445,10 +445,17 @@ export const useGameStore = defineStore('game', () => {
       // En Bomb Pot, la acción post-flop comienza en la SB (como en una partida real)
       activePlayerIndex.value = players.value[sbIndex].id;
       lastRaiserIndex.value = activePlayerIndex.value;
-      gamePhase.value = 'flop'; // Iniciar directamente en flop
 
-      const bombTypeText = bombPotType.value === 'double' ? 'Double Board Bomb Pot' : 'Bomb Pot';
-      recordState(`${bombTypeText}: Todos los jugadores ponen ${bombPotBB.value} BB. Total del bote: ${bombAmount * numPlayers}. Se va directo al flop.`);
+      // Si es Crazy Pineapple Bomb Pot, esperar al flop y permitir descarte
+      if (gameVariant.value === 'pineapple') {
+        gamePhase.value = 'waitingForFlop';
+        const bombTypeText = bombPotType.value === 'double' ? 'Double Board Bomb Pot' : 'Bomb Pot';
+        recordState(`${bombTypeText}: Todos los jugadores ponen ${bombPotBB.value} BB. Total del bote: ${bombAmount * numPlayers}. Se va directo al flop. Asigna las cartas del flop.`);
+      } else {
+        gamePhase.value = 'flop'; // Iniciar directamente en flop
+        const bombTypeText = bombPotType.value === 'double' ? 'Double Board Bomb Pot' : 'Bomb Pot';
+        recordState(`${bombTypeText}: Todos los jugadores ponen ${bombPotBB.value} BB. Total del bote: ${bombAmount * numPlayers}. Se va directo al flop.`);
+      }
     } else {
       players.value[sbIndex].isSB = true;
       postBet(players.value[sbIndex].id, smallBlind.value, true);
@@ -983,7 +990,19 @@ export const useGameStore = defineStore('game', () => {
 
           // Si estamos en Crazy Pineapple y en la fase waitingForFlop, avanzar a discard
           if (gamePhase.value === 'waitingForFlop' && gameVariant.value === 'pineapple') {
-            advanceRound();
+            // En Double Board, solo avanzar cuando ambos boards tengan sus 3 cartas del flop
+            if (bombPotType.value === 'double') {
+              const board1HasFlop = board.value.slice(0, 3).every(c => c);
+              const board2HasFlop = board2.value.slice(0, 3).every(c => c);
+
+              // Solo avanzar a discard cuando ambos boards tengan el flop completo
+              if (board1HasFlop && board2HasFlop) {
+                advanceRound();
+              }
+            } else {
+              // Single board: avanzar inmediatamente
+              advanceRound();
+            }
           }
         }
       } else {
