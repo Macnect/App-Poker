@@ -1225,12 +1225,12 @@ const betBoxStyle = computed(() => {
   }
 
   .is-9-max .player-cards.pineapple-cards {
-    gap: 2%;
-    width: 125%;
+    gap: 0%;
+    width: 115%;
   }
 
   .is-9-max .player-cards.pineapple-cards .card-placeholder {
-    width: 30%;
+    width: 32%;
   }
 
   .is-9-max .card-placeholder {
