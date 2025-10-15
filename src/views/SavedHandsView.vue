@@ -29,6 +29,9 @@
             <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
             <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
             <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
+            <span class="game-variant-badge" :class="getGameVariantClass(hand)">
+              {{ getGameVariantLabel(hand) }}
+            </span>
           </div>
 
           <div class="hand-preview">
@@ -74,6 +77,9 @@
               <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
               <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
               <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
+              <span class="game-variant-badge" :class="getGameVariantClass(hand)">
+                {{ getGameVariantLabel(hand) }}
+              </span>
             </div>
 
             <div class="hand-preview">
@@ -212,6 +218,8 @@ function getHeroFromHand(hand) { if (!hand.historial || hand.historial.length ==
 function getBoardFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board.filter(card => card); }
 function getBoard2FromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board2 ? finalState.board2.filter(card => card) : []; }
 function isDoubleBoardBombPot(hand) { return hand.bomb_pot_type === 'double' && hand.regla_especial === 'Bomb Pot'; }
+function getGameVariantLabel(hand) { return hand.game_variant === 'omaha' ? 'Omaha' : "Hold'em"; }
+function getGameVariantClass(hand) { return hand.game_variant === 'omaha' ? 'variant-omaha' : 'variant-holdem'; }
 function confirmDelete(handId) { selectedHandId.value = handId; showModal.value = true; }
 function closeModal() { showModal.value = false; selectedHandId.value = null; }
 async function deleteAndClose() {
@@ -431,16 +439,51 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-basis: 200px;
   flex-shrink: 0;
   color: #d1d5db;
   font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.hand-info span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .hand-info strong {
   color: #d4af37;
   font-weight: 600;
+}
+
+.game-variant-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.variant-holdem {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.7) 0%, rgba(37, 99, 235, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.variant-omaha {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.7) 0%, rgba(126, 34, 206, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
 .hand-preview {
@@ -765,11 +808,16 @@ h2 {
   }
 
   .hand-info {
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
     flex-basis: auto;
     width: 100%;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    gap: 0.3rem;
+  }
+
+  .game-variant-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
   }
 
   .hand-preview {
