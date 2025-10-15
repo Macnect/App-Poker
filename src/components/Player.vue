@@ -484,6 +484,8 @@ const betBoxStyle = computed(() => {
   line-height: 1;
   text-align: center;
   margin-bottom: 2px;
+  position: relative;
+  z-index: 15;
 }
 
 .player-name {
