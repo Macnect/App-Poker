@@ -665,6 +665,17 @@ const betBoxStyle = computed(() => {
   align-items: center;
   justify-content: center;
   gap: 4px;
+  /* Override parent overflow constraints to prevent currency truncation */
+  overflow: visible;
+  white-space: normal;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+/* Ensure parent allows overflow when input wrapper is present */
+.player-stack:has(.stack-input-wrapper) {
+  overflow: visible;
+  white-space: normal;
 }
 .editable-name-wrapper {
   display: flex;
