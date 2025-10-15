@@ -78,19 +78,30 @@
     <div
       v-if="player.betThisRound > 0"
       class="bet-box"
-      :class="{ 'bomb-pot-bet': player.isBombPot }"
+      :class="{ 'bomb-pot-bet': player.isBombPot, 'all-in-only': player.isAllIn }"
       :style="betBoxStyle"
     >
-      <ChipStack :amount="player.betThisRound" :bigBlind="gameStore.bigBlind" :isBombPot="player.isBombPot" />
-      <div class="bet-info">
-        <div class="bet-amount-container">
-          <div class="bet-amount-text">
-            <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
-            <span v-else>{{ formatBBs(player.betThisRound / gameStore.bigBlind) }}</span>
+      <!-- Si está en all-in, mostramos el icono del triángulo y la cantidad debajo -->
+      <template v-if="player.isAllIn">
+        <img src="/icons/all-in-icon.svg" alt="All-in" class="all-in-icon" />
+        <div class="bet-amount-text">
+          <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
+          <span v-else>{{ formatBBs(player.betThisRound / gameStore.bigBlind) }}</span>
+        </div>
+      </template>
+
+      <!-- Si NO está en all-in, mostramos las fichas y la cantidad -->
+      <template v-else>
+        <ChipStack :amount="player.betThisRound" :bigBlind="gameStore.bigBlind" :isBombPot="player.isBombPot" />
+        <div class="bet-info">
+          <div class="bet-amount-container">
+            <div class="bet-amount-text">
+              <span v-if="!gameStore.displayInBBs">{{ gameStore.currency }}{{ player.betThisRound }}</span>
+              <span v-else>{{ formatBBs(player.betThisRound / gameStore.bigBlind) }}</span>
+            </div>
           </div>
         </div>
-        <img v-if="player.isAllIn" src="/icons/all-in-icon.svg" alt="All-in" class="all-in-icon" />
-      </div>
+      </template>
     </div>
 
     <div
