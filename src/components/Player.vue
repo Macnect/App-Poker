@@ -473,11 +473,11 @@ const betBoxStyle = computed(() => {
 }
 
 .player-cards.omaha-cards .card-placeholder {
-  width: 48%; /* Adjusted width to prevent overflow with less overlap */
+  width: 52%; /* Larger cards for better readability */
 }
 
 .player-cards.omaha-cards .card-placeholder:not(:first-child) {
-  margin-left: -12%; /* Reduced overlap for better card separation */
+  margin-left: -14%; /* Adjusted overlap to maintain compact layout */
   position: relative;
 }
 
@@ -951,11 +951,11 @@ const betBoxStyle = computed(() => {
   }
 
   .player-cards.omaha-cards .card-placeholder {
-    width: 46%; /* Adjusted width to prevent overflow with less overlap */
+    width: 50%; /* Larger cards for better readability on mobile */
   }
 
   .player-cards.omaha-cards .card-placeholder:not(:first-child) {
-    margin-left: -12%; /* Reduced overlap for better card separation */
+    margin-left: -14%; /* Adjusted overlap to maintain compact layout */
   }
 
   .card-placeholder {
@@ -1183,11 +1183,11 @@ const betBoxStyle = computed(() => {
   }
 
   .is-9-max .player-cards.omaha-cards .card-placeholder {
-    width: 44%; /* Adjusted width to prevent overflow with less overlap */
+    width: 48%; /* Larger cards for better readability in 9-max */
   }
 
   .is-9-max .player-cards.omaha-cards .card-placeholder:not(:first-child) {
-    margin-left: -12%; /* Reduced overlap for better card separation */
+    margin-left: -14%; /* Adjusted overlap to maintain compact layout */
   }
 
   .is-9-max .card-placeholder {
