@@ -5,12 +5,10 @@
     <div class="filters-container">
       <div class="filter-group date-filter-group">
         <label for="date-picker">Filtrar por Fecha:</label>
-        <input
-          id="date-picker"
-          type="date"
+        <DatePicker
           v-model="datePickerValue"
           @change="onDatePickerChange"
-          class="date-input"
+          placeholder="Seleccionar fecha"
         />
         <button v-if="selectedDate" @click="clearDateFilter" class="clear-date-btn" title="Limpiar filtro">
           ✕
@@ -176,6 +174,7 @@ import { useGameStore } from '../store/game'
 import { useAuthStore } from '../store/useAuthStore'
 import PlayingCard from '../components/PlayingCard.vue';
 import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
+import DatePicker from '../components/DatePicker.vue';
 
 const gameStore = useGameStore();
 const authStore = useAuthStore();
@@ -348,46 +347,6 @@ h2 {
   color: #d1d5db;
   letter-spacing: 0.025em;
   white-space: nowrap;
-}
-
-.date-input {
-  flex: 1;
-  padding: 10px 14px;
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: 10px;
-  border: 1.5px solid rgba(212, 175, 55, 0.25);
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
-  color: #f9fafb;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.date-input:hover {
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-  border-color: rgba(212, 175, 55, 0.4);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-}
-
-.date-input:focus {
-  outline: none;
-  border-color: rgba(212, 175, 55, 0.6);
-  box-shadow:
-    0 4px 8px rgba(0, 0, 0, 0.3),
-    0 0 0 3px rgba(212, 175, 55, 0.1);
-}
-
-/* Estilos para el calendario del date picker */
-.date-input::-webkit-calendar-picker-indicator {
-  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(10deg);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.date-input::-webkit-calendar-picker-indicator:hover {
-  filter: invert(0.9) sepia(1) saturate(6) hue-rotate(10deg);
-  transform: scale(1.1);
 }
 
 .clear-date-btn {
@@ -1006,11 +965,6 @@ h2 {
 
   .filter-group label {
     font-size: 0.85rem;
-  }
-
-  .date-input {
-    padding: 9px 12px;
-    font-size: 0.95rem;
   }
 
   .clear-date-btn {
