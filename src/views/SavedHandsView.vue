@@ -41,10 +41,18 @@
               </div>
             </div>
             <div class="card-group">
-              <span class="group-label">Board</span>
+              <span class="group-label">Board 1</span>
               <div class="cards-display">
                 <template v-if="getBoardFromHand(hand).length > 0">
                   <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
+                </template>
+              </div>
+            </div>
+            <div v-if="isDoubleBoardBombPot(hand)" class="card-group">
+              <span class="group-label">Board 2</span>
+              <div class="cards-display">
+                <template v-if="getBoard2FromHand(hand).length > 0">
+                  <PlayingCard v-for="(card, index) in getBoard2FromHand(hand)" :key="`board2-${card}-${index}`" :cardId="card" />
                 </template>
               </div>
             </div>
@@ -78,10 +86,18 @@
                 </div>
               </div>
               <div class="card-group">
-                <span class="group-label">Board</span>
+                <span class="group-label">Board 1</span>
                 <div class="cards-display">
                   <template v-if="getBoardFromHand(hand).length > 0">
                     <PlayingCard v-for="(card, index) in getBoardFromHand(hand)" :key="`board-${card}-${index}`" :cardId="card" />
+                  </template>
+                </div>
+              </div>
+              <div v-if="isDoubleBoardBombPot(hand)" class="card-group">
+                <span class="group-label">Board 2</span>
+                <div class="cards-display">
+                  <template v-if="getBoard2FromHand(hand).length > 0">
+                    <PlayingCard v-for="(card, index) in getBoard2FromHand(hand)" :key="`board2-${card}-${index}`" :cardId="card" />
                   </template>
                 </div>
               </div>
@@ -194,6 +210,8 @@ function toggleHandStrengthSort() { sortKey.value = sortKey.value === 'strength'
 function loadHandForReplay(hand) { gameStore.loadHand(hand); emit('switch-view', 'CurrentHandView'); }
 function getHeroFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return null; const finalState = hand.historial[hand.historial.length - 1]; return finalState.players.find(p => p.name === 'Hero'); }
 function getBoardFromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board.filter(card => card); }
+function getBoard2FromHand(hand) { if (!hand.historial || hand.historial.length === 0) return []; const finalState = hand.historial[hand.historial.length - 1]; return finalState.board2 ? finalState.board2.filter(card => card) : []; }
+function isDoubleBoardBombPot(hand) { return hand.bomb_pot_type === 'double' && hand.regla_especial === 'Bomb Pot'; }
 function confirmDelete(handId) { selectedHandId.value = handId; showModal.value = true; }
 function closeModal() { showModal.value = false; selectedHandId.value = null; }
 async function deleteAndClose() {

@@ -33,7 +33,9 @@ export const useGameStore = defineStore('game', () => {
   const currency = ref('$');
   const specialRule = ref('Ninguno');
   const bombPotBB = ref(2);
+  const bombPotType = ref('single'); // 'single' o 'double'
   const board = ref(['', '', '', '', '']);
+  const board2 = ref(['', '', '', '', '']); // Segundo board para Double Board Bomb Pot
   const pots = ref([]);
   const history = ref([]);
   const currentActionIndex = ref(-1);
@@ -85,6 +87,12 @@ export const useGameStore = defineStore('game', () => {
     board.value.forEach(c => {
       if (c) cards.add(c);
     });
+    // Agregar cartas del segundo board si es double board bomb pot
+    if (bombPotType.value === 'double') {
+      board2.value.forEach(c => {
+        if (c) cards.add(c);
+      });
+    }
     return cards;
   });
 
@@ -128,6 +136,7 @@ export const useGameStore = defineStore('game', () => {
       moneda: currency.value,
       regla_especial: specialRule.value,
       bomb_pot_bb: bombPotBB.value,
+      bomb_pot_type: bombPotType.value, // Guardar el tipo de bomb pot
     };
     try {
       const newHand = await apiAddHand(handToSave);
@@ -153,6 +162,7 @@ export const useGameStore = defineStore('game', () => {
     const initialState = handData.historial[0]; // El historial viene del campo JSONB
     players.value = deepCopy(initialState.players);
     board.value = deepCopy(initialState.board);
+    board2.value = deepCopy(initialState.board2 || ['', '', '', '', '']); // Cargar segundo board si existe
     pots.value = deepCopy(initialState.pots);
     heroPosition.value = handData.posicion_heroe;
     smallBlind.value = handData.ciega_pequena;
@@ -160,6 +170,7 @@ export const useGameStore = defineStore('game', () => {
     currency.value = handData.moneda;
     specialRule.value = handData.regla_especial || 'Ninguno';
     bombPotBB.value = handData.bomb_pot_bb || 2;
+    bombPotType.value = handData.bomb_pot_type || 'single'; // Cargar tipo de bomb pot
 
     // Consolidar snapshots del flop para que aparezcan las 3 cartas a la vez
     const consolidatedHistory = consolidateFlopSnapshots(deepCopy(handData.historial));
@@ -188,8 +199,41 @@ export const useGameStore = defineStore('game', () => {
     while (i < historial.length) {
       const current = historial[i];
 
-      // Detectar si este snapshot es el inicio de una secuencia de flop
-      // Buscar 3 snapshots consecutivos donde el board pasa de 0 a 1, de 1 a 2, y de 2 a 3 cartas
+      // Detectar si es un Double Board Bomb Pot (mirando el snapshot inicial)
+      const isDoubleBoard = historial[0]?.description?.includes('Double Board Bomb Pot');
+
+      // Para Double Board Bomb Pot: consolidar 2 snapshots (uno por cada board con 3 cartas)
+      if (isDoubleBoard && i + 1 < historial.length) {
+        const prev = i > 0 ? historial[i - 1] : { board: ['', '', '', '', ''], board2: ['', '', '', '', ''] };
+        const snap1 = historial[i];
+        const snap2 = historial[i + 1];
+
+        // Verificar que snap1 tiene Board 1 con 3 cartas y Board 2 vacío
+        // Y que snap2 tiene Board 1 con 3 cartas y Board 2 con 3 cartas
+        const prevBoard1Count = prev.board?.slice(0, 3).filter(c => c).length || 0;
+        const prevBoard2Count = prev.board2?.slice(0, 3).filter(c => c).length || 0;
+        const snap1Board1Count = snap1.board?.slice(0, 3).filter(c => c).length || 0;
+        const snap1Board2Count = snap1.board2?.slice(0, 3).filter(c => c).length || 0;
+        const snap2Board1Count = snap2.board?.slice(0, 3).filter(c => c).length || 0;
+        const snap2Board2Count = snap2.board2?.slice(0, 3).filter(c => c).length || 0;
+
+        // Patrón esperado: prev (0,0) -> snap1 (3,0) -> snap2 (3,3)
+        if (prevBoard1Count === 0 && prevBoard2Count === 0 &&
+            snap1Board1Count === 3 && snap1Board2Count === 0 &&
+            snap2Board1Count === 3 && snap2Board2Count === 3) {
+
+          // Consolidar los 2 snapshots en uno solo
+          const consolidatedSnapshot = deepCopy(snap2); // El último snapshot tiene ambos boards completos
+          const flopCards1 = snap2.board.slice(0, 3);
+          const flopCards2 = snap2.board2.slice(0, 3);
+          consolidatedSnapshot.description = `Se asignan las cartas del flop:\nBoard 1: ${flopCards1.join(', ')}\nBoard 2: ${flopCards2.join(', ')}`;
+          consolidated.push(consolidatedSnapshot);
+          i += 2; // Saltar los 2 snapshots
+          continue;
+        }
+      }
+
+      // Detectar secuencia de flop normal (single board) - solo para cartas individuales
       if (i + 2 < historial.length) {
         const prev = i > 0 ? historial[i - 1] : { board: ['', '', '', '', ''] };
         const snap1 = historial[i];
@@ -278,6 +322,7 @@ export const useGameStore = defineStore('game', () => {
     const stateToRestore = history.value[0];
     players.value = deepCopy(stateToRestore.players);
     board.value = deepCopy(stateToRestore.board);
+    board2.value = deepCopy(stateToRestore.board2 || ['', '', '', '', '']); // Restaurar segundo board
     pots.value = deepCopy(stateToRestore.pots);
     // Restaurar estado del juego (con backward compatibility)
     if (stateToRestore.gamePhase !== undefined) {
@@ -300,7 +345,7 @@ export const useGameStore = defineStore('game', () => {
       playReplay();
     }
   }
-  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null) {
+  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null, newBombPotType = 'single') {
     // ... (El resto de la lógica de setupNewHand, performAction, etc., es interna y no cambia)
     // ... (ya que solo manipula el estado de la mano actual, no la lista de manos guardadas)
     pauseReplay();
@@ -311,7 +356,9 @@ export const useGameStore = defineStore('game', () => {
     bigBlind.value = newBb;
     specialRule.value = newSpecialRule;
     bombPotBB.value = newBombPotBB || 2;
+    bombPotType.value = newBombPotType || 'single';
     board.value = ['', '', '', '', ''];
+    board2.value = ['', '', '', '', '']; // Resetear segundo board
     pots.value = [{ amount: 0, eligiblePlayers: [] }];
     history.value = [];
     currentActionIndex.value = -1;
@@ -366,15 +413,25 @@ export const useGameStore = defineStore('game', () => {
     if (specialRule.value === 'Bomb Pot') {
       const bombAmount = bigBlind.value * bombPotBB.value;
       players.value.forEach(player => {
-        postBet(player.id, bombAmount, true);
+        player.stack -= bombAmount;
         player.isBombPot = true;
+        player.totalBetInHand += bombAmount;
       });
-      currentBet.value = bombAmount;
-      minRaise.value = bombAmount * 2;
-      lastRaiseAmount.value = bombAmount;
-      activePlayerIndex.value = players.value[(bbIndex + 1) % numPlayers].id;
+      // Las apuestas van directamente al bote
+      pots.value[0].amount = bombAmount * numPlayers;
+      pots.value[0].eligiblePlayers = players.value.map(p => p.id);
+
+      // Configurar para empezar en flop - la acción comienza por la SB
+      currentBet.value = 0;
+      minRaise.value = bigBlind.value;
+      lastRaiseAmount.value = 0;
+      // En Bomb Pot, la acción post-flop comienza en la SB (como en una partida real)
+      activePlayerIndex.value = players.value[sbIndex].id;
       lastRaiserIndex.value = activePlayerIndex.value;
-      recordState(`Bomb Pot: Todos los jugadores ponen ${bombPotBB.value} BB inicialmente.`);
+      gamePhase.value = 'flop'; // Iniciar directamente en flop
+
+      const bombTypeText = bombPotType.value === 'double' ? 'Double Board Bomb Pot' : 'Bomb Pot';
+      recordState(`${bombTypeText}: Todos los jugadores ponen ${bombPotBB.value} BB. Total del bote: ${bombAmount * numPlayers}. Se va directo al flop.`);
     } else {
       players.value[sbIndex].isSB = true;
       postBet(players.value[sbIndex].id, smallBlind.value, true);
@@ -625,29 +682,63 @@ export const useGameStore = defineStore('game', () => {
     }
     recordState("--- SHOWDOWN --- Se muestran las cartas.");
     const playersToShowdown = players.value.filter(p => p.inHand);
-    pots.value.forEach((pot, index) => {
+
+    // Si es Double Board Bomb Pot, dividir cada bote 50/50 entre ambos boards
+    if (bombPotType.value === 'double' && specialRule.value === 'Bomb Pot') {
+      pots.value.forEach((pot, index) => {
         if(pot.amount === 0) return;
         const eligiblePlayers = playersToShowdown.filter(p => pot.eligiblePlayers.includes(p.id));
-        if(eligiblePlayers.length === 1) {
-            const winner = eligiblePlayers[0];
-            winner.stack += pot.amount;
-            recordState(`${winner.name} gana el bote ${index+1} de ${pot.amount}.`);
-        } else if (eligiblePlayers.length > 1) {
-            eligiblePlayers.forEach(p => { p.handResult = evaluateHand(p.cards, board.value); });
-            eligiblePlayers.sort((a, b) => b.handResult.rank - a.handResult.rank);
-            const bestRank = eligiblePlayers[0].handResult.rank;
-            const winners = eligiblePlayers.filter(p => p.handResult.rank === bestRank);
-            const potSplit = Math.floor(pot.amount / winners.length);
-            winners.forEach(winner => { winner.stack += potSplit; });
-            const winnerNames = winners.map(w => w.name).join(', ');
-            recordState(`${winnerNames} gana${winners.length > 1 ? 'n' : ''} el bote ${index+1} de ${pot.amount} con ${winners[0].handResult.description}.`);
-        }
-    });
+
+        // Dividir el bote 50/50 entre los dos boards
+        const halfPot = Math.floor(pot.amount / 2);
+
+        // Evaluar Board 1
+        eligiblePlayers.forEach(p => { p.handResult1 = evaluateHand(p.cards, board.value); });
+        eligiblePlayers.sort((a, b) => b.handResult1.rank - a.handResult1.rank);
+        const bestRank1 = eligiblePlayers[0].handResult1.rank;
+        const winners1 = eligiblePlayers.filter(p => p.handResult1.rank === bestRank1);
+        const potSplit1 = Math.floor(halfPot / winners1.length);
+        winners1.forEach(winner => { winner.stack += potSplit1; });
+        const winnerNames1 = winners1.map(w => w.name).join(', ');
+        recordState(`Board 1 - ${winnerNames1} gana${winners1.length > 1 ? 'n' : ''} ${halfPot} con ${winners1[0].handResult1.description}.`);
+
+        // Evaluar Board 2
+        eligiblePlayers.forEach(p => { p.handResult2 = evaluateHand(p.cards, board2.value); });
+        eligiblePlayers.sort((a, b) => b.handResult2.rank - a.handResult2.rank);
+        const bestRank2 = eligiblePlayers[0].handResult2.rank;
+        const winners2 = eligiblePlayers.filter(p => p.handResult2.rank === bestRank2);
+        const potSplit2 = Math.floor(halfPot / winners2.length);
+        winners2.forEach(winner => { winner.stack += potSplit2; });
+        const winnerNames2 = winners2.map(w => w.name).join(', ');
+        recordState(`Board 2 - ${winnerNames2} gana${winners2.length > 1 ? 'n' : ''} ${halfPot} con ${winners2[0].handResult2.description}.`);
+      });
+    } else {
+      // Lógica normal para manos sin double board
+      pots.value.forEach((pot, index) => {
+          if(pot.amount === 0) return;
+          const eligiblePlayers = playersToShowdown.filter(p => pot.eligiblePlayers.includes(p.id));
+          if(eligiblePlayers.length === 1) {
+              const winner = eligiblePlayers[0];
+              winner.stack += pot.amount;
+              recordState(`${winner.name} gana el bote ${index+1} de ${pot.amount}.`);
+          } else if (eligiblePlayers.length > 1) {
+              eligiblePlayers.forEach(p => { p.handResult = evaluateHand(p.cards, board.value); });
+              eligiblePlayers.sort((a, b) => b.handResult.rank - a.handResult.rank);
+              const bestRank = eligiblePlayers[0].handResult.rank;
+              const winners = eligiblePlayers.filter(p => p.handResult.rank === bestRank);
+              const potSplit = Math.floor(pot.amount / winners.length);
+              winners.forEach(winner => { winner.stack += potSplit; });
+              const winnerNames = winners.map(w => w.name).join(', ');
+              recordState(`${winnerNames} gana${winners.length > 1 ? 'n' : ''} el bote ${index+1} de ${pot.amount} con ${winners[0].handResult.description}.`);
+          }
+      });
+    }
   }
   function resetHand() {
     pauseReplay();
     players.value = [];
     board.value = ['', '', '', '', ''];
+    board2.value = ['', '', '', '', '']; // Resetear segundo board
     pots.value = [];
     history.value = [];
     currentActionIndex.value = -1;
@@ -664,6 +755,7 @@ export const useGameStore = defineStore('game', () => {
     const currentState = {
       players: deepCopy(players.value),
       board: deepCopy(board.value),
+      board2: deepCopy(board2.value), // Incluir segundo board en snapshots
       pots: deepCopy(pots.value),
       description: actionDescription,
       // Estado del juego
@@ -688,6 +780,7 @@ export const useGameStore = defineStore('game', () => {
       const stateToRestore = history.value[newIndex];
       players.value = deepCopy(stateToRestore.players);
       board.value = deepCopy(stateToRestore.board);
+      board2.value = deepCopy(stateToRestore.board2 || ['', '', '', '', '']); // Restaurar segundo board
       pots.value = deepCopy(stateToRestore.pots);
       // Restaurar estado del juego (con backward compatibility)
       if (stateToRestore.gamePhase !== undefined) {
@@ -710,7 +803,9 @@ export const useGameStore = defineStore('game', () => {
 
     // Detectar si estamos abriendo para el flop completo (posiciones 0, 1, 2)
     if (target.type === 'board' && target.id >= 0 && target.id <= 2) {
-      const flopCards = [board.value[0], board.value[1], board.value[2]];
+      // Determinar qué board estamos usando basándonos en boardNumber
+      const targetBoard = target.boardNumber === 2 ? board2 : board;
+      const flopCards = [targetBoard.value[0], targetBoard.value[1], targetBoard.value[2]];
       const emptyFlopCount = flopCards.filter(c => !c).length;
 
       // Activar modo multi-select solo si todas las cartas del flop están vacías
@@ -728,7 +823,7 @@ export const useGameStore = defineStore('game', () => {
   }
   function assignCard(cardId) {
     if (!cardPickerTarget.value) return;
-    const { type, id, cardIndex } = cardPickerTarget.value;
+    const { type, id, cardIndex, boardNumber } = cardPickerTarget.value;
 
     if (type === 'player') {
       const player = players.value.find(p => p.id === id);
@@ -736,9 +831,12 @@ export const useGameStore = defineStore('game', () => {
       closeCardPicker();
       recordState(`Se asigna la carta ${cardId}.`);
     } else if (type === 'board') {
+      const targetBoard = boardNumber === 2 ? board2 : board;
+      const boardLabel = boardNumber === 2 ? 'Board 2' : 'Board 1';
+
       if (isFlopMultiSelect.value) {
         // Modo selección múltiple de flop
-        board.value[flopSelectIndex.value] = cardId;
+        targetBoard.value[flopSelectIndex.value] = cardId;
         // No registrar estado hasta que se completen las 3 cartas
 
         flopSelectIndex.value++;
@@ -747,18 +845,20 @@ export const useGameStore = defineStore('game', () => {
         if (flopSelectIndex.value >= 3) {
           closeCardPicker();
           // Registrar un solo estado con las 3 cartas del flop
-          recordState(`Se asignan las cartas del flop: ${board.value[0]}, ${board.value[1]}, ${board.value[2]}.`);
+          const boardLabelText = bombPotType.value === 'double' ? ` (${boardLabel})` : '';
+          recordState(`Se asignan las cartas del flop${boardLabelText}: ${targetBoard.value[0]}, ${targetBoard.value[1]}, ${targetBoard.value[2]}.`);
         }
       } else {
         // Modo normal: asignar a la posición específica
-        board.value[id] = cardId;
+        targetBoard.value[id] = cardId;
         closeCardPicker();
-        recordState(`Se asigna la carta ${cardId}.`);
+        const boardLabelText = bombPotType.value === 'double' ? ` en ${boardLabel}` : '';
+        recordState(`Se asigna la carta ${cardId}${boardLabelText}.`);
       }
     }
   }
   function unassignCard(target) {
-    const { type, id, cardIndex } = target;
+    const { type, id, cardIndex, boardNumber } = target;
     let cardToUnassign = '';
     if (type === 'player') {
       const player = players.value.find(p => p.id === id);
@@ -767,8 +867,15 @@ export const useGameStore = defineStore('game', () => {
         player.cards[cardIndex] = '';
       }
     } else if (type === 'board') {
-      cardToUnassign = board.value[id];
-      board.value[id] = '';
+      const targetBoard = boardNumber === 2 ? board2 : board;
+      const boardLabel = boardNumber === 2 ? 'Board 2' : 'Board 1';
+      cardToUnassign = targetBoard.value[id];
+      targetBoard.value[id] = '';
+
+      if (cardToUnassign && bombPotType.value === 'double') {
+        recordState(`Se desasigna la carta ${cardToUnassign} de ${boardLabel}.`);
+        return;
+      }
     }
     if (cardToUnassign) {
       recordState(`Se desasigna la carta ${cardToUnassign}.`);
@@ -877,7 +984,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   return {
-    players, heroPosition, smallBlind, bigBlind, currency, specialRule, bombPotBB, board, savedHands, pots,
+    players, heroPosition, smallBlind, bigBlind, currency, specialRule, bombPotBB, bombPotType, board, board2, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,

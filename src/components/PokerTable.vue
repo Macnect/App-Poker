@@ -9,13 +9,49 @@
           <span v-else>{{ formatBBs(gameStore.totalPot / gameStore.bigBlind) }}</span>
         </div>
 
-        <div class="board">
-          <div 
-            v-for="(card, index) in 5" 
-            :key="`board-${index}`" 
+        <!-- Mostrar dos boards si es Double Board Bomb Pot -->
+        <div v-if="gameStore.bombPotType === 'double' && gameStore.specialRule === 'Bomb Pot'" class="double-board-container">
+          <div class="board">
+            <div
+              v-for="(card, index) in 5"
+              :key="`board1-${index}`"
+              class="card-placeholder"
+              :class="{ locked: !isBoardCardClickable(index) }"
+              @click="handleBoardCardClick(index, 1)"
+            >
+              <PlayingCard v-if="gameStore.board[index]" :cardId="gameStore.board[index]" />
+              <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="140" rx="8" fill="#374151"/>
+                <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="300">+</text>
+              </svg>
+            </div>
+          </div>
+
+          <div class="board">
+            <div
+              v-for="(card, index) in 5"
+              :key="`board2-${index}`"
+              class="card-placeholder"
+              :class="{ locked: !isBoardCardClickable(index) }"
+              @click="handleBoardCardClick(index, 2)"
+            >
+              <PlayingCard v-if="gameStore.board2[index]" :cardId="gameStore.board2[index]" />
+              <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="100" height="140" rx="8" fill="#374151"/>
+                <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="300">+</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Board único para otros modos -->
+        <div v-else class="board">
+          <div
+            v-for="(card, index) in 5"
+            :key="`board-${index}`"
             class="card-placeholder"
             :class="{ locked: !isBoardCardClickable(index) }"
-            @click="handleBoardCardClick(index)"
+            @click="handleBoardCardClick(index, 1)"
           >
             <PlayingCard v-if="gameStore.board[index]" :cardId="gameStore.board[index]" />
             <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -66,10 +102,13 @@ function isBoardCardClickable(index) {
   return false;
 }
 
-function handleBoardCardClick(index) {
+function handleBoardCardClick(index, boardNumber = 1) {
   if (!isBoardCardClickable(index) || gameStore.gamePhase === 'replay') return;
-  const target = { type: 'board', id: index };
-  if (gameStore.board[index]) {
+  const target = { type: 'board', id: index, boardNumber: boardNumber };
+
+  const boardRef = boardNumber === 1 ? gameStore.board : gameStore.board2;
+
+  if (boardRef[index]) {
     gameStore.unassignCard(target);
   } else {
     gameStore.openCardPicker(target);
@@ -238,5 +277,27 @@ function formatBBs(value) {
 
 .card-placeholder.locked:hover {
   outline: none;
+}
+
+/* Estilos para Double Board Bomb Pot */
+.double-board-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(3px, 0.6vh, 8px);
+  align-items: center;
+}
+
+.board-label {
+  font-size: clamp(0.65rem, 1.5vmin, 0.85rem);
+  font-weight: 700;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  padding: 0.2em 0.8em;
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 </style>

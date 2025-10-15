@@ -62,6 +62,13 @@
           <option value="5">5bb</option>
         </select>
       </div>
+      <div v-if="selectedSpecialRule === 'Bomb Pot'" class="config-item">
+        <label for="bomb-pot-type-select">Tipo de Bomb Pot:</label>
+        <select id="bomb-pot-type-select" v-model="selectedBombPotType">
+          <option value="single">Single Board</option>
+          <option value="double">Double Board</option>
+        </select>
+      </div>
       <button class="start-hand-btn" @click="loadHandClicked">Iniciar Mano</button>
     </div>
 
@@ -103,6 +110,7 @@ const bbInput = ref(2);
 const selectedCurrency = ref('$');
 const selectedSpecialRule = ref('Ninguno');
 const selectedBombPotBB = ref(2);
+const selectedBombPotType = ref('single');
 
 const showRotateOverlay = ref(false);
 const showAllCurrencies = ref(false);
@@ -122,7 +130,8 @@ function saveConfiguration() {
     bbInput: bbInput.value,
     selectedCurrency: selectedCurrency.value,
     selectedSpecialRule: selectedSpecialRule.value,
-    selectedBombPotBB: selectedBombPotBB.value
+    selectedBombPotBB: selectedBombPotBB.value,
+    selectedBombPotType: selectedBombPotType.value
   };
 
   localStorage.setItem('handConfiguration', JSON.stringify(config));
@@ -147,6 +156,7 @@ function loadConfiguration() {
       selectedCurrency.value = config.selectedCurrency || '$';
       selectedSpecialRule.value = config.selectedSpecialRule || 'Ninguno';
       selectedBombPotBB.value = config.selectedBombPotBB || 2;
+      selectedBombPotType.value = config.selectedBombPotType || 'single';
     } catch (error) {
       console.error('Error al cargar la configuración guardada:', error);
     }
@@ -226,7 +236,8 @@ function handlePositionSelected(heroPosition) {
     sbInput.value,
     bbInput.value,
     selectedSpecialRule.value,
-    selectedSpecialRule.value === 'Bomb Pot' ? selectedBombPotBB.value : null
+    selectedSpecialRule.value === 'Bomb Pot' ? selectedBombPotBB.value : null,
+    selectedSpecialRule.value === 'Bomb Pot' ? selectedBombPotType.value : 'single'
   );
 }
 
