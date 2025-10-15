@@ -475,6 +475,8 @@ export const useGameStore = defineStore('game', () => {
         lastRaiseAmount.value = bigBlind.value * 2;
         lastRaiserIndex.value = players.value[buttonIndex].id;
         recordState(`Mississippi puesto por ${players.value[buttonIndex].name}.`);
+        // En Mississippi, la acción preflop empieza en la SB (no en UTG como sería con straddle normal)
+        activePlayerIndex.value = players.value[sbIndex].id;
       }
     }
   }
@@ -664,12 +666,17 @@ export const useGameStore = defineStore('game', () => {
     let nextIndex;
     const dealerIndexInPlayersArray = players.value.findIndex(p => p.id === dealerPosition.value);
 
+    // Postflop SIEMPRE empieza en la SB (dealerIndex + 1)
+    // Esto aplica para manos normales, Straddle, Mississippi, etc.
     if (players.value.length === 2) {
+      // Heads-up: BB es dealer+1, acción empieza allí
       nextIndex = (dealerIndexInPlayersArray + 1) % players.value.length;
     } else {
+      // Multi-way: SB es dealer+1, acción empieza allí
       nextIndex = (dealerIndexInPlayersArray + 1) % players.value.length;
     }
 
+    // Saltar jugadores que se retiraron o están all-in
     while (!players.value[nextIndex].inHand || players.value[nextIndex].isAllIn) {
       nextIndex = (nextIndex + 1) % players.value.length;
     }
