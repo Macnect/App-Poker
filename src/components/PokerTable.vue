@@ -84,7 +84,7 @@ import PlayingCard from './PlayingCard.vue';
 const gameStore = useGameStore();
 const settingsStore = useSettingsStore();
 
-const clickablePhases = computed(() => ['flop', 'turn', 'river', 'showdown']);
+const clickablePhases = computed(() => ['waitingForFlop', 'flop', 'turn', 'river', 'showdown']);
 
 function isBoardCardClickable(index) {
   if (gameStore.gamePhase === 'replay' || gameStore.gamePhase === 'showdown') {

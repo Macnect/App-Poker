@@ -31,7 +31,9 @@
     "bet": "BET",
     "raise": "RAISE",
     "pot": "POT",
-    "allIn": "ALL-IN"
+    "allIn": "ALL-IN",
+    "selectCardToDiscard": "Crazy Pineapple Discard Phase",
+    "clickCardToDiscard": "Click one of your cards to discard it"
   },
   "pokerTable": {
     "pot": "Pot"

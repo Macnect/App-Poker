@@ -20,6 +20,7 @@
         <select id="game-variant-select" v-model="selectedGameVariant">
           <option value="holdem">No-Limit Hold'em</option>
           <option value="omaha">Pot Limit Omaha</option>
+          <option value="pineapple">Crazy Pineapple</option>
         </select>
       </div>
       <div class="config-item">

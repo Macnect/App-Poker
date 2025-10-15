@@ -31,7 +31,9 @@
     "bet": "BET",
     "raise": "RAISE",
     "pot": "POT",
-    "allIn": "ALL-IN"
+    "allIn": "ALL-IN",
+    "selectCardToDiscard": "Fase de descarte de Crazy Pineapple",
+    "clickCardToDiscard": "Haz clic en una de tus cartas para descartarla"
   },
   "pokerTable": {
     "pot": "Bote"

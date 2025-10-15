@@ -46,7 +46,9 @@ export const useGameStore = defineStore('game', () => {
 
   // Helper function: returns empty card slots based on game variant
   const getEmptyCardSlots = () => {
-    return gameVariant.value === 'omaha' ? ['', '', '', ''] : ['', ''];
+    if (gameVariant.value === 'omaha') return ['', '', '', ''];
+    if (gameVariant.value === 'pineapple') return ['', '', ''];
+    return ['', ''];
   };
 
   // Pagination state
@@ -73,6 +75,9 @@ export const useGameStore = defineStore('game', () => {
   const playerCardsSelectIndex = ref(0);
 
   const isPreActionPhase = ref(true);
+
+  // Crazy Pineapple discard tracking
+  const playersWhoDiscarded = ref(new Set());
   const openNotesPanelPlayerId = ref(null);
   const tableLayout = ref({
     board: { x: 0, y: 0 },
@@ -540,7 +545,63 @@ export const useGameStore = defineStore('game', () => {
     recordState(actionDescription);
     checkHandOrRoundCompletion();
   }
-  
+
+  function performDiscard(playerId, cardIndex) {
+    const player = players.value.find(p => p.id === playerId);
+    if (!player || !player.inHand) return;
+
+    // Remove card from player's hand
+    const discardedCard = player.cards[cardIndex];
+    player.cards.splice(cardIndex, 1);
+
+    // Mark player as having discarded
+    playersWhoDiscarded.value.add(playerId);
+
+    // Record state
+    recordState(`${player.name} descarta una carta.`);
+
+    // Check if all active players have discarded
+    const playersInHand = players.value.filter(p => p.inHand);
+    const allDiscarded = playersInHand.every(p => playersWhoDiscarded.value.has(p.id));
+
+    if (allDiscarded) {
+      // Reset discard tracking
+      playersWhoDiscarded.value.clear();
+
+      // Transition to normal flop betting
+      gamePhase.value = 'flop';
+      recordState("--- Todos los jugadores han descartado. Comienza la apuesta del flop. ---");
+    }
+  }
+
+  function autoDiscardNonHeroPlayers() {
+    const playersInHand = players.value.filter(p => p.inHand);
+
+    playersInHand.forEach(player => {
+      // Skip Hero - they must discard manually
+      if (player.name === 'Hero') return;
+
+      // Randomly discard one of the 3 cards
+      const randomIndex = Math.floor(Math.random() * player.cards.length);
+      player.cards.splice(randomIndex, 1);
+
+      // Mark player as having discarded
+      playersWhoDiscarded.value.add(player.id);
+
+      // Record state
+      recordState(`${player.name} descarta una carta.`);
+    });
+
+    // Check if Hero is still in hand - if not, we can proceed immediately
+    const heroInHand = playersInHand.find(p => p.name === 'Hero');
+    if (!heroInHand) {
+      // No Hero in hand, all players have discarded automatically
+      playersWhoDiscarded.value.clear();
+      gamePhase.value = 'flop';
+      recordState("--- Todos los jugadores han descartado. Comienza la apuesta del flop. ---");
+    }
+  }
+
   function checkHandOrRoundCompletion() {
     const playersInHand = players.value.filter(p => p.inHand);
     if (playersInHand.length === 1) {
@@ -684,7 +745,25 @@ export const useGameStore = defineStore('game', () => {
     lastRaiserIndex.value = activePlayerIndex.value;
 
     switch (gamePhase.value) {
-      case 'preflop': gamePhase.value = 'flop'; recordState("--- FLOP ---"); break;
+      case 'preflop':
+        // For Crazy Pineapple, wait for flop assignment before entering discard phase
+        if (gameVariant.value === 'pineapple') {
+          gamePhase.value = 'waitingForFlop';
+          recordState("--- FLOP --- Asigna las cartas del flop.");
+        } else {
+          gamePhase.value = 'flop';
+          recordState("--- FLOP ---");
+        }
+        break;
+      case 'waitingForFlop':
+        // After flop is assigned, enter discard phase
+        gamePhase.value = 'discard';
+        playersWhoDiscarded.value.clear();
+        recordState("--- Los jugadores deben descartar una carta antes de apostar. ---");
+
+        // Auto-discard for non-hero players
+        autoDiscardNonHeroPlayers();
+        break;
       case 'flop': gamePhase.value = 'turn'; recordState("--- TURN ---"); break;
       case 'turn': gamePhase.value = 'river'; recordState("--- RIVER ---"); break;
     }
@@ -901,6 +980,11 @@ export const useGameStore = defineStore('game', () => {
           // Registrar un solo estado con las 3 cartas del flop
           const boardLabelText = bombPotType.value === 'double' ? ` (${boardLabel})` : '';
           recordState(`Se asignan las cartas del flop${boardLabelText}: ${targetBoard.value[0]}, ${targetBoard.value[1]}, ${targetBoard.value[2]}.`);
+
+          // Si estamos en Crazy Pineapple y en la fase waitingForFlop, avanzar a discard
+          if (gamePhase.value === 'waitingForFlop' && gameVariant.value === 'pineapple') {
+            advanceRound();
+          }
         }
       } else {
         // Modo normal: asignar a la posición específica
@@ -1045,10 +1129,11 @@ export const useGameStore = defineStore('game', () => {
     replaySpeed, isPreActionPhase, openNotesPanelPlayerId, tableLayout,
     isFlopMultiSelect, flopSelectIndex,
     isPlayerCardsMultiSelect, playerCardsSelectIndex,
+    playersWhoDiscarded,
     toggleDisplayMode,
     playReplay, pauseReplay, restartReplay, setReplaySpeed, toggleReplay,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,
-    performAction, resetHand,
+    performAction, performDiscard, resetHand,
     openCardPicker, closeCardPicker, assignCard, unassignCard,
     updatePlayerName, updatePlayerStack,
     updatePlayerNotes, updatePlayerTag, updatePlayerPosition, updateTableLayout, toggleNotesPanel, closeNotesPanel,

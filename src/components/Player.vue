@@ -1,7 +1,7 @@
 <template>
   <div class="player-container" :style="seatStyle" :class="{ 'is-9-max': playerCount >= 9 }">
 
-    <div class="player-cards" :class="{ 'omaha-cards': player.cards.length === 4 }">
+    <div class="player-cards" :class="{ 'omaha-cards': player.cards.length === 4, 'pineapple-cards': player.cards.length === 3 }">
         <div
           v-for="(card, index) in player.cards"
           :key="index"
@@ -206,6 +206,17 @@ function checkTeleportTarget() {
 
 function handleCardClick(playerId, cardIndex) {
   if (gameStore.gamePhase === 'replay') return;
+
+  // Handle discard phase for Crazy Pineapple
+  if (gameStore.gamePhase === 'discard' && props.player.inHand) {
+    // Only allow discarding if this player hasn't discarded yet
+    if (!gameStore.playersWhoDiscarded.has(playerId) && props.player.cards[cardIndex]) {
+      gameStore.performDiscard(playerId, cardIndex);
+      return;
+    }
+  }
+
+  // Normal card assignment/unassignment
   const target = { type: 'player', id: playerId, cardIndex: cardIndex };
   if (props.player.cards[cardIndex]) {
     gameStore.unassignCard(target);
@@ -487,6 +498,17 @@ const betBoxStyle = computed(() => {
 .player-cards.omaha-cards .card-placeholder:nth-child(2) { z-index: 3; }
 .player-cards.omaha-cards .card-placeholder:nth-child(3) { z-index: 2; }
 .player-cards.omaha-cards .card-placeholder:nth-child(4) { z-index: 1; }
+
+/* Pineapple cards - 3 cards positioned similarly to Hold'em */
+.player-cards.pineapple-cards {
+  gap: 3%;
+  margin-bottom: 0;
+  width: 100%;
+}
+
+.player-cards.pineapple-cards .card-placeholder {
+  width: 28%;
+}
 
 .card-placeholder {
   width: 70%;
@@ -960,6 +982,15 @@ const betBoxStyle = computed(() => {
     margin-left: -8%; /* Small overlap between cards */
   }
 
+  .player-cards.pineapple-cards {
+    gap: 2%;
+    width: 95%;
+  }
+
+  .player-cards.pineapple-cards .card-placeholder {
+    width: 30%;
+  }
+
   .card-placeholder {
     width: 68%;
   }
@@ -1191,6 +1222,15 @@ const betBoxStyle = computed(() => {
 
   .is-9-max .player-cards.omaha-cards .card-placeholder:not(:first-child) {
     margin-left: -8%; /* Small overlap between cards */
+  }
+
+  .is-9-max .player-cards.pineapple-cards {
+    gap: 2%;
+    width: 90%;
+  }
+
+  .is-9-max .player-cards.pineapple-cards .card-placeholder {
+    width: 28%;
   }
 
   .is-9-max .card-placeholder {

@@ -1,7 +1,20 @@
 <template>
   <div class="action-panel-container">
     <div class="action-panel-wrapper">
-      <div class="actions-grid">
+      <!-- Waiting for flop phase UI (Crazy Pineapple) -->
+      <div v-if="gameStore.gamePhase === 'waitingForFlop'" class="discard-message">
+        <p>Asigna las cartas del flop</p>
+        <p class="discard-instruction">Haz clic en las posiciones del board para seleccionar las 3 cartas del flop</p>
+      </div>
+
+      <!-- Discard phase UI -->
+      <div v-else-if="gameStore.gamePhase === 'discard'" class="discard-message">
+        <p>Descarta una de tus cartas</p>
+        <p class="discard-instruction">Los rivales ya descartaron. Haz clic en una de tus 3 cartas para descartarla.</p>
+      </div>
+
+      <!-- Normal action UI -->
+      <div v-else class="actions-grid">
         <div class="grid-turn-info">{{ $t('actionPanel.turnOf') }} <strong>{{ gameStore.activePlayer?.name }}</strong></div>
         <button @click="gameStore.performAction('fold')" class="grid-fold btn-fold">{{ $t('actionPanel.fold') }}</button>
         <button @click="handleCheckCall" :disabled="isCallDisabled" class="grid-call btn-call">{{ checkOrCallLabel.toUpperCase() }}</button>
@@ -675,6 +688,29 @@ button:disabled, .grid-slider:disabled {
   cursor: not-allowed;
   opacity: 0.5;
   transform: none !important;
+}
+
+/* ========================================
+   DISCARD PHASE STYLING
+   ======================================== */
+.discard-message {
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  color: #d4af37;
+}
+
+.discard-message p {
+  margin: 8px 0;
+  font-size: clamp(1rem, 2vmin, 1.3rem);
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.discard-instruction {
+  font-size: clamp(0.85rem, 1.6vmin, 1rem);
+  font-weight: 500;
+  color: #d1d5db;
 }
 
 /* ========================================
