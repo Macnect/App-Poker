@@ -29,9 +29,20 @@
             <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
             <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
             <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
-            <span class="game-variant-badge" :class="getGameVariantClass(hand)">
-              {{ getGameVariantLabel(hand) }}
-            </span>
+            <div class="badges-container">
+              <span class="game-variant-badge" :class="getGameVariantClass(hand)">
+                {{ getGameVariantLabel(hand) }}
+              </span>
+              <span v-if="hand.regla_especial === 'Bomb Pot'" class="special-rule-badge bomb-pot-badge">
+                BOMB POT
+              </span>
+              <span v-if="hand.regla_especial === 'Mississippi'" class="special-rule-badge mississippi-badge">
+                MISSISSIPPI
+              </span>
+              <span v-if="hand.regla_especial === 'Straddle'" class="special-rule-badge straddle-badge">
+                STRADDLE
+              </span>
+            </div>
           </div>
 
           <div class="hand-preview">
@@ -77,9 +88,20 @@
               <span><strong>Hora:</strong> {{ new Date(hand.fecha).toLocaleTimeString('es-ES') }}</span>
               <span><strong>Hero:</strong> {{ hand.posicion_heroe }}</span>
               <span><strong>Jugadores:</strong> {{ hand.cantidad_jugadores }}</span>
-              <span class="game-variant-badge" :class="getGameVariantClass(hand)">
-                {{ getGameVariantLabel(hand) }}
-              </span>
+              <div class="badges-container">
+                <span class="game-variant-badge" :class="getGameVariantClass(hand)">
+                  {{ getGameVariantLabel(hand) }}
+                </span>
+                <span v-if="hand.regla_especial === 'Bomb Pot'" class="special-rule-badge bomb-pot-badge">
+                  BOMB POT
+                </span>
+                <span v-if="hand.regla_especial === 'Mississippi'" class="special-rule-badge mississippi-badge">
+                  MISSISSIPPI
+                </span>
+                <span v-if="hand.regla_especial === 'Straddle'" class="special-rule-badge straddle-badge">
+                  STRADDLE
+                </span>
+              </div>
             </div>
 
             <div class="hand-preview">
@@ -460,7 +482,15 @@ h2 {
   font-weight: 600;
 }
 
-.game-variant-badge {
+.badges-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.game-variant-badge,
+.special-rule-badge {
   display: inline-block;
   padding: 2px 8px;
   border-radius: 6px;
@@ -484,6 +514,24 @@ h2 {
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.7) 0%, rgba(126, 34, 206, 0.8) 100%);
   color: white;
   border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.bomb-pot-badge {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.7) 0%, rgba(220, 38, 38, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.mississippi-badge {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.7) 0%, rgba(217, 119, 6, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.straddle-badge {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.7) 0%, rgba(5, 150, 105, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .hand-preview {
@@ -815,9 +863,14 @@ h2 {
     gap: 0.3rem;
   }
 
-  .game-variant-badge {
+  .game-variant-badge,
+  .special-rule-badge {
     font-size: 0.65rem;
     padding: 2px 6px;
+  }
+
+  .badges-container {
+    gap: 0.25rem;
   }
 
   .hand-preview {
