@@ -469,7 +469,7 @@ const betBoxStyle = computed(() => {
 /* Omaha cards - same positioning as Hold'em with overlapping */
 .player-cards.omaha-cards {
   gap: 0; /* Remove gap for overlapping */
-  margin-bottom: 2px; /* Cards close to player panel */
+  margin-bottom: 5px; /* Cards higher above player panel to avoid covering position text */
 }
 
 .player-cards.omaha-cards .card-placeholder {
@@ -947,7 +947,7 @@ const betBoxStyle = computed(() => {
 
   .player-cards.omaha-cards {
     gap: 0;
-    margin-bottom: 2px; /* Cards close to player panel */
+    margin-bottom: 5px; /* Cards higher above player panel to avoid covering position text */
   }
 
   .player-cards.omaha-cards .card-placeholder {
@@ -1179,7 +1179,7 @@ const betBoxStyle = computed(() => {
 
   .is-9-max .player-cards.omaha-cards {
     gap: 0;
-    margin-bottom: 2px; /* Cards close to player panel */
+    margin-bottom: 5px; /* Cards higher above player panel to avoid covering position text */
   }
 
   .is-9-max .player-cards.omaha-cards .card-placeholder {
