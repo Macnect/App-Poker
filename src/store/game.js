@@ -63,6 +63,8 @@ export const useGameStore = defineStore('game', () => {
   const cardPickerTarget = ref(null);
   const isFlopMultiSelect = ref(false);
   const flopSelectIndex = ref(0);
+  const isPlayerCardsMultiSelect = ref(false);
+  const playerCardsSelectIndex = ref(0);
 
   const isPreActionPhase = ref(true);
   const openNotesPanelPlayerId = ref(null);
@@ -801,8 +803,21 @@ export const useGameStore = defineStore('game', () => {
     cardPickerTarget.value = target;
     isCardPickerOpen.value = true;
 
+    // Detectar si estamos abriendo para las cartas de un jugador
+    if (target.type === 'player') {
+      const player = players.value.find(p => p.id === target.id);
+      if (player) {
+        const emptyCardsCount = player.cards.filter(c => !c).length;
+
+        // Activar modo multi-select solo si ambas cartas están vacías
+        if (emptyCardsCount === 2) {
+          isPlayerCardsMultiSelect.value = true;
+          playerCardsSelectIndex.value = 0;
+        }
+      }
+    }
     // Detectar si estamos abriendo para el flop completo (posiciones 0, 1, 2)
-    if (target.type === 'board' && target.id >= 0 && target.id <= 2) {
+    else if (target.type === 'board' && target.id >= 0 && target.id <= 2) {
       // Determinar qué board estamos usando basándonos en boardNumber
       const targetBoard = target.boardNumber === 2 ? board2 : board;
       const flopCards = [targetBoard.value[0], targetBoard.value[1], targetBoard.value[2]];
@@ -820,6 +835,8 @@ export const useGameStore = defineStore('game', () => {
     cardPickerTarget.value = null;
     isFlopMultiSelect.value = false;
     flopSelectIndex.value = 0;
+    isPlayerCardsMultiSelect.value = false;
+    playerCardsSelectIndex.value = 0;
   }
   function assignCard(cardId) {
     if (!cardPickerTarget.value) return;
@@ -827,9 +844,27 @@ export const useGameStore = defineStore('game', () => {
 
     if (type === 'player') {
       const player = players.value.find(p => p.id === id);
-      if (player) player.cards[cardIndex] = cardId;
-      closeCardPicker();
-      recordState(`Se asigna la carta ${cardId}.`);
+      if (!player) return;
+
+      if (isPlayerCardsMultiSelect.value) {
+        // Modo selección múltiple de cartas de jugador (2 cartas)
+        player.cards[playerCardsSelectIndex.value] = cardId;
+        // No registrar estado hasta que se completen las 2 cartas
+
+        playerCardsSelectIndex.value++;
+
+        // Si completamos las 2 cartas, cerrar el picker y registrar estado
+        if (playerCardsSelectIndex.value >= 2) {
+          closeCardPicker();
+          // Registrar un solo estado con las 2 cartas
+          recordState(`${player.name} recibe las cartas: ${player.cards[0]}, ${player.cards[1]}.`);
+        }
+      } else {
+        // Modo normal: asignar a la posición específica
+        player.cards[cardIndex] = cardId;
+        closeCardPicker();
+        recordState(`Se asigna la carta ${cardId}.`);
+      }
     } else if (type === 'board') {
       const targetBoard = boardNumber === 2 ? board2 : board;
       const boardLabel = boardNumber === 2 ? 'Board 2' : 'Board 1';
@@ -990,6 +1025,7 @@ export const useGameStore = defineStore('game', () => {
     isReplaying, isCardPickerOpen, usedCards,
     replaySpeed, isPreActionPhase, openNotesPanelPlayerId, tableLayout,
     isFlopMultiSelect, flopSelectIndex,
+    isPlayerCardsMultiSelect, playerCardsSelectIndex,
     toggleDisplayMode,
     playReplay, pauseReplay, restartReplay, setReplaySpeed, toggleReplay,
     setupNewHand, loadHand, saveCurrentHand, deleteHand, navigateHistory, recordState,

@@ -4,6 +4,9 @@
       <div v-if="gameStore.isFlopMultiSelect" class="flop-indicator">
         Seleccionando Flop: {{ gameStore.flopSelectIndex + 1 }} de 3
       </div>
+      <div v-if="gameStore.isPlayerCardsMultiSelect" class="player-cards-indicator">
+        Seleccionando carta {{ gameStore.playerCardsSelectIndex + 1 }} de 2
+      </div>
       <div v-for="suit in deck" :key="suit.name" class="suit-row">
         <div
           v-for="card in suit.cards"
@@ -102,6 +105,19 @@ function selectCard(card) {
   font-weight: 600;
   color: #0a0e1a;
   box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.player-cards-indicator {
+  font-family: 'Poppins', sans-serif;
+  text-align: center;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -219,6 +235,10 @@ function selectCard(card) {
     width: 100%;
   }
   .flop-indicator {
+    font-size: 0.95rem;
+    padding: 0.6rem 0.8rem;
+  }
+  .player-cards-indicator {
     font-size: 0.95rem;
     padding: 0.6rem 0.8rem;
   }
