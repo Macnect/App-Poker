@@ -284,7 +284,7 @@ function formatBBs(value) {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(2px, 0.4vh, 4px);
+  gap: clamp(1px, 0.2vh, 2px);
   align-items: center;
   /* Escalar todo el contenedor para que las cartas sean más pequeñas pero proporcionales */
   transform: scale(0.85);

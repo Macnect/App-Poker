@@ -78,9 +78,10 @@
     <div
       v-if="player.betThisRound > 0"
       class="bet-box"
+      :class="{ 'bomb-pot-bet': player.isBombPot }"
       :style="betBoxStyle"
     >
-      <ChipStack :amount="player.betThisRound" :bigBlind="gameStore.bigBlind" />
+      <ChipStack :amount="player.betThisRound" :bigBlind="gameStore.bigBlind" :isBombPot="player.isBombPot" />
       <div class="bet-info">
         <div class="bet-amount-container">
           <div class="bet-amount-text">
@@ -568,6 +569,12 @@ const betBoxStyle = computed(() => {
   transition: all 0.2s ease;
 }
 
+/* Reduce size for bomb pot bets to prevent overlapping */
+.bet-box.bomb-pot-bet {
+  transform: scale(0.50);
+  transform-origin: center center;
+}
+
 .bet-info {
   display: flex;
   align-items: center;
@@ -940,6 +947,11 @@ const betBoxStyle = computed(() => {
     gap: 2px;
   }
 
+  /* Bomb pot bets on mobile portrait - slightly less aggressive scaling */
+  .bet-box.bomb-pot-bet {
+    transform: scale(0.45);
+  }
+
   .bet-amount-text {
     font-size: 0.55em;
     padding: 2px 6px;
@@ -1018,6 +1030,12 @@ const betBoxStyle = computed(() => {
   .bet-box {
     transform: scale(0.75) translateY(-50%); /* Hacemos más pequeña la info de apuesta */
   }
+
+  /* Bomb pot bets on mobile landscape - even more compact */
+  .bet-box.bomb-pot-bet {
+    transform: scale(0.40) translateY(-50%);
+  }
+
   /* Ocultamos el botón de edición para maximizar el espacio, pero mantenemos visible las notas en modo lectura */
   .edit-notes-btn, .player-tag {
     display: none;
@@ -1147,6 +1165,11 @@ const betBoxStyle = computed(() => {
     font-size: 0.5em;
   }
 
+  /* Bomb pot bets in 9-max portrait - extra compact */
+  .is-9-max .bet-box.bomb-pot-bet {
+    transform: scale(0.40);
+  }
+
   .is-9-max .edit-notes-btn {
     width: 18px;
     height: 18px;
@@ -1164,6 +1187,11 @@ const betBoxStyle = computed(() => {
 @media screen and (max-width: 900px) and (orientation: landscape) {
   .is-9-max .player-seat {
     height: 40px;
+  }
+
+  /* Bomb pot bets in 9-max landscape - most compact */
+  .is-9-max .bet-box.bomb-pot-bet {
+    transform: scale(0.35) translateY(-50%);
   }
 }
 </style>

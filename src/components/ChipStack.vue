@@ -1,5 +1,5 @@
 <template>
-  <div class="chip-stack-container">
+  <div class="chip-stack-container" :class="{ 'bomb-pot-chips': isBombPot }">
     <div v-if="stackDetails.count > 0" class="chip-stack">
       <div
         v-for="i in stackDetails.count"
@@ -27,6 +27,10 @@ const props = defineProps({
   bigBlind: {
     type: Number,
     required: true,
+  },
+  isBombPot: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -80,6 +84,12 @@ const stackDetails = computed(() => {
   perspective: 500px;
 }
 
+/* Reduce chip container size for bomb pots */
+.chip-stack-container.bomb-pot-chips {
+  height: 18px;
+  width: 27px;
+}
+
 .chip-stack {
   position: relative;
   width: 100%;
@@ -94,12 +104,12 @@ const stackDetails = computed(() => {
   border-radius: 50%;
   box-sizing: border-box;
   left: 15px; /* Centrado en el contenedor de 45px */
-  
+
   /* --- EFECTO 3D Y REALISMO --- */
 
   /* 1. Inclinación para dar perspectiva */
-  transform: rotateX(70deg); 
-  
+  transform: rotateX(70deg);
+
   /* 2. Sombra proyectada por la ficha */
   box-shadow: 0 10px 8px rgba(0, 0, 0, 0.4);
 
@@ -108,10 +118,18 @@ const stackDetails = computed(() => {
 
   /* 4. Reflejo de luz en la parte superior para dar volumen */
   background-image: radial-gradient(
-    circle at 50% 10%, 
-    rgba(255, 255, 255, 0.6), 
+    circle at 50% 10%,
+    rgba(255, 255, 255, 0.6),
     transparent 70%
   );
+}
+
+/* Smaller chips for bomb pots */
+.bomb-pot-chips .chip {
+  width: 9px;
+  height: 15px;
+  left: 9px; /* Ajustado para centrar en contenedor de 27px */
+  border-bottom: 3px solid color-mix(in srgb, var(--chip-color) 70%, black);
 }
 
 /* Detalle de las franjas en la cara de la ficha */
