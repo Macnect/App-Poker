@@ -584,19 +584,7 @@ h2 {
   border-radius: 10px;
   border: 1.5px solid rgba(16, 185, 129, 0.4);
   background: rgba(16, 185, 129, 0.08);
-  animation: hero-glow-list 2s infinite ease-in-out;
   width: fit-content;
-}
-
-@keyframes hero-glow-list {
-  0%, 100% {
-    background-color: rgba(16, 185, 129, 0.05);
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
-  }
-  50% {
-    background-color: rgba(16, 185, 129, 0.12);
-    box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
-  }
 }
 
 /* ========================================
