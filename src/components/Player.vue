@@ -1180,17 +1180,17 @@ const betBoxStyle = computed(() => {
   }
 
   .is-9-max .player-cards.omaha-cards {
-    gap: 1%; /* Small gap between cards */
-    margin-bottom: 5px; /* Cards higher above player panel to avoid covering position text */
-    width: 100%; /* Wider container for 4 larger cards in 9-max */
+    gap: 0%; /* Small gap between cards */
+    margin-bottom: 0px; /* Cards higher above player panel to avoid covering position text */
+    width: 150%; /* Much wider container to allow larger cards in 9-max */
   }
 
   .is-9-max .player-cards.omaha-cards .card-placeholder {
-    width: 23%; /* Larger cards so text fits inside properly in 9-max */
+    width: 25%; /* Larger cards so text fits inside properly in 9-max */
   }
 
   .is-9-max .player-cards.omaha-cards .card-placeholder:not(:first-child) {
-    margin-left: 0;
+    margin-left: -8%; /* Small overlap between cards */
   }
 
   .is-9-max .card-placeholder {
