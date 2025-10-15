@@ -16,6 +16,13 @@
 
       <h2>Generar Mano</h2>
       <div class="config-item">
+        <label for="game-variant-select">Tipo de Juego:</label>
+        <select id="game-variant-select" v-model="selectedGameVariant">
+          <option value="holdem">No-Limit Hold'em</option>
+          <option value="omaha">Omaha</option>
+        </select>
+      </div>
+      <div class="config-item">
         <label for="player-count">Número de Jugadores:</label>
         <select id="player-count" v-model.number="selectedPlayers">
           <option v-for="n in 8" :key="n" :value="n + 1">{{ n + 1 }} Jugadores</option>
@@ -104,6 +111,7 @@ import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 const gameStore = useGameStore();
 const handIsActive = computed(() => gameStore.gamePhase !== 'setup');
 
+const selectedGameVariant = ref('holdem');
 const selectedPlayers = ref(6);
 const sbInput = ref(1);
 const bbInput = ref(2);
@@ -125,6 +133,7 @@ const checkOrientation = () => {
 // Guardar configuración en localStorage
 function saveConfiguration() {
   const config = {
+    selectedGameVariant: selectedGameVariant.value,
     selectedPlayers: selectedPlayers.value,
     sbInput: sbInput.value,
     bbInput: bbInput.value,
@@ -150,6 +159,7 @@ function loadConfiguration() {
   if (savedConfig) {
     try {
       const config = JSON.parse(savedConfig);
+      selectedGameVariant.value = config.selectedGameVariant || 'holdem';
       selectedPlayers.value = config.selectedPlayers || 6;
       sbInput.value = config.sbInput || 1;
       bbInput.value = config.bbInput || 2;
@@ -237,7 +247,8 @@ function handlePositionSelected(heroPosition) {
     bbInput.value,
     selectedSpecialRule.value,
     selectedSpecialRule.value === 'Bomb Pot' ? selectedBombPotBB.value : null,
-    selectedSpecialRule.value === 'Bomb Pot' ? selectedBombPotType.value : 'single'
+    selectedSpecialRule.value === 'Bomb Pot' ? selectedBombPotType.value : 'single',
+    selectedGameVariant.value
   );
 }
 

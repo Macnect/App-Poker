@@ -34,6 +34,7 @@ export const useGameStore = defineStore('game', () => {
   const specialRule = ref('Ninguno');
   const bombPotBB = ref(2);
   const bombPotType = ref('single'); // 'single' o 'double'
+  const gameVariant = ref('holdem'); // 'holdem' o 'omaha'
   const board = ref(['', '', '', '', '']);
   const board2 = ref(['', '', '', '', '']); // Segundo board para Double Board Bomb Pot
   const pots = ref([]);
@@ -42,6 +43,11 @@ export const useGameStore = defineStore('game', () => {
   // Reemplazamos localStorage con un ref vacío
   const savedHands = ref([]);
   const displayInBBs = ref(false);
+
+  // Helper function: returns empty card slots based on game variant
+  const getEmptyCardSlots = () => {
+    return gameVariant.value === 'omaha' ? ['', '', '', ''] : ['', ''];
+  };
 
   // Pagination state
   const hasMore = ref(true);
@@ -83,8 +89,9 @@ export const useGameStore = defineStore('game', () => {
   const usedCards = computed(() => {
     const cards = new Set();
     players.value.forEach(p => {
-      if (p.cards[0]) cards.add(p.cards[0]);
-      if (p.cards[1]) cards.add(p.cards[1]);
+      p.cards.forEach(card => {
+        if (card) cards.add(card);
+      });
     });
     board.value.forEach(c => {
       if (c) cards.add(c);
@@ -139,6 +146,7 @@ export const useGameStore = defineStore('game', () => {
       regla_especial: specialRule.value,
       bomb_pot_bb: bombPotBB.value,
       bomb_pot_type: bombPotType.value, // Guardar el tipo de bomb pot
+      game_variant: gameVariant.value, // Guardar variante del juego
     };
     try {
       const newHand = await apiAddHand(handToSave);
@@ -173,6 +181,7 @@ export const useGameStore = defineStore('game', () => {
     specialRule.value = handData.regla_especial || 'Ninguno';
     bombPotBB.value = handData.bomb_pot_bb || 2;
     bombPotType.value = handData.bomb_pot_type || 'single'; // Cargar tipo de bomb pot
+    gameVariant.value = handData.game_variant || 'holdem'; // Cargar variante del juego (default holdem para compatibilidad)
 
     // Consolidar snapshots del flop para que aparezcan las 3 cartas a la vez
     const consolidatedHistory = consolidateFlopSnapshots(deepCopy(handData.historial));
@@ -347,7 +356,7 @@ export const useGameStore = defineStore('game', () => {
       playReplay();
     }
   }
-  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null, newBombPotType = 'single') {
+  function setupNewHand(numPlayers, newHeroPosition, newCurrency, newSb, newBb, newSpecialRule, newBombPotBB = null, newBombPotType = 'single', newGameVariant = 'holdem') {
     // ... (El resto de la lógica de setupNewHand, performAction, etc., es interna y no cambia)
     // ... (ya que solo manipula el estado de la mano actual, no la lista de manos guardadas)
     pauseReplay();
@@ -359,6 +368,7 @@ export const useGameStore = defineStore('game', () => {
     specialRule.value = newSpecialRule;
     bombPotBB.value = newBombPotBB || 2;
     bombPotType.value = newBombPotType || 'single';
+    gameVariant.value = newGameVariant || 'holdem';
     board.value = ['', '', '', '', ''];
     board2.value = ['', '', '', '', '']; // Resetear segundo board
     pots.value = [{ amount: 0, eligiblePlayers: [] }];
@@ -377,7 +387,7 @@ export const useGameStore = defineStore('game', () => {
         id: i,
         name: isHero ? 'Hero' : `Jugador ${i + 1}`,
         stack: newBb * 100,
-        cards: ['', ''],
+        cards: getEmptyCardSlots(),
         position: positions[i],
         inHand: true,
         isAllIn: false,
@@ -808,9 +818,10 @@ export const useGameStore = defineStore('game', () => {
       const player = players.value.find(p => p.id === target.id);
       if (player) {
         const emptyCardsCount = player.cards.filter(c => !c).length;
+        const totalCardsCount = player.cards.length;
 
-        // Activar modo multi-select solo si ambas cartas están vacías
-        if (emptyCardsCount === 2) {
+        // Activar modo multi-select solo si todas las cartas están vacías
+        if (emptyCardsCount === totalCardsCount) {
           isPlayerCardsMultiSelect.value = true;
           playerCardsSelectIndex.value = 0;
         }
@@ -847,17 +858,18 @@ export const useGameStore = defineStore('game', () => {
       if (!player) return;
 
       if (isPlayerCardsMultiSelect.value) {
-        // Modo selección múltiple de cartas de jugador (2 cartas)
+        // Modo selección múltiple de cartas de jugador (2 o 4 cartas)
         player.cards[playerCardsSelectIndex.value] = cardId;
-        // No registrar estado hasta que se completen las 2 cartas
+        // No registrar estado hasta que se completen todas las cartas
 
         playerCardsSelectIndex.value++;
 
-        // Si completamos las 2 cartas, cerrar el picker y registrar estado
-        if (playerCardsSelectIndex.value >= 2) {
+        // Si completamos todas las cartas, cerrar el picker y registrar estado
+        if (playerCardsSelectIndex.value >= player.cards.length) {
           closeCardPicker();
-          // Registrar un solo estado con las 2 cartas
-          recordState(`${player.name} recibe las cartas: ${player.cards[0]}, ${player.cards[1]}.`);
+          // Registrar un solo estado con todas las cartas
+          const cardsText = player.cards.filter(c => c).join(', ');
+          recordState(`${player.name} recibe las cartas: ${cardsText}.`);
         }
       } else {
         // Modo normal: asignar a la posición específica
@@ -1019,7 +1031,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   return {
-    players, heroPosition, smallBlind, bigBlind, currency, specialRule, bombPotBB, bombPotType, board, board2, savedHands, pots,
+    players, heroPosition, smallBlind, bigBlind, currency, specialRule, bombPotBB, bombPotType, gameVariant, board, board2, savedHands, pots,
     gamePhase, activePlayerIndex, currentBet, lastRaiseAmount,
     activePlayer, totalPot, displayInBBs,
     isReplaying, isCardPickerOpen, usedCards,

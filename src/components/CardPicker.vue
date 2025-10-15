@@ -5,7 +5,7 @@
         Seleccionando Flop: {{ gameStore.flopSelectIndex + 1 }} de 3
       </div>
       <div v-if="gameStore.isPlayerCardsMultiSelect" class="player-cards-indicator">
-        Seleccionando carta {{ gameStore.playerCardsSelectIndex + 1 }} de 2
+        Seleccionando carta {{ gameStore.playerCardsSelectIndex + 1 }} de {{ totalPlayerCards }}
       </div>
       <div v-for="suit in deck" :key="suit.name" class="suit-row">
         <div
@@ -25,6 +25,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useGameStore } from '../store/game';
 
 const gameStore = useGameStore();
@@ -44,6 +45,10 @@ const deck = suits.map(suit => ({
     rank: rank,
   }))
 }));
+
+const totalPlayerCards = computed(() => {
+  return gameStore.gameVariant === 'omaha' ? 4 : 2;
+});
 
 function selectCard(card) {
   if (gameStore.usedCards.has(card.id)) return;

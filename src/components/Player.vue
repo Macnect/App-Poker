@@ -1,16 +1,14 @@
 <template>
   <div class="player-container" :style="seatStyle" :class="{ 'is-9-max': playerCount >= 9 }">
 
-    <div class="player-cards">
-        <div class="card-placeholder" @click="handleCardClick(player.id, 0)">
-          <PlayingCard v-if="player.cards[0]" :cardId="player.cards[0]" />
-          <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="140" rx="8" fill="#4A5568"/>
-            <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="300">+</text>
-          </svg>
-        </div>
-        <div class="card-placeholder" @click="handleCardClick(player.id, 1)">
-          <PlayingCard v-if="player.cards[1]" :cardId="player.cards[1]" />
+    <div class="player-cards" :class="{ 'omaha-cards': player.cards.length === 4 }">
+        <div
+          v-for="(card, index) in player.cards"
+          :key="index"
+          class="card-placeholder"
+          @click="handleCardClick(player.id, index)"
+        >
+          <PlayingCard v-if="card" :cardId="card" />
           <svg v-else width="100%" height="100%" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="100" height="140" rx="8" fill="#4A5568"/>
             <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="white" font-size="60" font-weight="300">+</text>
@@ -468,10 +466,31 @@ const betBoxStyle = computed(() => {
   margin-bottom: 0;
 }
 
+/* Omaha cards - same positioning as Hold'em with overlapping */
+.player-cards.omaha-cards {
+  gap: 0; /* Remove gap for overlapping */
+  margin-bottom: 2px; /* Cards close to player panel */
+}
+
+.player-cards.omaha-cards .card-placeholder {
+  width: 48%; /* Adjusted width to prevent overflow with less overlap */
+}
+
+.player-cards.omaha-cards .card-placeholder:not(:first-child) {
+  margin-left: -12%; /* Reduced overlap for better card separation */
+  position: relative;
+}
+
+/* Z-index progression for proper stacking and clickability */
+.player-cards.omaha-cards .card-placeholder:nth-child(1) { z-index: 4; }
+.player-cards.omaha-cards .card-placeholder:nth-child(2) { z-index: 3; }
+.player-cards.omaha-cards .card-placeholder:nth-child(3) { z-index: 2; }
+.player-cards.omaha-cards .card-placeholder:nth-child(4) { z-index: 1; }
+
 .card-placeholder {
-  width: 70%; 
+  width: 70%;
   height: auto;
-  aspect-ratio: 100 / 140; 
+  aspect-ratio: 100 / 140;
   cursor: pointer;
   position: relative;
 }
@@ -926,6 +945,19 @@ const betBoxStyle = computed(() => {
     left: 55%;
   }
 
+  .player-cards.omaha-cards {
+    gap: 0;
+    margin-bottom: 2px; /* Cards close to player panel */
+  }
+
+  .player-cards.omaha-cards .card-placeholder {
+    width: 46%; /* Adjusted width to prevent overflow with less overlap */
+  }
+
+  .player-cards.omaha-cards .card-placeholder:not(:first-child) {
+    margin-left: -12%; /* Reduced overlap for better card separation */
+  }
+
   .card-placeholder {
     width: 68%;
   }
@@ -1143,6 +1175,19 @@ const betBoxStyle = computed(() => {
     gap: 4%;
     width: 90%;
     margin-bottom: 0;
+  }
+
+  .is-9-max .player-cards.omaha-cards {
+    gap: 0;
+    margin-bottom: 2px; /* Cards close to player panel */
+  }
+
+  .is-9-max .player-cards.omaha-cards .card-placeholder {
+    width: 44%; /* Adjusted width to prevent overflow with less overlap */
+  }
+
+  .is-9-max .player-cards.omaha-cards .card-placeholder:not(:first-child) {
+    margin-left: -12%; /* Reduced overlap for better card separation */
   }
 
   .is-9-max .card-placeholder {
