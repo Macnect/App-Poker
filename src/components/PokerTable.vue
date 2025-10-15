@@ -284,8 +284,57 @@ function formatBBs(value) {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: clamp(3px, 0.6vh, 8px);
+  gap: clamp(2px, 0.4vh, 4px);
   align-items: center;
+  /* Escalar todo el contenedor para que las cartas sean más pequeñas pero proporcionales */
+  transform: scale(0.85);
+  transform-origin: center center;
+}
+
+/* Boards en double board mode mantienen proporciones */
+.double-board-container .board {
+  width: 100%;
+  padding: 1.5%;
+  gap: 2%;
+}
+
+/* Cartas en double board mantienen su proporción original */
+.double-board-container .card-placeholder {
+  width: 18%;
+}
+
+/* Ajustes adicionales para portrait en double board */
+@media screen and (orientation: portrait) {
+  .double-board-container {
+    transform: scale(0.88);
+  }
+
+  .double-board-container .board {
+    width: 100%;
+    padding: 2%;
+    gap: 2.5%;
+  }
+
+  .double-board-container .card-placeholder {
+    width: 17%;
+  }
+}
+
+/* Ajustes adicionales para landscape en double board */
+@media screen and (orientation: landscape) {
+  .double-board-container {
+    transform: scale(0.82);
+  }
+
+  .double-board-container .board {
+    width: 100%;
+    padding: 1%;
+    gap: 1.5%;
+  }
+
+  .double-board-container .card-placeholder {
+    width: 18%;
+  }
 }
 
 .board-label {
