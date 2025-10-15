@@ -19,12 +19,13 @@
     </div>
     
     <div class="player-seat" :class="{ faded: !player.inHand, active: isActivePlayer, 'is-hero': player.name === 'Hero' }">
-      
-      <div v-if="player.isDealer" class="dealer-button" :style="dealerButtonStyle">D</div>
 
       <div class="player-info-panel" :style="player.name === 'Hero' ? { background: '#68d39199', backgroundImage: 'none' } : (player.tag ? { background: player.tag + '99', backgroundImage: 'none' } : {})">
         <div class="player-info">
-          <div class="player-position">{{ player.position }}</div>
+          <div class="player-position">
+            <div v-if="player.position === 'BTN'" class="dealer-button-inline">D</div>
+            <span v-else>{{ player.position }}</span>
+          </div>
           <div class="player-name">
             <div v-if="gameStore.isPreActionPhase" class="editable-name-wrapper">
               <input
@@ -401,17 +402,6 @@ const seatStyle = computed(() => {
   };
 });
 
-
-const dealerButtonStyle = computed(() => {
-  // Posicionamos el dealer button siempre justo debajo del stack (player-info-panel)
-  // Lo acercamos más para que toque el panel sin tapar el texto
-  return {
-    top: '100%',
-    left: '50%',
-    transform: 'translate(-50%, -3px)',
-    marginTop: '0'
-  };
-});
 const betBoxStyle = computed(() => {
   // El visualIndex [0] es siempre el Héroe en la parte inferior.
   const visualIndex = (props.index - props.heroIndex + props.playerCount) % props.playerCount;
@@ -553,21 +543,19 @@ const betBoxStyle = computed(() => {
   opacity: 0.5;
 }
 
-.dealer-button {
-  position: absolute;
+.dealer-button-inline {
+  display: inline-flex;
   width: 18px;
   height: 18px;
-  background: linear-gradient(145deg, #ffffff, #e6e6e6);
-  color: #333;
+  background: #d4af37;
+  color: #1a202c;
   border-radius: 50%;
   font-weight: bold;
   font-size: 0.7rem;
-  display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid rgba(0,0,0,0.2);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  z-index: 8;
+  border: 1px solid #d4af37;
+  margin: 0 auto;
 }
 
 .bet-box {
@@ -948,7 +936,7 @@ const betBoxStyle = computed(() => {
     padding: 1px 3px;
   }
 
-  .dealer-button {
+  .dealer-button-inline {
     width: 16px;
     height: 16px;
     font-size: 0.65rem;
@@ -1033,10 +1021,10 @@ const betBoxStyle = computed(() => {
     top: -55%; /* Subimos las cartas para que se solapen con el panel */
     gap: 2%;
   }
-  .dealer-button {
-    width: 18px;
-    height: 18px;
-    font-size: 0.7rem;
+  .dealer-button-inline {
+    width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
   }
   .bet-box {
     transform: scale(0.75) translateY(-50%); /* Hacemos más pequeña la info de apuesta */
@@ -1115,7 +1103,7 @@ const betBoxStyle = computed(() => {
   padding: 1.5px;
 }
 
-.is-9-max .dealer-button {
+.is-9-max .dealer-button-inline {
   width: 16px;
   height: 16px;
   font-size: 0.65rem;
@@ -1166,7 +1154,7 @@ const betBoxStyle = computed(() => {
     font-size: clamp(0.7rem, 2vw, 0.9rem);
   }
 
-  .is-9-max .dealer-button {
+  .is-9-max .dealer-button-inline {
     width: 14px;
     height: 14px;
     font-size: 0.6rem;
