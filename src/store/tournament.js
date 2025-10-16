@@ -107,11 +107,39 @@ export const useTournamentStore = defineStore('tournament', () => {
   // --- ACCIONES PARA MANOS DE TORNEO ---
 
   async function fetchHands(date = null, incremental = false) {
-    // TODO: Implementar llamada API para torneos cuando se cree la tabla
     console.log('[DEBUG] tournamentStore.fetchHands: Starting with date:', date);
-    // Placeholder: por ahora devuelve array vacío
-    savedHands.value = [];
-    hasMore.value = false;
+
+    try {
+      if (!incremental) {
+        currentOffset.value = 0;
+        savedHands.value = [];
+        hasMore.value = true;
+      }
+
+      if (!hasMore.value) {
+        console.log('[DEBUG] tournamentStore.fetchHands: No more hands to fetch');
+        return;
+      }
+
+      const { apiFetchTournamentHands } = await import('@/api/index.js');
+      const newHands = await apiFetchTournamentHands(date, pageSize.value, currentOffset.value);
+
+      console.log('[DEBUG] tournamentStore.fetchHands: Received', newHands?.length || 0, 'hands');
+
+      if (incremental) {
+        savedHands.value = [...savedHands.value, ...newHands];
+      } else {
+        savedHands.value = newHands;
+      }
+
+      currentOffset.value += pageSize.value;
+      hasMore.value = newHands.length === pageSize.value;
+
+      console.log('[DEBUG] tournamentStore.fetchHands: Total hands now:', savedHands.value.length, ', hasMore:', hasMore.value);
+    } catch (error) {
+      console.error('[DEBUG] tournamentStore.fetchHands: Error:', error);
+      throw error;
+    }
   }
 
   async function loadMoreHands(date = null) {
@@ -121,6 +149,7 @@ export const useTournamentStore = defineStore('tournament', () => {
 
   async function saveCurrentHand() {
     if (history.value.length === 0) return null;
+
     const handToSave = {
       fecha: new Date().toISOString(),
       posicion_heroe: heroPosition.value,
@@ -137,15 +166,31 @@ export const useTournamentStore = defineStore('tournament', () => {
       remaining_players: remainingPlayers.value,
     };
 
-    // TODO: Guardar en tabla de manos de torneo cuando se implemente
-    console.log('[DEBUG] Mano de torneo a guardar:', handToSave);
-    return handToSave;
+    try {
+      const { apiAddTournamentHand } = await import('@/api/index.js');
+      const savedHand = await apiAddTournamentHand(handToSave);
+      console.log('[DEBUG] Mano de torneo guardada con ID:', savedHand.id);
+
+      // Agregar la mano guardada al principio del array
+      savedHands.value.unshift(savedHand);
+
+      return savedHand;
+    } catch (error) {
+      console.error('[DEBUG] Error al guardar mano de torneo:', error);
+      throw error;
+    }
   }
 
   async function deleteHand(handId) {
-    // TODO: Implementar eliminación cuando se cree la API
-    console.log('[DEBUG] Eliminar mano de torneo:', handId);
-    savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
+    try {
+      const { apiDeleteTournamentHand } = await import('@/api/index.js');
+      await apiDeleteTournamentHand(handId);
+      console.log('[DEBUG] Mano de torneo eliminada:', handId);
+      savedHands.value = savedHands.value.filter(hand => hand.id !== handId);
+    } catch (error) {
+      console.error('[DEBUG] Error al eliminar mano de torneo:', error);
+      throw error;
+    }
   }
 
   function loadHand(handData) {

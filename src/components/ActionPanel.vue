@@ -89,15 +89,34 @@ const settingsStore = useSettingsStore();
 const handSaved = ref(false);
 
 async function handleSaveHand() {
-  const savedHand = await gameStore.saveCurrentHand();
-  if (savedHand) {
-    // Cargar la mano guardada en modo replay
-    gameStore.loadHand(savedHand);
+  console.log('[DEBUG] ActionPanel.handleSaveHand: Button clicked!');
+  console.log('[DEBUG] ActionPanel.handleSaveHand: Using store:', gameStore.$id);
+  console.log('[DEBUG] ActionPanel.handleSaveHand: History length:', gameStore.history?.length);
+  console.log('[DEBUG] ActionPanel.handleSaveHand: Hero position:', gameStore.heroPosition);
+
+  try {
+    console.log('[DEBUG] ActionPanel.handleSaveHand: Calling gameStore.saveCurrentHand()...');
+    const savedHand = await gameStore.saveCurrentHand();
+    console.log('[DEBUG] ActionPanel.handleSaveHand: saveCurrentHand() returned:', savedHand ? `Hand ID: ${savedHand.id}` : 'null');
+
+    if (savedHand) {
+      console.log('[DEBUG] ActionPanel.handleSaveHand: Hand saved successfully, loading in replay mode...');
+      // Cargar la mano guardada en modo replay
+      gameStore.loadHand(savedHand);
+      console.log('[DEBUG] ActionPanel.handleSaveHand: Replay loaded');
+    } else {
+      console.warn('[DEBUG] ActionPanel.handleSaveHand: No hand was saved (returned null)');
+    }
+
+    handSaved.value = true;
+    console.log('[DEBUG] ActionPanel.handleSaveHand: Visual feedback activated');
+    setTimeout(() => {
+      handSaved.value = false;
+    }, 2000);
+  } catch (error) {
+    console.error('[DEBUG] ActionPanel.handleSaveHand: Error saving hand:', error.message);
+    console.error('[DEBUG] ActionPanel.handleSaveHand: Full error:', error);
   }
-  handSaved.value = true;
-  setTimeout(() => {
-    handSaved.value = false;
-  }, 2000);
 }
 
 const amountToCall = computed(() => {

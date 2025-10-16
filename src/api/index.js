@@ -207,6 +207,114 @@ export const apiDeleteHand = async (handId) => {
 };
 
 // ----------------------------------------------------------------------------
+// API para Manos de Torneo (manos_guardadas_torneos)
+// ----------------------------------------------------------------------------
+
+export const apiFetchTournamentHands = async (date = null, limit = null, offset = 0, targetUserId = null) => {
+  console.log('[DEBUG] apiFetchTournamentHands: Starting with params - date:', date, 'limit:', limit, 'offset:', offset);
+  const user = await getCurrentUser();
+  console.log('[DEBUG] apiFetchTournamentHands: User obtained:', user ? `ID: ${user.id}` : 'not authenticated');
+
+  console.log('[DEBUG] apiFetchTournamentHands: Building query...');
+  let query = supabase
+    .from('manos_guardadas_torneos')
+    .select('*');
+
+  if (user) {
+    const userIdToFetch = targetUserId || user.id;
+    query = query.eq('usuario_id', userIdToFetch);
+    console.log('[DEBUG] apiFetchTournamentHands: Added user filter for ID:', userIdToFetch);
+  } else {
+    console.log('[DEBUG] apiFetchTournamentHands: No user filter applied');
+  }
+
+  if (date) {
+    const startDate = new Date(date);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+    query = query.gte('fecha_creacion', startDate.toISOString()).lt('fecha_creacion', endDate.toISOString());
+    console.log('[DEBUG] apiFetchTournamentHands: Added date filter from', startDate.toISOString(), 'to', endDate.toISOString());
+  }
+
+  query = query.order('fecha_creacion', { ascending: false });
+  console.log('[DEBUG] apiFetchTournamentHands: Added ordering by fecha_creacion desc');
+
+  if (limit !== null && limit !== undefined) {
+    query = query.range(offset || 0, (offset || 0) + limit - 1);
+    console.log('[DEBUG] apiFetchTournamentHands: Added range from', offset || 0, 'to', (offset || 0) + limit - 1);
+  }
+
+  console.log('[DEBUG] apiFetchTournamentHands: Executing query...');
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+  );
+
+  const queryPromise = query;
+  const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+
+  console.log('[DEBUG] apiFetchTournamentHands: Query completed - error:', error ? `${error.message} (code: ${error.code})` : 'none', 'data count:', data ? data.length : 'null');
+
+  if (error) {
+    console.error("[DEBUG] apiFetchTournamentHands: Full error object:", error);
+    throw error;
+  }
+
+  console.log('[DEBUG] apiFetchTournamentHands: Returning data array of length:', data?.length || 0);
+  return data;
+};
+
+export const apiAddTournamentHand = async (handData) => {
+  console.log('[DEBUG] apiAddTournamentHand: Starting...');
+  const user = await getCurrentUser();
+  if (!user) {
+    console.error('[DEBUG] apiAddTournamentHand: Usuario no autenticado');
+    throw new Error("Usuario no autenticado");
+  }
+
+  console.log('[DEBUG] apiAddTournamentHand: User authenticated, ID:', user.id);
+  const dataToInsert = { ...handData, usuario_id: user.id };
+  console.log('[DEBUG] apiAddTournamentHand: Data to insert:', {
+    usuario_id: dataToInsert.usuario_id,
+    posicion_heroe: dataToInsert.posicion_heroe,
+    cantidad_jugadores: dataToInsert.cantidad_jugadores,
+    tournament_type: dataToInsert.tournament_type,
+    buy_in: dataToInsert.buy_in,
+    historial_length: dataToInsert.historial?.length
+  });
+
+  console.log('[DEBUG] apiAddTournamentHand: Executing INSERT query...');
+  const { data, error } = await supabase
+    .from('manos_guardadas_torneos')
+    .insert(dataToInsert)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[DEBUG] apiAddTournamentHand: Error inserting hand:", error.message);
+    console.error("[DEBUG] apiAddTournamentHand: Error code:", error.code);
+    console.error("[DEBUG] apiAddTournamentHand: Full error:", error);
+    throw error;
+  }
+
+  console.log('[DEBUG] apiAddTournamentHand: Hand saved successfully! ID:', data.id);
+  return data;
+};
+
+export const apiDeleteTournamentHand = async (handId) => {
+  const { error } = await supabase
+    .from('manos_guardadas_torneos')
+    .delete()
+    .eq('id', handId);
+
+  if (error) {
+    console.error("Error en apiDeleteTournamentHand:", error);
+    throw error;
+  }
+};
+
+// ----------------------------------------------------------------------------
 // API para Viajes de Poker (viajes_poker y relacionadas)
 // ----------------------------------------------------------------------------
 

@@ -271,6 +271,13 @@
         </div>
       </div>
 
+      <!-- Botón FAB para crear nueva mano -->
+      <button class="fab-new-hand" @click="startNewTournamentHand" title="Nueva Mano de Torneo">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </button>
+
       <!-- Botón para navegar a Cash -->
       <button class="mode-switch-btn" @click="emit('go-to-cash')" title="Cambiar a Cash Games">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -499,7 +506,9 @@ function handleKeyDown(event) {
 // ========================================
 // LÓGICA DE MANOS GUARDADAS
 // ========================================
-const isLoading = computed(() => !authStore.isInitialized);
+const isLoadingAuth = computed(() => !authStore.isInitialized);
+const isLoadingHands = ref(false);
+const isLoading = computed(() => isLoadingAuth.value || isLoadingHands.value);
 const selectedDate = ref(null);
 const datePickerValue = ref('');
 const showModal = ref(false);
@@ -507,6 +516,7 @@ const showToast = ref(false);
 const selectedHandId = ref(null);
 
 const groupedHands = computed(() => {
+  console.log('[DEBUG] TournamentHandView.groupedHands: Computing with', tournamentStore.savedHands.length, 'hands');
   const groups = {};
   tournamentStore.savedHands.forEach(hand => {
     const date = hand.fecha.split('T')[0];
@@ -514,10 +524,14 @@ const groupedHands = computed(() => {
     groups[date].push(hand);
   });
   const sortedDates = Object.keys(groups).sort((a, b) => new Date(b) - new Date(a));
-  return sortedDates.map(date => ({ date, hands: groups[date] }));
+  const result = sortedDates.map(date => ({ date, hands: groups[date] }));
+  console.log('[DEBUG] TournamentHandView.groupedHands: Returning', result.length, 'groups');
+  return result;
 });
 
 const filteredAndSortedHands = computed(() => {
+  console.log('[DEBUG] TournamentHandView.filteredAndSortedHands: Computing with', tournamentStore.savedHands.length, 'hands');
+  console.log('[DEBUG] TournamentHandView.filteredAndSortedHands: Selected date:', selectedDate.value);
   let hands = [...tournamentStore.savedHands];
   if (selectedDate.value) {
     const startOfDay = new Date(selectedDate.value + 'T00:00:00');
@@ -528,6 +542,7 @@ const filteredAndSortedHands = computed(() => {
     });
   }
   hands.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  console.log('[DEBUG] TournamentHandView.filteredAndSortedHands: Returning', hands.length, 'hands');
   return hands;
 });
 
@@ -621,11 +636,60 @@ async function deleteAndClose() {
   }
 }
 
-onMounted(() => {
+// Función para crear una nueva mano de torneo
+function startNewTournamentHand() {
+  console.log('[DEBUG] TournamentHandView: startNewTournamentHand clicked');
+  tournamentStore.resetHand();
+  activeTab.value = 'crear';
+  console.log('[DEBUG] TournamentHandView: Hand reset and switched to crear tab');
+}
+
+// Función para cargar manos guardadas
+async function loadSavedHands() {
+  console.log('[DEBUG] TournamentHandView.loadSavedHands: Starting...');
+  isLoadingHands.value = true;
+  try {
+    console.log('[DEBUG] TournamentHandView.loadSavedHands: Calling tournamentStore.fetchHands()');
+    await tournamentStore.fetchHands();
+    console.log('[DEBUG] TournamentHandView.loadSavedHands: fetchHands() completed');
+    console.log('[DEBUG] TournamentHandView.loadSavedHands: Manos de torneo cargadas:', tournamentStore.savedHands.length);
+    console.log('[DEBUG] TournamentHandView.loadSavedHands: First hand:', tournamentStore.savedHands[0]);
+  } catch (error) {
+    console.error('[DEBUG] TournamentHandView.loadSavedHands: Error al cargar manos de torneo:', error.message);
+    console.error('[DEBUG] TournamentHandView.loadSavedHands: Full error:', error);
+  } finally {
+    isLoadingHands.value = false;
+    console.log('[DEBUG] TournamentHandView.loadSavedHands: isLoadingHands set to false');
+  }
+}
+
+// Cargar manos guardadas cuando se cambia a la pestaña "guardadas"
+watch(activeTab, async (newTab, oldTab) => {
+  console.log('[DEBUG] TournamentHandView: activeTab changed from', oldTab, 'to', newTab);
+  if (newTab === 'guardadas') {
+    console.log('[DEBUG] TournamentHandView: Tab is now "guardadas", loading hands...');
+    await loadSavedHands();
+  }
+});
+
+onMounted(async () => {
+  console.log('[DEBUG] TournamentHandView: Component mounted');
+  console.log('[DEBUG] TournamentHandView: Initial activeTab value:', activeTab.value);
+  console.log('[DEBUG] TournamentHandView: Auth initialized:', authStore.isInitialized);
+  console.log('[DEBUG] TournamentHandView: User:', authStore.user?.id);
+
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('resize', checkOrientation);
   checkOrientation();
   loadConfiguration(); // Cargar configuración guardada al iniciar
+
+  // Cargar manos si ya está en la pestaña "guardadas" al montar
+  if (activeTab.value === 'guardadas') {
+    console.log('[DEBUG] TournamentHandView: Already on "guardadas" tab, loading hands...');
+    await loadSavedHands();
+  } else {
+    console.log('[DEBUG] TournamentHandView: Not on "guardadas" tab, skipping initial load');
+  }
 });
 
 onUnmounted(() => {
@@ -2160,6 +2224,51 @@ h3 {
 /* ========================================
    MODE SWITCH BUTTON - Cash Game Navigation
    ======================================== */
+/* Botón FAB para Nueva Mano - Estilo circular central */
+.fab-new-hand {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border: 4px solid rgba(10, 14, 26, 0.95);
+  box-shadow:
+    0 4px 12px rgba(124, 58, 237, 0.4),
+    0 8px 24px rgba(124, 58, 237, 0.3),
+    0 0 20px rgba(124, 58, 237, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-new-hand svg {
+  width: 36px;
+  height: 36px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.fab-new-hand:hover {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  transform: translateX(-50%) translateY(-3px) scale(1.05);
+  box-shadow:
+    0 8px 20px rgba(124, 58, 237, 0.5),
+    0 12px 32px rgba(124, 58, 237, 0.4),
+    0 0 32px rgba(124, 58, 237, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+}
+
+.fab-new-hand:active {
+  transform: translateX(-50%) scale(0.95);
+}
+
 .mode-switch-btn {
   position: absolute;
   top: 20px;
@@ -2198,6 +2307,17 @@ h3 {
 
 /* Responsive para móvil */
 @media (max-width: 640px) {
+  .fab-new-hand {
+    width: 65px;
+    height: 65px;
+    bottom: 25px;
+  }
+
+  .fab-new-hand svg {
+    width: 32px;
+    height: 32px;
+  }
+
   .mode-switch-btn {
     top: 15px;
     left: 15px;
