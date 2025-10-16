@@ -2,6 +2,15 @@
   <div class="view-container">
     <!-- Panel de Configuración (visible cuando no hay mano activa) -->
     <div v-if="!handIsActive" class="tabs-container">
+
+      <!-- Botón para navegar a Torneos -->
+      <button class="mode-switch-btn" @click="emit('go-to-tournaments')" title="Cambiar a Torneos">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0" />
+        </svg>
+        <span>Torneos</span>
+      </button>
+
       <!-- Sistema de pestañas -->
       <div class="tabs-header">
         <button
@@ -304,6 +313,9 @@ import DatePicker from '../components/DatePicker.vue';
 
 const gameStore = useGameStore();
 const authStore = useAuthStore();
+
+// Emits
+const emit = defineEmits(['go-to-tournaments']);
 
 // Estado para las pestañas
 const activeTab = ref('crear');
@@ -648,6 +660,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  position: relative;
 }
 
 .tabs-header {
@@ -657,7 +670,7 @@ onUnmounted(() => {
   border: 1px solid rgba(212, 175, 55, 0.15);
   border-radius: 16px 16px 0 0;
   padding: 8px;
-  margin: 1.5rem 1.5rem 0 1.5rem;
+  margin: 4.5rem 1.5rem 0 1.5rem;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
@@ -1957,7 +1970,7 @@ h3 {
   }
 
   .tabs-header {
-    margin: 1rem 1rem 0 1rem;
+    margin: 4rem 1rem 0 1rem;
     padding: 6px;
   }
 
@@ -1986,7 +1999,7 @@ h3 {
   }
 
   .tabs-header {
-    margin: 0.75rem 0.75rem 0 0.75rem;
+    margin: 3.5rem 0.75rem 0 0.75rem;
   }
 
   .tab-btn {
@@ -2020,6 +2033,61 @@ h3 {
   .group-label {
     font-size: 0.85rem;
     min-width: 50px;
+  }
+}
+
+/* ========================================
+   BOTÓN DE CAMBIO DE MODO A TORNEOS
+   ======================================== */
+/* Botón de cambio de modo */
+.mode-switch-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.25) 100%);
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  border-radius: 10px;
+  color: #d4af37;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+  z-index: 10;
+}
+
+.mode-switch-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mode-switch-btn:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.35) 100%);
+  border-color: rgba(212, 175, 55, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
+}
+
+.mode-switch-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive para móvil */
+@media (max-width: 640px) {
+  .mode-switch-btn {
+    top: 15px;
+    left: 15px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .mode-switch-btn svg {
+    width: 18px;
+    height: 18px;
   }
 }
 </style>

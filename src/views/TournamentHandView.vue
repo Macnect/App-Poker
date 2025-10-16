@@ -270,6 +270,14 @@
           <div class="toast-message">Mano eliminada con éxito</div>
         </div>
       </div>
+
+      <!-- Botón para navegar a Cash -->
+      <button class="mode-switch-btn" @click="emit('go-to-cash')" title="Cambiar a Cash Games">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Cash</span>
+      </button>
     </div>
 
     <!-- Contenedor del Editor de Manos (ahora con layout de Grid) -->
@@ -309,6 +317,8 @@ import CardPicker from '../components/CardPicker.vue';
 import RotateDeviceOverlay from '../components/RotateDeviceOverlay.vue';
 import PlayingCard from '../components/PlayingCard.vue';
 import DatePicker from '../components/DatePicker.vue';
+
+const emit = defineEmits(['go-to-cash']);
 
 const tournamentStore = useTournamentStore();
 const authStore = useAuthStore();
@@ -660,6 +670,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  position: relative;
 }
 
 .tabs-header {
@@ -669,7 +680,7 @@ onUnmounted(() => {
   border: 1px solid rgba(212, 175, 55, 0.15);
   border-radius: 16px 16px 0 0;
   padding: 8px;
-  margin: 1.5rem 1.5rem 0 1.5rem;
+  margin: 4.5rem 1.5rem 0 1.5rem;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
@@ -2077,7 +2088,7 @@ h3 {
   }
 
   .tabs-header {
-    margin: 1rem 1rem 0 1rem;
+    margin: 4rem 1rem 0 1rem;
     padding: 6px;
   }
 
@@ -2106,7 +2117,7 @@ h3 {
   }
 
   .tabs-header {
-    margin: 0.75rem 0.75rem 0 0.75rem;
+    margin: 3.5rem 0.75rem 0 0.75rem;
   }
 
   .tab-btn {
@@ -2140,6 +2151,60 @@ h3 {
   .group-label {
     font-size: 0.85rem;
     min-width: 50px;
+  }
+}
+
+/* ========================================
+   MODE SWITCH BUTTON - Cash Game Navigation
+   ======================================== */
+.mode-switch-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.25) 100%);
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  border-radius: 10px;
+  color: #d4af37;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+  z-index: 10;
+}
+
+.mode-switch-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.mode-switch-btn:hover {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.35) 100%);
+  border-color: rgba(212, 175, 55, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
+}
+
+.mode-switch-btn:active {
+  transform: translateY(0);
+}
+
+/* Responsive para móvil */
+@media (max-width: 640px) {
+  .mode-switch-btn {
+    top: 15px;
+    left: 15px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .mode-switch-btn svg {
+    width: 18px;
+    height: 18px;
   }
 }
 </style>

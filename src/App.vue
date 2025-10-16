@@ -9,13 +9,14 @@
   <TournamentsView
     v-else-if="authStore.user && selectedGameMode === 'tournament'"
     @back-to-selector="resetGameMode"
+    @go-to-cash="switchToCashMode"
   />
 
   <!-- Main Cash Games App - Shown when cash mode is selected -->
   <div v-else-if="authStore.user && selectedGameMode === 'cash'" id="main-container">
     <main>
       <KeepAlive>
-        <component :is="views[currentView]" @switch-view="switchToView" />
+        <component :is="views[currentView]" @switch-view="switchToView" @go-to-tournaments="switchToTournamentMode" />
       </KeepAlive>
     </main>
 
@@ -222,6 +223,17 @@ function handleModeSelection(mode) {
 function resetGameMode() {
   selectedGameMode.value = null;
   localStorage.removeItem('selectedGameMode');
+}
+
+// Funciones para cambiar entre modos Cash y Torneos
+function switchToCashMode() {
+  selectedGameMode.value = 'cash';
+  localStorage.setItem('selectedGameMode', 'cash');
+}
+
+function switchToTournamentMode() {
+  selectedGameMode.value = 'tournament';
+  localStorage.setItem('selectedGameMode', 'tournament');
 }
 
 // Watch for user logout to reset game mode
