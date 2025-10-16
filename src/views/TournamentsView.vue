@@ -26,7 +26,6 @@
         <button @click="navigateTo('SavedTournamentTripsView')">🗂️ Viajes Guardados</button>
         <button @click="navigateTo('SettingsView')">⚙️ Configuración</button>
         <button @click="authStore.signOut()" class="logout-btn">🚪 Salir</button>
-        <button @click="$emit('go-to-cash')" class="switch-mode-btn">💰 Cambiar a Cash</button>
       </div>
     </div>
 
@@ -454,19 +453,6 @@ nav button.active svg {
   color: #fca5a5;
 }
 
-.more-menu-panel button.switch-mode-btn {
-  margin-top: 0.5rem;
-  color: #a78bfa;
-  font-weight: 600;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(147, 51, 234, 0.15) 100%);
-  border-color: rgba(168, 85, 247, 0.2);
-}
-
-.more-menu-panel button.switch-mode-btn:hover {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.25) 100%);
-  border-color: rgba(168, 85, 247, 0.4);
-  color: #c4b5fd;
-}
 
 /* ========================================
    LANDSCAPE ORIENTATION OPTIMIZATIONS
@@ -560,9 +546,5 @@ nav button.active svg {
     padding-top: 0.7rem;
   }
 
-  .more-menu-panel button.switch-mode-btn {
-    margin-top: 0.25rem;
-    padding-top: 0.7rem;
-  }
 }
 </style>
