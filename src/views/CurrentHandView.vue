@@ -276,7 +276,7 @@
       <DisplayOptions v-else />
       <CardPicker v-if="gameStore.isCardPickerOpen" />
     </div>
-    
+
     <!-- Overlay que pide girar el dispositivo (se muestra en móvil horizontal) -->
     <RotateDeviceOverlay v-if="showRotateOverlay" />
 

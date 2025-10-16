@@ -90,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, onMounted, onUnmounted, watch, computed } from 'vue';
+import { ref, shallowRef, onMounted, watch, computed } from 'vue';
 import { useTripStore } from './store/useTripStore';
 import { useAuthStore } from './store/useAuthStore';
 import { useGameStore } from './store/game'; // <-- ADICIÓN
