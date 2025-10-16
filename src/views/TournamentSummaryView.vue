@@ -71,6 +71,14 @@
             <span class="loss-text">{{ formatCurrency(worstTournament) }}</span>
           </div>
           <div class="detail-item">
+            <span>Mesas Finales</span>
+            <span class="profit-text">{{ finalTables }}</span>
+          </div>
+          <div class="detail-item">
+            <span>1º Puesto</span>
+            <span class="profit-text">{{ firstPlaces }}</span>
+          </div>
+          <div class="detail-item">
             <span>Total Invertido</span>
             <span>{{ formatCurrency(totalInvested, false) }}</span>
           </div>
@@ -81,10 +89,6 @@
           <div class="detail-item">
             <span>Rebuys Totales</span>
             <span>{{ formatCurrency(totalRebuys, false) }}</span>
-          </div>
-          <div class="detail-item">
-            <span>Gastos Totales</span>
-            <span>{{ formatCurrency(totalExpenses, false) }}</span>
           </div>
           <div class="detail-item">
             <span>Horas Jugadas</span>
@@ -195,12 +199,18 @@ const worstTournament = computed(() => {
   return Math.min(...filteredSessions.value.map(session => session.resultado || 0));
 });
 
-const totalRebuys = computed(() => {
-  return filteredSessions.value.reduce((sum, session) => sum + (session.total_recompras || 0), 0);
+const finalTables = computed(() => {
+  return filteredSessions.value.filter(session =>
+    session.posicion_final && session.posicion_final > 0 && session.posicion_final <= 9
+  ).length;
 });
 
-const totalExpenses = computed(() => {
-  return filteredSessions.value.reduce((sum, session) => sum + (session.total_gastos || 0), 0);
+const firstPlaces = computed(() => {
+  return filteredSessions.value.filter(session => session.posicion_final === 1).length;
+});
+
+const totalRebuys = computed(() => {
+  return filteredSessions.value.reduce((sum, session) => sum + (session.total_recompras || 0), 0);
 });
 
 const totalHoursPlayed = computed(() => {
