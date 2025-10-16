@@ -15,6 +15,12 @@
       <button class="confirm-btn" @click="$emit('confirm', selectedPosition)" :disabled="!selectedPosition">
         Confirmar e Iniciar Mano
       </button>
+      <button class="back-btn" @click="$emit('cancel')" title="Volver">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="back-icon">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+        <span>Volver</span>
+      </button>
     </div>
   </div>
 </template>
@@ -25,7 +31,7 @@ import { ref } from 'vue';
 defineProps({
   positions: Array,
 });
-defineEmits(['confirm']);
+defineEmits(['confirm', 'cancel']);
 
 const selectedPosition = ref(null);
 </script>
@@ -85,6 +91,47 @@ const selectedPosition = ref(null);
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.back-btn {
+  width: 100%;
+  padding: 12px 15px;
+  margin-top: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(74, 85, 104, 0.8) 0%, rgba(45, 55, 72, 1) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.back-btn:hover {
+  background: linear-gradient(135deg, rgba(74, 85, 104, 1) 0%, rgba(55, 65, 81, 1) 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.back-btn:active {
+  transform: translateY(0);
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+  color: #d1d5db;
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover .back-icon {
+  color: #d4af37;
 }
 
 h3 {

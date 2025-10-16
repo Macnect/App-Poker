@@ -284,6 +284,7 @@
       v-if="showPositionModal"
       :positions="availablePositions"
       @confirm="handlePositionSelected"
+      @cancel="showPositionModal = false"
     />
   </div>
 </template>
