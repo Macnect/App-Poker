@@ -20,16 +20,9 @@
         </div>
         <div class="live-actions">
           <div class="action-group">
-            <input type="number" v-model.number="rebuyAmount" placeholder="Monto Recarga">
+            <div class="rebuy-label">Recompra</div>
+            <div class="rebuy-amount">{{ sessionStore.currency }}{{ sessionStore.buyIn }}</div>
             <button @click="handleAddRebuy" class="btn-add">+</button>
-          </div>
-          <div class="action-group">
-            <input type="number" v-model.number="tipAmount" placeholder="Propina">
-            <button @click="handleAddTip" class="btn-add">+</button>
-          </div>
-          <div class="action-group">
-            <input type="number" v-model.number="expenseAmount" placeholder="Gasto">
-            <button @click="handleAddExpense" class="btn-add">+</button>
           </div>
         </div>
       </div>
@@ -69,6 +62,17 @@
                 <option value="Progressive KO">Progressive KO</option>
                 <option value="Total KO">Total KO</option>
                 <option value="Mystery KO">Mystery KO</option>
+                <option value="Rebuy">Rebuy</option>
+                <option value="Clasificatorio">Clasificatorio</option>
+              </select>
+            </div>
+            <div class="config-item">
+              <label for="structure">Estructura</label>
+              <select id="structure" v-model="sessionStore.structure">
+                <option value="Lenta">Lenta</option>
+                <option value="Normal">Normal</option>
+                <option value="Turbo">Turbo</option>
+                <option value="Hyper Turbo">Hyper Turbo</option>
               </select>
             </div>
             <div class="config-item">
@@ -115,7 +119,7 @@
         </template>
       </div>
     </div>
-    <EndSessionModal
+    <EndTournamentModal
       v-if="showEndSessionModal"
       @confirm="handleConfirmEndSession"
       @cancel="showEndSessionModal = false"
@@ -140,16 +144,12 @@
 import { computed, ref, onMounted, watch } from 'vue';
 import { useTournamentSessionStore } from '../store/useTournamentSessionStore';
 import { useAuthStore } from '../store/useAuthStore';
-import EndSessionModal from '../components/EndSessionModal.vue';
+import EndTournamentModal from '../components/EndTournamentModal.vue';
 
 const sessionStore = useTournamentSessionStore();
 const authStore = useAuthStore();
 const showEndSessionModal = ref(false);
 const isSaving = ref(false);
-
-const rebuyAmount = ref(null);
-const tipAmount = ref(null);
-const expenseAmount = ref(null);
 
 const saveButtonText = ref('Guardar cambios');
 
@@ -174,35 +174,19 @@ function showNotification(message, type = 'success') {
 }
 
 function handleAddRebuy() {
-  if (rebuyAmount.value > 0) {
-    const amount = rebuyAmount.value;
+  const amount = sessionStore.buyIn;
+  if (amount > 0) {
     sessionStore.addRebuy(amount);
-    showNotification(`💰 Recarga de ${sessionStore.currency}${amount} añadida correctamente`);
-    rebuyAmount.value = null;
-  }
-}
-function handleAddTip() {
-  if (tipAmount.value > 0) {
-    const amount = tipAmount.value;
-    sessionStore.addExpense(amount);
-    showNotification(`🎲 Propina de ${sessionStore.currency}${amount} registrada correctamente`);
-    tipAmount.value = null;
-  }
-}
-function handleAddExpense() {
-  if (expenseAmount.value > 0) {
-    const amount = expenseAmount.value;
-    sessionStore.addExpense(amount);
-    showNotification(`🍹 Gasto de ${sessionStore.currency}${amount} añadido correctamente`);
-    expenseAmount.value = null;
+    showNotification(`💰 Recompra de ${sessionStore.currency}${amount} añadida correctamente`);
   }
 }
 
-async function handleConfirmEndSession(finalStack) {
+async function handleConfirmEndSession(sessionData) {
   isSaving.value = true;
   try {
-    await sessionStore.stopAndSaveSession(finalStack);
+    await sessionStore.stopAndSaveSession(sessionData);
     showEndSessionModal.value = false;
+    showNotification('✅ Torneo finalizado y guardado correctamente');
   } catch (error) {
     alert(`Error al guardar la sesión: ${error.message}`);
   } finally {
@@ -218,7 +202,8 @@ function saveConfiguration() {
     buyIn: sessionStore.buyIn,
     initialStack: sessionStore.initialStack,
     gameType: sessionStore.gameType,
-    tournamentType: sessionStore.tournamentType
+    tournamentType: sessionStore.tournamentType,
+    structure: sessionStore.structure
   };
 
   localStorage.setItem('liveTournamentSessionConfiguration', JSON.stringify(config));
@@ -243,6 +228,7 @@ function loadConfiguration() {
       sessionStore.initialStack = config.initialStack || 5000;
       sessionStore.gameType = config.gameType || 'holdem';
       sessionStore.tournamentType = config.tournamentType || 'Normal';
+      sessionStore.structure = config.structure || 'Normal';
     } catch (error) {
       console.error('Error al cargar la configuración de sesión guardada:', error);
     }
@@ -510,8 +496,31 @@ const formattedTime = computed(() => {
 
 .action-group {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   gap: 1rem;
+  align-items: center;
+}
+
+.rebuy-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #d1d5db;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rebuy-amount {
+  padding: 16px 20px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.3);
+  color: #a855f7;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2) inset,
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
 
 .action-group input {

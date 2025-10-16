@@ -19,6 +19,7 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
     initialStack: 5000,
     gameType: 'holdem',
     tournamentType: 'Normal',
+    structure: 'Normal',
   });
 
   const savedSessions = ref([]);
@@ -119,7 +120,7 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
     }
   }
 
-  async function stopAndSaveSession(finalStack) {
+  async function stopAndSaveSession(tournamentData) {
     try {
       const finalElapsedTimeInSeconds = elapsedTime.value;
       const finalTotalBreakTimeInSeconds = Math.floor(sessionState.value.totalBreakDuration / 1000);
@@ -130,7 +131,6 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
       };
 
       const currentInvestment = ensureFloat(sessionState.value.buyIn) + ensureFloat(sessionState.value.totalRebuys);
-      const result = ensureFloat(finalStack) - currentInvestment - ensureFloat(sessionState.value.totalExpenses);
 
       // Aquí podrías guardar en la base de datos si lo necesitas
       // Por ahora solo guardamos localmente
@@ -143,11 +143,15 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
         moneda: sessionState.value.currency,
         buy_in: ensureFloat(sessionState.value.buyIn),
         total_recompras: ensureFloat(sessionState.value.totalRebuys),
-        total_gastos: ensureFloat(sessionState.value.totalExpenses),
-        stack_final: ensureFloat(finalStack),
-        resultado: result,
         tipo_juego: sessionState.value.gameType,
         tipo_torneo: sessionState.value.tournamentType,
+        estructura: sessionState.value.structure,
+        // Nuevos campos específicos de torneos
+        es_dia_2: tournamentData.isDay2,
+        stack_dia_2: tournamentData.day2Stack,
+        posicion_final: tournamentData.finalPosition,
+        premio_ganado: tournamentData.prizeWon,
+        resultado: tournamentData.result,
       };
 
       savedSessions.value.push(sessionData);
@@ -221,6 +225,10 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
     tournamentType: computed({
       get: () => sessionState.value.tournamentType,
       set: (val) => { sessionState.value.tournamentType = val; saveStateToLocalStorage(); }
+    }),
+    structure: computed({
+      get: () => sessionState.value.structure,
+      set: (val) => { sessionState.value.structure = val; saveStateToLocalStorage(); }
     }),
     totalRebuys: computed(() => sessionState.value.totalRebuys),
     totalExpenses: computed(() => sessionState.value.totalExpenses),
