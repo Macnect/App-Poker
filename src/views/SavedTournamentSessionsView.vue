@@ -1,6 +1,6 @@
 <template>
   <div class="saved-sessions-container">
-    <h2>Sesiones Guardadas de Torneos</h2>
+    <h2>Torneos Guardados</h2>
 
     <div class="filters-container">
       <label for="date-range-filter">Mostrar Sesiones de:</label>

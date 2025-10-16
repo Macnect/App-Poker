@@ -20,7 +20,7 @@
           🛡️ Panel de Administrador
         </button>
         <button @click="navigateTo('SavedTournamentHandsView')">🃏 Manos Guardadas</button>
-        <button @click="navigateTo('SavedTournamentSessionsView')">📝 Sesiones Guardadas</button>
+        <button @click="navigateTo('SavedTournamentSessionsView')">🏆 Torneos Guardados</button>
         <button @click="navigateTo('ChartsView')">📈 Gráficos</button>
         <button @click="navigateTo('TournamentTripsView')">✈️ Viajes</button>
         <button @click="navigateTo('SavedTournamentTripsView')">🗂️ Viajes Guardados</button>
