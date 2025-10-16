@@ -21,8 +21,10 @@
         <div class="live-actions">
           <div class="action-group">
             <div class="rebuy-label">Recompra</div>
-            <div class="rebuy-amount">{{ sessionStore.currency }}{{ sessionStore.buyIn }}</div>
-            <button @click="handleAddRebuy" class="btn-add">+</button>
+            <div class="rebuy-controls">
+              <div class="rebuy-amount">{{ sessionStore.currency }}{{ sessionStore.buyIn }}</div>
+              <button @click="handleAddRebuy" class="btn-add">+</button>
+            </div>
           </div>
         </div>
       </div>
@@ -495,10 +497,9 @@ const formattedTime = computed(() => {
 }
 
 .action-group {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 1rem;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .rebuy-label {
@@ -509,7 +510,14 @@ const formattedTime = computed(() => {
   letter-spacing: 0.5px;
 }
 
+.rebuy-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .rebuy-amount {
+  flex: 1;
   padding: 16px 20px;
   font-size: 1.3rem;
   font-weight: 600;
@@ -844,7 +852,10 @@ const formattedTime = computed(() => {
   }
 
   .action-group {
-    grid-template-columns: 1fr auto;
+    gap: 0.5rem;
+  }
+
+  .rebuy-controls {
     gap: 0.5rem;
   }
 
@@ -920,6 +931,15 @@ const formattedTime = computed(() => {
 
   .widget-header {
     font-size: 0.8rem;
+  }
+
+  .rebuy-controls {
+    gap: 0.5rem;
+  }
+
+  .rebuy-amount {
+    padding: 12px 16px;
+    font-size: 1.1rem;
   }
 
   .action-group input {

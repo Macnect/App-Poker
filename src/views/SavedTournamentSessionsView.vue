@@ -79,8 +79,8 @@
      <!-- Notes Modal -->
      <div v-if="showNotesModal" class="modal-overlay" @click="closeNotesModal">
        <div class="modal-content notes-modal" @click.stop>
-         <h3>Notas de la Sesión</h3>
-         <textarea v-model="sessionNotes" placeholder="Escribe tus notas sobre esta sesión..." rows="6"></textarea>
+         <h3>Notas del Torneo</h3>
+         <textarea v-model="sessionNotes" placeholder="Escribe tus notas sobre este torneo..." rows="6"></textarea>
          <div class="modal-actions">
            <button class="cancel-btn" @click="closeNotesModal">Cancelar</button>
            <button class="confirm-btn" @click="saveNotes">Guardar</button>
@@ -114,37 +114,46 @@ const filteredSessions = computed(() => {
   const filter = selectedFilter.value;
   const allSessions = tournamentSessionStore.savedSessions;
 
+  let sessions = [];
+
   if (filter === 'all') {
-    return allSessions;
+    sessions = [...allSessions];
+  } else {
+    const now = new Date();
+    const cutoffDate = new Date();
+
+    switch (filter) {
+      case 'today':
+        cutoffDate.setHours(0, 0, 0, 0);
+        break;
+      case 'last7days':
+        cutoffDate.setDate(now.getDate() - 7);
+        break;
+      case 'last1month':
+        cutoffDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'last3months':
+        cutoffDate.setMonth(now.getMonth() - 3);
+        break;
+      case 'last6months':
+        cutoffDate.setMonth(now.getMonth() - 6);
+        break;
+      case 'last1year':
+        cutoffDate.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+
+    sessions = allSessions.filter(session => {
+      const sessionDate = new Date(session.fecha);
+      return sessionDate >= cutoffDate;
+    });
   }
 
-  const now = new Date();
-  const cutoffDate = new Date();
-
-  switch (filter) {
-    case 'today':
-      cutoffDate.setHours(0, 0, 0, 0);
-      break;
-    case 'last7days':
-      cutoffDate.setDate(now.getDate() - 7);
-      break;
-    case 'last1month':
-      cutoffDate.setMonth(now.getMonth() - 1);
-      break;
-    case 'last3months':
-      cutoffDate.setMonth(now.getMonth() - 3);
-      break;
-    case 'last6months':
-      cutoffDate.setMonth(now.getMonth() - 6);
-      break;
-    case 'last1year':
-      cutoffDate.setFullYear(now.getFullYear() - 1);
-      break;
-  }
-
-  return allSessions.filter(session => {
-    const sessionDate = new Date(session.fecha);
-    return sessionDate >= cutoffDate;
+  // Ordenar por fecha descendente (más recientes primero)
+  return sessions.sort((a, b) => {
+    const dateA = new Date(a.fecha);
+    const dateB = new Date(b.fecha);
+    return dateB - dateA;
   });
 });
 
