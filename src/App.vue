@@ -348,12 +348,12 @@ nav button:nth-child(2) svg {
   min-width: 64px; /* Asegura ancho mínimo */
   min-height: 64px; /* Asegura alto mínimo */
   border-radius: 50%;
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
   border: 4px solid rgba(10, 14, 26, 0.95);
   box-shadow:
-    0 4px 12px rgba(4, 120, 87, 0.4),
-    0 8px 24px rgba(4, 120, 87, 0.3),
-    0 0 20px rgba(4, 120, 87, 0.15),
+    0 4px 12px rgba(212, 175, 55, 0.4),
+    0 8px 24px rgba(212, 175, 55, 0.3),
+    0 0 20px rgba(212, 175, 55, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   color: white;
   display: flex;
@@ -377,12 +377,12 @@ nav button:nth-child(2) svg {
 
 @media (hover: hover) and (pointer: fine) {
   .fab-nav-btn:hover {
-    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
     transform: translateY(-3px) scale(1.05);
     box-shadow:
-      0 8px 20px rgba(4, 120, 87, 0.45),
-      0 12px 32px rgba(4, 120, 87, 0.35),
-      0 0 32px rgba(4, 120, 87, 0.2),
+      0 8px 20px rgba(212, 175, 55, 0.45),
+      0 12px 32px rgba(212, 175, 55, 0.35),
+      0 0 32px rgba(212, 175, 55, 0.2),
       0 0 0 1px rgba(255, 255, 255, 0.15) inset;
   }
 }
