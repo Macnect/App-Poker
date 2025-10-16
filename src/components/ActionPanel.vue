@@ -88,7 +88,11 @@ const settingsStore = useSettingsStore();
 const handSaved = ref(false);
 
 async function handleSaveHand() {
-  await gameStore.saveCurrentHand();
+  const savedHand = await gameStore.saveCurrentHand();
+  if (savedHand) {
+    // Cargar la mano guardada en modo replay
+    gameStore.loadHand(savedHand);
+  }
   handSaved.value = true;
   setTimeout(() => {
     handSaved.value = false;

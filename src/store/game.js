@@ -138,7 +138,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   async function saveCurrentHand() {
-    if (history.value.length === 0) return;
+    if (history.value.length === 0) return null;
     const handToSave = {
       // id y fecha los genera la BD, ya no los necesitamos aquí
       fecha: new Date().toISOString(),
@@ -156,9 +156,11 @@ export const useGameStore = defineStore('game', () => {
     try {
       const newHand = await apiAddHand(handToSave);
       savedHands.value.unshift(newHand); // Añadimos la mano devuelta a nuestro estado local
+      return newHand; // Devolver la mano guardada
     } catch (error) {
       console.error("Error al guardar la mano:", error);
       // Opcional: mostrar un error al usuario
+      return null;
     }
   }
   
