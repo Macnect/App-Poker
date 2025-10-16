@@ -2,9 +2,26 @@
   <div id="tournament-container">
     <main>
       <KeepAlive>
-        <component :is="views[currentView]" @go-to-cash="$emit('go-to-cash')" />
+        <component :is="views[currentView]" @go-to-cash="$emit('go-to-cash')" @switch-view="switchToView" />
       </KeepAlive>
     </main>
+
+    <!-- Menú "Más" (Overlay) -->
+    <div v-if="showMoreMenu" class="more-menu-overlay" @click="showMoreMenu = false">
+      <div
+        class="more-menu-panel"
+        @click.stop
+        @touchstart="handleDragStart"
+        @touchmove="handleDragMove"
+        @touchend="handleDragEnd"
+        :style="{ transform: `translateY(${dragOffset}px)` }"
+      >
+        <button @click="navigateTo('TournamentSummaryView')">📊 Sumario</button>
+        <button @click="navigateTo('ChartsView')">📈 Gráficos</button>
+        <button @click="navigateTo('SettingsView')">⚙️ Configuración</button>
+        <button @click="$emit('go-to-cash')" class="switch-mode-btn">💰 Cambiar a Cash</button>
+      </div>
+    </div>
 
     <!-- Barra de Navegación Inferior -->
     <nav>
@@ -28,8 +45,13 @@
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
       </button>
-      <button>
-        <!-- Placeholder para mantener el diseño simétrico -->
+      <button @click="switchToView('TournamentSummaryView')" :class="{ active: currentView === 'TournamentSummaryView' }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+        <span>Sumario</span>
+      </button>
+      <button @click="showMoreMenu = !showMoreMenu" :class="{ active: showMoreMenu }">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+        <span>Más</span>
       </button>
     </nav>
   </div>
@@ -40,25 +62,77 @@ import { ref, shallowRef } from 'vue';
 import { useTournamentStore } from '../store/tournament';
 import TournamentHandView from './TournamentHandView.vue';
 import LiveTournamentSessionView from './LiveTournamentSessionView.vue';
+import TournamentSummaryView from './TournamentSummaryView.vue';
+import ChartsView from './ChartsView.vue';
+import SettingsView from './SettingsView.vue';
 
 const emit = defineEmits(['go-to-cash']);
 const tournamentStore = useTournamentStore();
 
 const currentView = ref('TournamentHandView');
+const showMoreMenu = ref(false);
+
+// Drag/swipe state for more menu
+const dragStartY = ref(0);
+const dragOffset = ref(0);
+const isDragging = ref(false);
 
 const views = shallowRef({
   TournamentHandView,
   LiveTournamentSessionView,
+  TournamentSummaryView,
+  ChartsView,
+  SettingsView,
 });
 
 function switchToView(viewName) {
   currentView.value = viewName;
+  showMoreMenu.value = false;
+}
+
+function navigateTo(viewName) {
+  switchToView(viewName);
 }
 
 function startNewTournamentHand() {
   // Reset the hand and switch to TournamentHandView with 'crear' tab
   tournamentStore.resetHand();
   currentView.value = 'TournamentHandView';
+}
+
+// Drag handlers for more menu
+function handleDragStart(e) {
+  isDragging.value = true;
+  dragStartY.value = e.touches[0].clientY;
+  dragOffset.value = 0;
+}
+
+function handleDragMove(e) {
+  if (!isDragging.value) return;
+
+  const currentY = e.touches[0].clientY;
+  const diff = currentY - dragStartY.value;
+
+  // Only allow dragging down (positive values)
+  if (diff > 0) {
+    dragOffset.value = diff;
+    // Prevent default scrolling while dragging
+    e.preventDefault();
+  }
+}
+
+function handleDragEnd() {
+  if (!isDragging.value) return;
+
+  isDragging.value = false;
+
+  // If dragged more than 100px, close the menu
+  if (dragOffset.value > 100) {
+    showMoreMenu.value = false;
+  }
+
+  // Reset offset
+  dragOffset.value = 0;
 }
 </script>
 
@@ -219,6 +293,142 @@ nav button.active svg {
 }
 
 /* ========================================
+   MORE MENU OVERLAY - Premium Modal
+   ======================================== */
+.more-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(10, 14, 26, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1001;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.more-menu-panel {
+  position: relative;
+
+  /* Premium glass card effect */
+  background: linear-gradient(145deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 1) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+
+  width: 100%;
+  max-width: 500px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 2rem 1.5rem 90px 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  /* Multi-layer shadow for depth */
+  box-shadow:
+    0 -4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 -10px 25px -3px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 -20px 60px -15px rgba(168, 85, 247, 0.03);
+
+  animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Smooth transition when releasing drag */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Enable touch manipulation */
+  touch-action: pan-y;
+  user-select: none;
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Premium accent line at top - Drag handle */
+.more-menu-panel::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 5px;
+  background: rgba(168, 85, 247, 0.5);
+  border-radius: 10px;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+}
+
+.more-menu-panel:active::before {
+  cursor: grabbing;
+}
+
+.more-menu-panel button {
+  width: 100%;
+  padding: 1.1rem 1.25rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+
+  /* Premium button styling */
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.15);
+  border-radius: 12px;
+  color: #f9fafb;
+
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+.more-menu-panel button:hover {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
+  border-color: rgba(168, 85, 247, 0.3);
+  transform: translateX(4px);
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.25),
+    0 0 12px rgba(168, 85, 247, 0.08);
+}
+
+.more-menu-panel button.switch-mode-btn {
+  margin-top: 0.75rem;
+  border-top: 1.5px solid rgba(168, 85, 247, 0.2);
+  padding-top: 1.25rem;
+  color: #a78bfa;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(147, 51, 234, 0.15) 100%);
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.more-menu-panel button.switch-mode-btn:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.25) 100%);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #c4b5fd;
+}
+
+/* ========================================
    LANDSCAPE ORIENTATION OPTIMIZATIONS
    ======================================== */
 @media (orientation: landscape) {
@@ -258,6 +468,56 @@ nav button.active svg {
   .fab-nav-btn svg {
     width: 32px;
     height: 32px;
+  }
+
+  /* MORE MENU PANEL - Landscape Optimization */
+  .more-menu-panel {
+    padding: 1.5rem 1.5rem 75px 1.5rem;
+    gap: 0.5rem;
+    max-height: calc(100vh - 20px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(168, 85, 247, 0.3) rgba(31, 41, 55, 0.3);
+  }
+
+  .more-menu-panel::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .more-menu-panel::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.3);
+    border-radius: 3px;
+  }
+
+  .more-menu-panel::-webkit-scrollbar-thumb {
+    background: rgba(168, 85, 247, 0.3);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+  }
+
+  .more-menu-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(168, 85, 247, 0.5);
+  }
+
+  .more-menu-panel::before {
+    top: 8px;
+    width: 60px;
+    height: 4px;
+  }
+
+  .more-menu-panel button {
+    padding: 0.7rem 1rem;
+    font-size: 0.95rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .more-menu-panel button.switch-mode-btn {
+    margin-top: 0.5rem;
+    padding-top: 0.7rem;
   }
 }
 </style>
