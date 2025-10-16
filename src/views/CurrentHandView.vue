@@ -2050,13 +2050,13 @@ h3 {
   padding: 10px 16px;
   font-size: 0.95rem;
   font-weight: 600;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.25) 100%);
-  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.25) 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.4);
   border-radius: 10px;
-  color: #d4af37;
+  color: #a78bfa;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15);
   z-index: 10;
 }
 
@@ -2066,10 +2066,10 @@ h3 {
 }
 
 .mode-switch-btn:hover {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.35) 100%);
-  border-color: rgba(212, 175, 55, 0.6);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(139, 92, 246, 0.35) 100%);
+  border-color: rgba(139, 92, 246, 0.6);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25);
 }
 
 .mode-switch-btn:active {

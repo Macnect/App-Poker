@@ -145,7 +145,7 @@ function confirmAndStart() {
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   padding: 2rem;
   border-radius: 16px;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(139, 92, 246, 0.2);
   width: 100%;
   max-width: 550px;
   box-sizing: border-box;
@@ -185,7 +185,7 @@ h4 {
   margin: 1.5rem 0 1rem 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #d4af37;
+  color: #a78bfa;
   text-align: center;
 }
 
@@ -195,7 +195,7 @@ h4 {
   gap: 1.25rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
 }
 
 .config-item {
@@ -223,7 +223,7 @@ label {
   left: 15px;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #d4af37;
+  color: #a78bfa;
   pointer-events: none;
 }
 
@@ -251,18 +251,18 @@ label {
 
 .buyin-input:hover,
 .remaining-input:hover {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(139, 92, 246, 0.4);
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
 }
 
 .buyin-input:focus,
 .remaining-input:focus {
   outline: none;
-  border-color: rgba(212, 175, 55, 0.6);
+  border-color: rgba(139, 92, 246, 0.6);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3) inset,
-    0 0 0 3px rgba(212, 175, 55, 0.1),
-    0 0 12px rgba(212, 175, 55, 0.08);
+    0 0 0 3px rgba(139, 92, 246, 0.1),
+    0 0 12px rgba(139, 92, 246, 0.08);
 }
 
 select {
@@ -282,17 +282,17 @@ select {
 }
 
 select:hover {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(139, 92, 246, 0.4);
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
 }
 
 select:focus {
   outline: none;
-  border-color: rgba(212, 175, 55, 0.6);
+  border-color: rgba(139, 92, 246, 0.6);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3) inset,
-    0 0 0 3px rgba(212, 175, 55, 0.1),
-    0 0 12px rgba(212, 175, 55, 0.08);
+    0 0 0 3px rgba(139, 92, 246, 0.1),
+    0 0 12px rgba(139, 92, 246, 0.08);
 }
 
 select option {
@@ -359,7 +359,7 @@ select option {
   font-size: 0.95rem;
   font-weight: 600;
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  border: 2px solid rgba(212, 175, 55, 0.2);
+  border: 2px solid rgba(139, 92, 246, 0.2);
   border-radius: 10px;
   color: white;
   cursor: pointer;
@@ -374,14 +374,14 @@ select option {
 
 .positions-grid button:hover {
   background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(139, 92, 246, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
 }
 
 .positions-grid button.selected {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-color: rgba(212, 175, 55, 0.6);
+  border-color: rgba(139, 92, 246, 0.6);
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
 }
 
@@ -397,7 +397,7 @@ select option {
   font-size: 1.2rem;
   font-weight: 700;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(139, 92, 246, 0.3);
   border-radius: 10px;
   color: white;
   cursor: pointer;
@@ -438,7 +438,7 @@ select option {
 
 .back-btn:hover {
   background: linear-gradient(135deg, rgba(74, 85, 104, 1) 0%, rgba(55, 65, 81, 1) 100%);
-  border-color: rgba(212, 175, 55, 0.3);
+  border-color: rgba(139, 92, 246, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
@@ -451,7 +451,7 @@ select option {
 }
 
 .back-btn:hover .back-icon {
-  color: #d4af37;
+  color: #a78bfa;
 }
 
 /* Responsive */
