@@ -151,29 +151,29 @@ function selectMode(mode) {
 }
 
 .mode-card.cash-games {
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-.mode-card.cash-games:hover {
-  border-color: rgba(16, 185, 129, 0.6);
-  transform: translateY(-4px) scale(1.02);
-  box-shadow:
-    0 8px 16px -1px rgba(0, 0, 0, 0.4),
-    0 20px 40px -3px rgba(16, 185, 129, 0.3),
-    0 0 0 1px rgba(16, 185, 129, 0.1) inset;
-}
-
-.mode-card.tournaments {
   border-color: rgba(212, 175, 55, 0.3);
 }
 
-.mode-card.tournaments:hover {
+.mode-card.cash-games:hover {
   border-color: rgba(212, 175, 55, 0.6);
   transform: translateY(-4px) scale(1.02);
   box-shadow:
     0 8px 16px -1px rgba(0, 0, 0, 0.4),
     0 20px 40px -3px rgba(212, 175, 55, 0.3),
     0 0 0 1px rgba(212, 175, 55, 0.1) inset;
+}
+
+.mode-card.tournaments {
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+.mode-card.tournaments:hover {
+  border-color: rgba(139, 92, 246, 0.7);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 8px 16px -1px rgba(0, 0, 0, 0.4),
+    0 20px 40px -3px rgba(139, 92, 246, 0.4),
+    0 0 0 1px rgba(139, 92, 246, 0.15) inset;
 }
 
 .card-icon {
@@ -191,13 +191,13 @@ function selectMode(mode) {
 }
 
 .mode-card.cash-games .card-icon {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
-  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
+  border-color: rgba(212, 175, 55, 0.3);
 }
 
 .mode-card.tournaments .card-icon {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
-  border-color: rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border-color: rgba(139, 92, 246, 0.4);
 }
 
 .card-icon svg {
@@ -209,8 +209,13 @@ function selectMode(mode) {
 }
 
 .mode-card.cash-games .card-icon svg {
-  color: #10b981;
-  filter: drop-shadow(0 2px 4px rgba(16, 185, 129, 0.3));
+  color: #d4af37;
+  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.3));
+}
+
+.mode-card.tournaments .card-icon svg {
+  color: #a78bfa;
+  filter: drop-shadow(0 2px 4px rgba(167, 139, 250, 0.4));
 }
 
 .mode-card:hover .card-icon {
@@ -231,13 +236,13 @@ function selectMode(mode) {
 }
 
 .mode-card.cash-games h2 {
-  color: #10b981;
-  text-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  color: #d4af37;
+  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
 
 .mode-card.tournaments h2 {
-  color: #d4af37;
-  text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  color: #a78bfa;
+  text-shadow: 0 2px 8px rgba(167, 139, 250, 0.4);
 }
 
 .mode-card p {
@@ -253,15 +258,15 @@ function selectMode(mode) {
   position: absolute;
   top: 1rem;
   right: 1rem;
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.9), rgba(184, 134, 11, 0.9));
-  color: #0a0e1a;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(124, 58, 237, 0.95));
+  color: #f9fafb;
   padding: 0.3rem 0.8rem;
   border-radius: 16px;
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
 }
 
 .arrow {
@@ -289,11 +294,11 @@ function selectMode(mode) {
 }
 
 .mode-card.cash-games:hover .arrow svg {
-  color: #10b981;
+  color: #d4af37;
 }
 
 .mode-card.tournaments:hover .arrow svg {
-  color: #d4af37;
+  color: #a78bfa;
 }
 
 /* ========================================
