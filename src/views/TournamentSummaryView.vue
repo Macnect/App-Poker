@@ -38,7 +38,7 @@
           <span class="stat-value">{{ formatCurrency(averageBuyIn, false) }}</span>
         </div>
         <div class="stat-card">
-          <span class="stat-title">Stack Final Promedio</span>
+          <span class="stat-title">Promedio de Ganancia por Torneo</span>
           <span class="stat-value">{{ formatCurrency(averageFinalStack, false) }}</span>
         </div>
       </div>
@@ -173,7 +173,7 @@ const averageBuyIn = computed(() => {
 
 const averageFinalStack = computed(() => {
   if (filteredSessions.value.length === 0) return 0;
-  const total = filteredSessions.value.reduce((sum, session) => sum + (session.stack_final || 0), 0);
+  const total = filteredSessions.value.reduce((sum, session) => sum + (session.resultado || 0), 0);
   return total / filteredSessions.value.length;
 });
 
