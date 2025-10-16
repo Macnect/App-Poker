@@ -2,7 +2,7 @@
   <div class="charts-container">
     <div class="header">
       <h2>{{ $t('charts.title') }}</h2>
-      
+
       <div class="controls-wrapper">
         <div class="filter-controls">
           <label for="time-range">Mostrar:</label>
@@ -26,32 +26,55 @@
         </button>
       </div>
     </div>
-    
+
     <div v-if="isLoading" class="loading-message">
         Cargando datos para la gráfica...
     </div>
-    <div v-else-if="sessionStore.savedSessions.length < 2" class="no-data-message">
+    <div v-else-if="currentSessions.length < 2" class="no-data-message">
       {{ $t('charts.noData') }}
     </div>
     <div v-else class="chart-wrapper">
-      <SessionChart />
+      <SessionChart v-if="!isTournamentMode" />
+      <TournamentSessionChart v-else />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onActivated } from 'vue';
+import { ref, computed, onActivated, inject } from 'vue';
 import { useSessionStore } from '../store/useSessionStore';
+import { useTournamentSessionStore } from '../store/useTournamentSessionStore';
 import { useChartsStore } from '../store/useChartsStore';
 import SessionChart from '../components/SessionChart.vue';
+import TournamentSessionChart from '../components/TournamentSessionChart.vue';
 
 const sessionStore = useSessionStore();
+const tournamentSessionStore = useTournamentSessionStore();
 const chartsStore = useChartsStore();
 const isLoading = ref(true);
 
+// Detectar si estamos en modo torneo por el componente padre
+// Si estamos dentro de TournamentsView, será true
+const isTournamentMode = computed(() => {
+  // Intentar determinar el modo basándose en el localStorage
+  const selectedGameMode = localStorage.getItem('selectedGameMode');
+  return selectedGameMode === 'tournament';
+});
+
+// Computed para obtener las sesiones correctas según el modo
+const currentSessions = computed(() => {
+  if (isTournamentMode.value) {
+    return tournamentSessionStore.savedSessions;
+  }
+  return sessionStore.savedSessions;
+});
+
 onActivated(async () => {
     isLoading.value = true;
-    await sessionStore.fetchSessions();
+    if (!isTournamentMode.value) {
+      await sessionStore.fetchSessions();
+    }
+    // Las sesiones de torneo ya están en memoria (localStorage)
     isLoading.value = false;
 });
 </script>

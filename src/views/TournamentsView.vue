@@ -16,9 +16,16 @@
         @touchend="handleDragEnd"
         :style="{ transform: `translateY(${dragOffset}px)` }"
       >
-        <button @click="navigateTo('TournamentSummaryView')">📊 Sumario</button>
+        <button v-if="authStore.rol === 'Administrador'" @click="navigateTo('AdminView')">
+          🛡️ Panel de Administrador
+        </button>
+        <button @click="navigateTo('SavedTournamentHandsView')">🃏 Manos Guardadas</button>
+        <button @click="navigateTo('SavedTournamentSessionsView')">📝 Sesiones Guardadas</button>
         <button @click="navigateTo('ChartsView')">📈 Gráficos</button>
+        <button @click="navigateTo('TournamentTripsView')">✈️ Viajes</button>
+        <button @click="navigateTo('SavedTournamentTripsView')">🗂️ Viajes Guardados</button>
         <button @click="navigateTo('SettingsView')">⚙️ Configuración</button>
+        <button @click="authStore.signOut()" class="logout-btn">🚪 Salir</button>
         <button @click="$emit('go-to-cash')" class="switch-mode-btn">💰 Cambiar a Cash</button>
       </div>
     </div>
@@ -60,14 +67,21 @@
 <script setup>
 import { ref, shallowRef } from 'vue';
 import { useTournamentStore } from '../store/tournament';
+import { useAuthStore } from '../store/useAuthStore';
 import TournamentHandView from './TournamentHandView.vue';
 import LiveTournamentSessionView from './LiveTournamentSessionView.vue';
 import TournamentSummaryView from './TournamentSummaryView.vue';
+import SavedTournamentHandsView from './SavedTournamentHandsView.vue';
+import SavedTournamentSessionsView from './SavedTournamentSessionsView.vue';
+import TournamentTripsView from './TournamentTripsView.vue';
+import SavedTournamentTripsView from './SavedTournamentTripsView.vue';
 import ChartsView from './ChartsView.vue';
 import SettingsView from './SettingsView.vue';
+import AdminView from './AdminView.vue';
 
 const emit = defineEmits(['go-to-cash']);
 const tournamentStore = useTournamentStore();
+const authStore = useAuthStore();
 
 const currentView = ref('TournamentHandView');
 const showMoreMenu = ref(false);
@@ -81,11 +95,23 @@ const views = shallowRef({
   TournamentHandView,
   LiveTournamentSessionView,
   TournamentSummaryView,
+  SavedTournamentHandsView,
+  SavedTournamentSessionsView,
+  TournamentTripsView,
+  SavedTournamentTripsView,
   ChartsView,
   SettingsView,
+  AdminView,
 });
 
 function switchToView(viewName) {
+  if (viewName === 'TournamentTripsView' && currentView.value !== 'SavedTournamentTripsView') {
+    // Resetear el trip cuando navegamos a TournamentTripsView desde otra vista
+    import('../store/useTournamentTripStore').then(({ useTournamentTripStore }) => {
+      const tripStore = useTournamentTripStore();
+      tripStore.resetCurrentTrip();
+    });
+  }
   currentView.value = viewName;
   showMoreMenu.value = false;
 }
@@ -412,10 +438,24 @@ nav button.active svg {
     0 0 12px rgba(168, 85, 247, 0.08);
 }
 
-.more-menu-panel button.switch-mode-btn {
+.more-menu-panel button.logout-btn {
   margin-top: 0.75rem;
   border-top: 1.5px solid rgba(168, 85, 247, 0.2);
   padding-top: 1.25rem;
+  color: #f87171;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1) 0%, rgba(185, 28, 28, 0.15) 100%);
+  border-color: rgba(220, 38, 38, 0.2);
+}
+
+.more-menu-panel button.logout-btn:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(185, 28, 28, 0.25) 100%);
+  border-color: rgba(220, 38, 38, 0.4);
+  color: #fca5a5;
+}
+
+.more-menu-panel button.switch-mode-btn {
+  margin-top: 0.5rem;
   color: #a78bfa;
   font-weight: 600;
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(147, 51, 234, 0.15) 100%);
@@ -515,8 +555,13 @@ nav button.active svg {
     align-items: center;
   }
 
-  .more-menu-panel button.switch-mode-btn {
+  .more-menu-panel button.logout-btn {
     margin-top: 0.5rem;
+    padding-top: 0.7rem;
+  }
+
+  .more-menu-panel button.switch-mode-btn {
+    margin-top: 0.25rem;
     padding-top: 0.7rem;
   }
 }
