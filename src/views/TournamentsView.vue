@@ -23,16 +23,10 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
         <span>Sesión</span>
       </button>
-      <button @click="switchToView('TournamentHandView')" class="fab-nav-btn">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+      <button @click="startNewTournamentHand" class="fab-nav-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-      </button>
-      <button @click="goBackToCash" :class="{ active: false }">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
-        </svg>
-        <span>Cash</span>
       </button>
       <button>
         <!-- Placeholder para mantener el diseño simétrico -->
@@ -43,10 +37,12 @@
 
 <script setup>
 import { ref, shallowRef } from 'vue';
+import { useTournamentStore } from '../store/tournament';
 import TournamentHandView from './TournamentHandView.vue';
 import LiveTournamentSessionView from './LiveTournamentSessionView.vue';
 
 const emit = defineEmits(['go-to-cash']);
+const tournamentStore = useTournamentStore();
 
 const currentView = ref('TournamentHandView');
 
@@ -59,8 +55,10 @@ function switchToView(viewName) {
   currentView.value = viewName;
 }
 
-function goBackToCash() {
-  emit('go-to-cash');
+function startNewTournamentHand() {
+  // Reset the hand and switch to TournamentHandView with 'crear' tab
+  tournamentStore.resetHand();
+  currentView.value = 'TournamentHandView';
 }
 </script>
 
@@ -160,12 +158,12 @@ nav button:nth-child(2) svg {
   min-width: 64px;
   min-height: 64px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #b8860b 0%, #d4af37 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
   border: 4px solid rgba(10, 14, 26, 0.95);
   box-shadow:
-    0 4px 12px rgba(212, 175, 55, 0.4),
-    0 8px 24px rgba(212, 175, 55, 0.3),
-    0 0 20px rgba(212, 175, 55, 0.15),
+    0 4px 12px rgba(168, 85, 247, 0.4),
+    0 8px 24px rgba(168, 85, 247, 0.3),
+    0 0 20px rgba(168, 85, 247, 0.15),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
   color: white;
   display: flex;
@@ -178,8 +176,8 @@ nav button:nth-child(2) svg {
 }
 
 .fab-nav-btn svg {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
@@ -189,12 +187,12 @@ nav button:nth-child(2) svg {
 
 @media (hover: hover) and (pointer: fine) {
   .fab-nav-btn:hover {
-    background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
     transform: translateY(-3px) scale(1.05);
     box-shadow:
-      0 8px 20px rgba(212, 175, 55, 0.45),
-      0 12px 32px rgba(212, 175, 55, 0.35),
-      0 0 32px rgba(212, 175, 55, 0.2),
+      0 8px 20px rgba(139, 92, 246, 0.45),
+      0 12px 32px rgba(139, 92, 246, 0.35),
+      0 0 32px rgba(139, 92, 246, 0.2),
       0 0 0 1px rgba(255, 255, 255, 0.15) inset;
   }
 }
