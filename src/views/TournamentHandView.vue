@@ -306,7 +306,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, provide } from 'vue';
 import { useTournamentStore } from '../store/tournament';
 import { useAuthStore } from '../store/useAuthStore';
 import PokerTable from '../components/PokerTable.vue';
@@ -322,6 +322,9 @@ const emit = defineEmits(['go-to-cash']);
 
 const tournamentStore = useTournamentStore();
 const authStore = useAuthStore();
+
+// Provide the tournament store to all child components
+provide('pokerStore', tournamentStore);
 
 // Estado para las pestañas
 const activeTab = ref('crear');

@@ -148,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick, inject } from 'vue'
 import { useGameStore } from '../store/game'
 import PlayingCard from './PlayingCard.vue';
 import ChipStack from './ChipStack.vue';
@@ -172,7 +172,8 @@ const props = defineProps({
   heroIndex: Number,
 })
 
-const gameStore = useGameStore();
+// Try to inject the store, fallback to useGameStore for backward compatibility
+const gameStore = inject('pokerStore', null) || useGameStore();
 
 const isNotesPanelOpen = computed(() => gameStore.openNotesPanelPlayerId === props.player.id);
 

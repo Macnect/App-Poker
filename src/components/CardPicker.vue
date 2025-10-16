@@ -25,10 +25,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { useGameStore } from '../store/game';
 
-const gameStore = useGameStore();
+// Try to inject the store, fallback to useGameStore for backward compatibility
+const gameStore = inject('pokerStore', null) || useGameStore();
 
 const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 const suits = [

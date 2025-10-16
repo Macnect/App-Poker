@@ -39,10 +39,12 @@
 </template>
 
 <script setup>
+import { inject } from 'vue';
 import { useGameStore } from '../store/game';
 import { useSettingsStore } from '../store/useSettingsStore';
 
-const gameStore = useGameStore();
+// Try to inject the store, fallback to useGameStore for backward compatibility
+const gameStore = inject('pokerStore', null) || useGameStore();
 const settingsStore = useSettingsStore();
 </script>
 

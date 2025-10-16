@@ -75,14 +75,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useGameStore } from '../store/game';
 import { useSettingsStore } from '../store/useSettingsStore';
 
 const { t } = useI18n();
 
-const gameStore = useGameStore();
+// Try to inject the store, fallback to useGameStore for backward compatibility
+const gameStore = inject('pokerStore', null) || useGameStore();
 const settingsStore = useSettingsStore();
 
 const handSaved = ref(false);

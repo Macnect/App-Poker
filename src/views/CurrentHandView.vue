@@ -299,7 +299,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, provide } from 'vue';
 import { useGameStore } from '../store/game';
 import { useAuthStore } from '../store/useAuthStore';
 import PokerTable from '../components/PokerTable.vue';
@@ -313,6 +313,9 @@ import DatePicker from '../components/DatePicker.vue';
 
 const gameStore = useGameStore();
 const authStore = useAuthStore();
+
+// Provide the game store to all child components
+provide('pokerStore', gameStore);
 
 // Emits
 const emit = defineEmits(['go-to-tournaments']);

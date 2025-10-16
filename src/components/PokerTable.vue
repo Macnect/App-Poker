@@ -75,13 +75,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { useGameStore } from '../store/game';
 import { useSettingsStore } from '../store/useSettingsStore';
 import Player from './Player.vue';
 import PlayingCard from './PlayingCard.vue';
 
-const gameStore = useGameStore();
+// Try to inject the store, fallback to useGameStore for backward compatibility
+const gameStore = inject('pokerStore', null) || useGameStore();
 const settingsStore = useSettingsStore();
 
 const clickablePhases = computed(() => ['waitingForFlop', 'flop', 'turn', 'river', 'showdown']);
