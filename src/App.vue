@@ -54,7 +54,11 @@
     </div>
 
     <!-- Barra de Navegación Inferior -->
-    <nav>
+    <nav
+      @touchstart="handleNavSwipeStart"
+      @touchmove="handleNavSwipeMove"
+      @touchend="handleNavSwipeEnd"
+    >
       <button @click="switchToView('CurrentHandView')" :class="{ active: currentView === 'CurrentHandView' }">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <!-- Primera carta -->
@@ -132,6 +136,10 @@ const allowLandscape = computed(() => {
 const dragStartY = ref(0);
 const dragOffset = ref(0);
 const isDragging = ref(false);
+
+// Nav bar swipe-up state
+const navSwipeStartY = ref(0);
+const navSwipeEndY = ref(0);
 
 // Game mode selection state
 const selectedGameMode = ref(localStorage.getItem('selectedGameMode') || null);
@@ -212,6 +220,28 @@ function handleDragEnd() {
 
   // Reset offset
   dragOffset.value = 0;
+}
+
+// Nav bar swipe handlers
+function handleNavSwipeStart(e) {
+  navSwipeStartY.value = e.touches[0].clientY;
+}
+
+function handleNavSwipeMove(e) {
+  navSwipeEndY.value = e.touches[0].clientY;
+}
+
+function handleNavSwipeEnd() {
+  const swipeDistance = navSwipeStartY.value - navSwipeEndY.value;
+
+  // Swipe up detected (negative diff means upward movement)
+  if (swipeDistance > 50) {
+    showMoreMenu.value = true;
+  }
+
+  // Reset swipe tracking
+  navSwipeStartY.value = 0;
+  navSwipeEndY.value = 0;
 }
 
 // Game mode selection handlers
