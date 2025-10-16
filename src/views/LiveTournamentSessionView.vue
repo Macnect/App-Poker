@@ -316,7 +316,7 @@ const formattedTime = computed(() => {
    ======================================== */
 .widget {
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
-  border: 1px solid rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.15);
   border-radius: 16px;
   padding: 2rem;
 
@@ -324,7 +324,7 @@ const formattedTime = computed(() => {
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 10px 25px -3px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 20px 60px -15px rgba(212, 175, 55, 0.03);
+    0 20px 60px -15px rgba(168, 85, 247, 0.03);
 
   animation: cardSlideIn 0.5s ease-out;
 }
@@ -370,8 +370,8 @@ const formattedTime = computed(() => {
   height: 44px;
   padding: 10px;
 
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(212, 175, 55, 0.05) 100%);
-  border: 1.5px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.25);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
@@ -382,7 +382,7 @@ const formattedTime = computed(() => {
   margin: 0;
 
   box-shadow:
-    0 2px 8px rgba(212, 175, 55, 0.08),
+    0 2px 8px rgba(168, 85, 247, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
 
@@ -392,24 +392,24 @@ const formattedTime = computed(() => {
 }
 
 .save-icon-btn:not(:disabled):hover {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.15) 100%);
-  border-color: rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border-color: rgba(168, 85, 247, 0.5);
   transform: translateY(-3px) scale(1.05);
   box-shadow:
-    0 4px 16px rgba(212, 175, 55, 0.15),
-    0 0 20px rgba(212, 175, 55, 0.08);
+    0 4px 16px rgba(168, 85, 247, 0.15),
+    0 0 20px rgba(168, 85, 247, 0.08);
 }
 
 .save-icon-btn:not(:disabled):active {
   transform: translateY(-1px) scale(1.02);
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.35) 0%, rgba(212, 175, 55, 0.25) 100%);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0.25) 100%);
 }
 
 .save-icon {
   width: 24px;
   height: 24px;
-  color: #d4af37;
-  filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.2));
+  color: #a855f7;
+  filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.2));
 }
 
 .saved-indicator {
@@ -491,7 +491,7 @@ const formattedTime = computed(() => {
   font-weight: 700;
   color: #f9fafb;
   text-align: center;
-  text-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+  text-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
 }
 
 .timer-widget.on-break .timer-display {
@@ -532,19 +532,19 @@ const formattedTime = computed(() => {
 }
 
 .action-group input:hover {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(168, 85, 247, 0.4);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.2) inset,
-    0 0 8px rgba(212, 175, 55, 0.05);
+    0 0 8px rgba(168, 85, 247, 0.05);
 }
 
 .action-group input:focus {
   outline: none;
-  border-color: rgba(212, 175, 55, 0.6);
+  border-color: rgba(168, 85, 247, 0.6);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3) inset,
-    0 0 0 3px rgba(212, 175, 55, 0.1),
-    0 0 12px rgba(212, 175, 55, 0.08);
+    0 0 0 3px rgba(168, 85, 247, 0.1),
+    0 0 12px rgba(168, 85, 247, 0.08);
 }
 
 .action-group button {
@@ -636,17 +636,17 @@ const formattedTime = computed(() => {
 
 .config-item input:hover,
 .config-item select:hover {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(168, 85, 247, 0.4);
 }
 
 .config-item input:focus,
 .config-item select:focus {
   outline: none;
-  border-color: rgba(212, 175, 55, 0.6);
+  border-color: rgba(168, 85, 247, 0.6);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3) inset,
-    0 0 0 3px rgba(212, 175, 55, 0.1),
-    0 0 12px rgba(212, 175, 55, 0.08);
+    0 0 0 3px rgba(168, 85, 247, 0.1),
+    0 0 12px rgba(168, 85, 247, 0.08);
 }
 
 .config-item select option {

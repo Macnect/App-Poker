@@ -204,7 +204,7 @@ nav {
 
   /* Premium gradient background */
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.98) 0%, rgba(17, 24, 39, 1) 100%);
-  border-top: 1px solid rgba(212, 175, 55, 0.15);
+  border-top: 1px solid rgba(168, 85, 247, 0.15);
 
   display: flex;
   justify-content: space-around;
@@ -297,18 +297,18 @@ nav button:nth-child(2) svg {
 }
 
 nav button.active {
-  color: #d4af37;
-  text-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+  color: #a855f7;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
 }
 
 nav button.active svg {
-  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.4));
+  filter: drop-shadow(0 0 6px rgba(168, 85, 247, 0.4));
   transform: scale(1.1);
 }
 
 @media (hover: hover) and (pointer: fine) {
   nav button:not(.active):hover {
-    background: linear-gradient(180deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.02) 100%);
+    background: linear-gradient(180deg, rgba(168, 85, 247, 0.08) 0%, rgba(168, 85, 247, 0.02) 100%);
     color: #d1d5db;
   }
 
