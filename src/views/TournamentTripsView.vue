@@ -30,7 +30,12 @@
         <div class="action-card">
           <div class="action-card-header">
             <h3>Nueva Acción de Torneo</h3>
-            <button @click="resetCurrentAction" class="reset-btn">🔄 Limpiar</button>
+            <button @click="resetCurrentAction" class="reset-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="reset-icon">
+                <path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0112.548-3.364l1.903 1.903h-3.183a.75.75 0 100 1.5h4.992a.75.75 0 00.75-.75V4.356a.75.75 0 00-1.5 0v3.18l-1.9-1.9A9 9 0 003.306 9.67a.75.75 0 101.45.388zm15.408 3.352a.75.75 0 00-.919.53 7.5 7.5 0 01-12.548 3.364l-1.902-1.903h3.183a.75.75 0 000-1.5H2.984a.75.75 0 00-.75.75v4.992a.75.75 0 001.5 0v-3.18l1.9 1.9a9 9 0 0015.059-4.035.75.75 0 00-.53-.918z" clip-rule="evenodd" />
+              </svg>
+              Limpiar
+            </button>
           </div>
 
           <!-- Tipo de Acción Selector -->
@@ -40,14 +45,14 @@
               :class="{ active: currentAction.actionType === 'venta' }"
               class="type-selector-btn venta"
             >
-              📤 Venta de Acciones
+              💰 Venta de Acciones
             </button>
             <button
               @click="currentAction.actionType = 'compra'"
               :class="{ active: currentAction.actionType === 'compra' }"
               class="type-selector-btn compra"
             >
-              📥 Compra de Acciones
+              💳 Compra de Acciones
             </button>
           </div>
 
@@ -72,7 +77,16 @@
               </div>
 
               <div class="form-field">
-                <label>Precio del Torneo (€)</label>
+                <label>Moneda</label>
+                <select v-model="currentAction.currency">
+                  <option>€</option>
+                  <option>$</option>
+                  <option>£</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <label>Precio del Torneo ({{ currentAction.currency || '€' }})</label>
                 <input type="number" v-model.number="currentAction.price" @input="calculateTotals(currentAction)" min="0" placeholder="0">
               </div>
 
@@ -87,7 +101,7 @@
               </div>
 
               <div class="form-field calculated">
-                <label>Precio por 1% (€)</label>
+                <label>Precio por 1% ({{ currentAction.currency || '€' }})</label>
                 <div class="calculated-value">{{ currentAction.pricePerPercent?.toFixed(2) || '0.00' }}</div>
               </div>
             </div>
@@ -112,7 +126,7 @@
               </div>
 
               <div class="form-field calculated">
-                <label>Total {{ currentAction.actionType === 'venta' ? 'Recibido' : 'Pagado' }} (€)</label>
+                <label>Total {{ currentAction.actionType === 'venta' ? 'Recibido' : 'Pagado' }} ({{ currentAction.currency || '€' }})</label>
                 <div class="calculated-value">{{ currentAction.totalPaid?.toFixed(2) || '0.00' }}</div>
               </div>
 
@@ -131,7 +145,12 @@
               </div>
 
               <div class="form-field">
-                <button @click="saveCurrentAction" class="save-action-btn">💾 Guardar Acción</button>
+                <button @click="saveCurrentAction" class="save-action-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="save-icon">
+                    <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                  </svg>
+                  Guardar Acción
+                </button>
               </div>
             </div>
 
@@ -165,14 +184,14 @@
               :class="{ active: filterType === 'venta' }"
               class="filter-btn venta"
             >
-              📤 Ventas ({{ filteredByType('venta').length }})
+              💰 Ventas ({{ filteredByType('venta').length }})
             </button>
             <button
               @click="filterType = 'compra'"
               :class="{ active: filterType === 'compra' }"
               class="filter-btn compra"
             >
-              📥 Compras ({{ filteredByType('compra').length }})
+              💳 Compras ({{ filteredByType('compra').length }})
             </button>
           </div>
 
@@ -182,7 +201,7 @@
               <div class="header-left">
                 <h3>{{ action.tournamentName || `Torneo #${index + 1}` }}</h3>
                 <span class="action-type-badge" :class="action.actionType || 'venta'">
-                  {{ action.actionType === 'compra' ? '📥 Compra' : '📤 Venta' }}
+                  {{ action.actionType === 'compra' ? '💳 Compra' : '💰 Venta' }}
                 </span>
               </div>
               <div class="action-header-buttons">
@@ -203,7 +222,7 @@
                 </div>
                 <div class="summary-item">
                   <span class="summary-label">Precio Torneo:</span>
-                  <span class="summary-value">{{ action.price }}€</span>
+                  <span class="summary-value">{{ action.price }}{{ action.currency || '€' }}</span>
                 </div>
               </div>
 
@@ -218,7 +237,7 @@
                 </div>
                 <div class="summary-item">
                   <span class="summary-label">Total {{ action.actionType === 'compra' ? 'Pagado' : 'Recibido' }}:</span>
-                  <span class="summary-value highlight">{{ action.totalPaid?.toFixed(2) }}€</span>
+                  <span class="summary-value highlight">{{ action.totalPaid?.toFixed(2) }}{{ action.currency || '€' }}</span>
                 </div>
               </div>
 
@@ -268,6 +287,7 @@ const currentAction = ref({
   actionType: 'venta', // 'venta' o 'compra'
   playerName: '',
   tournamentName: '',
+  currency: '€',
   price: 0,
   percentageForSale: 0,
   markup: 1,
@@ -299,6 +319,7 @@ function resetCurrentAction() {
     actionType: 'venta',
     playerName: '',
     tournamentName: '',
+    currency: '€',
     price: 0,
     percentageForSale: 0,
     markup: 1,
@@ -948,6 +969,9 @@ watch(savedActions, () => {
   transition: all 0.3s ease;
   border: 1.5px solid;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .edit-btn {
@@ -964,16 +988,22 @@ watch(savedActions, () => {
 }
 
 .reset-btn {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(202, 138, 4, 0.3) 100%);
-  border-color: rgba(234, 179, 8, 0.3);
-  color: #fbbf24;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #f87171;
 }
 
 .reset-btn:hover {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.3) 0%, rgba(202, 138, 4, 0.4) 100%);
-  border-color: rgba(234, 179, 8, 0.5);
-  color: #fcd34d;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.3) 0%, rgba(185, 28, 28, 0.4) 100%);
+  border-color: rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
   transform: scale(1.05);
+}
+
+.reset-icon {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 2px 4px rgba(220, 38, 38, 0.2));
 }
 
 .delete-btn {
@@ -1084,7 +1114,7 @@ watch(savedActions, () => {
 /* Save Action Button */
 .save-action-btn {
   width: 100%;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
   color: white;
   font-size: 1rem;
   font-weight: 600;
@@ -1094,20 +1124,32 @@ watch(savedActions, () => {
   cursor: pointer;
   letter-spacing: 0.025em;
   box-shadow:
-    0 4px 6px -1px rgba(16, 185, 129, 0.3),
-    0 10px 20px -3px rgba(16, 185, 129, 0.2);
+    0 4px 6px -1px rgba(124, 58, 237, 0.3),
+    0 10px 20px -3px rgba(124, 58, 237, 0.2);
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .save-action-btn:hover {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+  box-shadow:
+    0 6px 12px rgba(124, 58, 237, 0.4),
+    0 0 20px rgba(168, 85, 247, 0.2);
 }
 
 .save-action-btn:active {
   transform: translateY(0);
+}
+
+.save-action-btn .save-icon {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 /* ========================================
