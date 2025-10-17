@@ -1,25 +1,7 @@
 <template>
   <div class="tournament-manager-container">
-    <!-- Tab Navigation -->
-    <div class="tabs-header">
-      <button
-        @click="activeTab = 'actions'"
-        :class="{ active: activeTab === 'actions' }"
-        class="tab-btn"
-      >
-        Acciones de Torneos
-      </button>
-      <button
-        @click="activeTab = 'planner'"
-        :class="{ active: activeTab === 'planner' }"
-        class="tab-btn"
-      >
-        Planificador de viajes
-      </button>
-    </div>
-
     <!-- Acciones de Torneos Section -->
-    <div v-if="activeTab === 'actions'" class="section-panel">
+    <div class="section-panel">
       <div class="section-header">
         <h2>Acciones de Torneos</h2>
       </div>
@@ -31,14 +13,14 @@
           :class="{ active: activeSubTab === 'new' }"
           class="sub-tab-btn"
         >
-          Nuevo Torneo
+          Nueva Acción
         </button>
         <button
           @click="activeSubTab = 'saved'"
           :class="{ active: activeSubTab === 'saved' }"
           class="sub-tab-btn"
         >
-          Torneos Guardados
+          Acciones Guardadas
           <span v-if="savedActions.length > 0" class="badge">{{ savedActions.length }}</span>
         </button>
       </div>
@@ -51,11 +33,36 @@
             <button @click="resetCurrentAction" class="reset-btn">🔄 Limpiar</button>
           </div>
 
+          <!-- Tipo de Acción Selector -->
+          <div class="action-type-selector">
+            <button
+              @click="currentAction.actionType = 'venta'"
+              :class="{ active: currentAction.actionType === 'venta' }"
+              class="type-selector-btn venta"
+            >
+              📤 Venta de Acciones
+            </button>
+            <button
+              @click="currentAction.actionType = 'compra'"
+              :class="{ active: currentAction.actionType === 'compra' }"
+              class="type-selector-btn compra"
+            >
+              📥 Compra de Acciones
+            </button>
+          </div>
+
           <div class="action-form-grid-two-columns">
             <!-- Columna 1 -->
             <div class="column">
-              <div class="form-field">
-                <label>Nombre del Jugador</label>
+              <!-- VENTA: El jugador es quien vende -->
+              <div v-if="currentAction.actionType === 'venta'" class="form-field">
+                <label>Jugador (Vendedor)</label>
+                <input type="text" v-model="currentAction.playerName" placeholder="Ej: Juan Pérez">
+              </div>
+
+              <!-- COMPRA: El jugador es quien compra -->
+              <div v-if="currentAction.actionType === 'compra'" class="form-field">
+                <label>Jugador (Comprador)</label>
                 <input type="text" v-model="currentAction.playerName" placeholder="Ej: Juan Pérez">
               </div>
 
@@ -65,11 +72,11 @@
               </div>
 
               <div class="form-field">
-                <label>Precio (€)</label>
+                <label>Precio del Torneo (€)</label>
                 <input type="number" v-model.number="currentAction.price" @input="calculateTotals(currentAction)" min="0" placeholder="0">
               </div>
 
-              <div class="form-field">
+              <div v-if="currentAction.actionType === 'venta'" class="form-field">
                 <label>% en Venta</label>
                 <input type="number" v-model.number="currentAction.percentageForSale" @input="calculateTotals(currentAction)" min="0" max="100" placeholder="0">
               </div>
@@ -87,22 +94,29 @@
 
             <!-- Columna 2 -->
             <div class="column">
-              <div class="form-field">
+              <!-- VENTA: Campo de comprador -->
+              <div v-if="currentAction.actionType === 'venta'" class="form-field">
                 <label>Comprador</label>
                 <input type="text" v-model="currentAction.buyer" placeholder="Nombre del comprador">
               </div>
 
+              <!-- COMPRA: Campo de vendedor (quien juega el torneo) -->
+              <div v-if="currentAction.actionType === 'compra'" class="form-field">
+                <label>Vendedor (Quien juega)</label>
+                <input type="text" v-model="currentAction.buyer" placeholder="Nombre del jugador">
+              </div>
+
               <div class="form-field">
-                <label>% Comprado</label>
+                <label>{{ currentAction.actionType === 'venta' ? '% Vendido' : '% Comprado' }}</label>
                 <input type="number" v-model.number="currentAction.percentageBought" @input="calculateTotals(currentAction)" min="0" max="100" placeholder="0">
               </div>
 
               <div class="form-field calculated">
-                <label>Total Pagado (€)</label>
+                <label>Total {{ currentAction.actionType === 'venta' ? 'Recibido' : 'Pagado' }} (€)</label>
                 <div class="calculated-value">{{ currentAction.totalPaid?.toFixed(2) || '0.00' }}</div>
               </div>
 
-              <div class="form-field calculated">
+              <div v-if="currentAction.actionType === 'venta'" class="form-field calculated">
                 <label>% Retenido Jugador</label>
                 <div class="calculated-value">{{ currentAction.percentageRetained?.toFixed(2) || '0.00' }}%</div>
               </div>
@@ -117,7 +131,7 @@
               </div>
 
               <div class="form-field">
-                <button @click="saveCurrentAction" class="save-action-btn">💾 Guardar Torneo</button>
+                <button @click="saveCurrentAction" class="save-action-btn">💾 Guardar Acción</button>
               </div>
             </div>
 
@@ -130,16 +144,47 @@
         </div>
       </div>
 
-      <!-- Torneos Guardados -->
+      <!-- Acciones Guardadas -->
       <div v-if="activeSubTab === 'saved'" class="sub-section">
         <div v-if="savedActions.length === 0" class="empty-state">
-          <p>No hay torneos guardados. Crea uno en la pestaña "Nuevo Torneo".</p>
+          <p>No hay acciones guardadas. Crea una en la pestaña "Nueva Acción".</p>
         </div>
 
-        <div v-else class="actions-list">
-          <div v-for="(action, index) in savedActions" :key="action.id" class="action-card">
+        <div v-else>
+          <!-- Filtros -->
+          <div class="filters-bar">
+            <button
+              @click="filterType = 'all'"
+              :class="{ active: filterType === 'all' }"
+              class="filter-btn"
+            >
+              Todas ({{ savedActions.length }})
+            </button>
+            <button
+              @click="filterType = 'venta'"
+              :class="{ active: filterType === 'venta' }"
+              class="filter-btn venta"
+            >
+              📤 Ventas ({{ filteredByType('venta').length }})
+            </button>
+            <button
+              @click="filterType = 'compra'"
+              :class="{ active: filterType === 'compra' }"
+              class="filter-btn compra"
+            >
+              📥 Compras ({{ filteredByType('compra').length }})
+            </button>
+          </div>
+
+          <div class="actions-list">
+            <div v-for="(action, index) in filteredActions" :key="action.id" class="action-card">
             <div class="action-card-header">
-              <h3>{{ action.tournamentName || `Torneo #${index + 1}` }}</h3>
+              <div class="header-left">
+                <h3>{{ action.tournamentName || `Torneo #${index + 1}` }}</h3>
+                <span class="action-type-badge" :class="action.actionType || 'venta'">
+                  {{ action.actionType === 'compra' ? '📥 Compra' : '📤 Venta' }}
+                </span>
+              </div>
               <div class="action-header-buttons">
                 <button @click="editAction(action)" class="edit-btn">✏️ Editar</button>
                 <button @click="deleteSavedAction(action.id)" class="delete-btn">🗑️</button>
@@ -149,36 +194,36 @@
             <div class="action-summary">
               <div class="summary-row">
                 <div class="summary-item">
-                  <span class="summary-label">Jugador:</span>
+                  <span class="summary-label">{{ action.actionType === 'compra' ? 'Comprador' : 'Vendedor' }}:</span>
                   <span class="summary-value">{{ action.playerName || 'N/A' }}</span>
                 </div>
                 <div class="summary-item">
-                  <span class="summary-label">Precio:</span>
-                  <span class="summary-value">{{ action.price }}€</span>
+                  <span class="summary-label">{{ action.actionType === 'compra' ? 'Vendedor' : 'Comprador' }}:</span>
+                  <span class="summary-value">{{ action.buyer || 'N/A' }}</span>
                 </div>
                 <div class="summary-item">
-                  <span class="summary-label">Mark-Up:</span>
-                  <span class="summary-value">{{ action.markup }}</span>
+                  <span class="summary-label">Precio Torneo:</span>
+                  <span class="summary-value">{{ action.price }}€</span>
                 </div>
               </div>
 
               <div class="summary-row">
                 <div class="summary-item">
-                  <span class="summary-label">Comprador:</span>
-                  <span class="summary-value">{{ action.buyer || 'N/A' }}</span>
+                  <span class="summary-label">Mark-Up:</span>
+                  <span class="summary-value">{{ action.markup }}x</span>
                 </div>
                 <div class="summary-item">
-                  <span class="summary-label">% Comprado:</span>
+                  <span class="summary-label">{{ action.actionType === 'compra' ? '% Comprado' : '% Vendido' }}:</span>
                   <span class="summary-value">{{ action.percentageBought }}%</span>
                 </div>
                 <div class="summary-item">
-                  <span class="summary-label">Total Pagado:</span>
+                  <span class="summary-label">Total {{ action.actionType === 'compra' ? 'Pagado' : 'Recibido' }}:</span>
                   <span class="summary-value highlight">{{ action.totalPaid?.toFixed(2) }}€</span>
                 </div>
               </div>
 
               <div class="summary-row">
-                <div class="summary-item">
+                <div v-if="action.actionType === 'venta'" class="summary-item">
                   <span class="summary-label">% Retenido:</span>
                   <span class="summary-value">{{ action.percentageRetained?.toFixed(2) }}%</span>
                 </div>
@@ -194,20 +239,8 @@
               </div>
             </div>
           </div>
+          </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Planificador de viajes Section -->
-    <div v-if="activeTab === 'planner'" class="section-panel">
-      <div class="section-header">
-        <h2>Planificador de viajes</h2>
-      </div>
-
-      <div class="planner-placeholder">
-        <div class="placeholder-icon">✈️</div>
-        <p class="placeholder-text">Esta sección estará disponible próximamente.</p>
-        <p class="placeholder-subtext">Aquí podrás planificar tus viajes de poker con todos los detalles necesarios.</p>
       </div>
     </div>
 
@@ -220,18 +253,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 
-const activeTab = ref('actions');
 const activeSubTab = ref('new');
 const savedActions = ref([]);
 const showToast = ref(false);
 const toastMessage = ref('');
+const filterType = ref('all');
 let nextId = 1;
 
 // Current action being created/edited
 const currentAction = ref({
   id: null,
+  actionType: 'venta', // 'venta' o 'compra'
   playerName: '',
   tournamentName: '',
   price: 0,
@@ -246,9 +280,23 @@ const currentAction = ref({
   notes: ''
 });
 
+// Computed property for filtered actions
+const filteredActions = computed(() => {
+  if (filterType.value === 'all') {
+    return savedActions.value;
+  }
+  return savedActions.value.filter(action => (action.actionType || 'venta') === filterType.value);
+});
+
+// Helper function for filtering by type (for badges)
+function filteredByType(type) {
+  return savedActions.value.filter(action => (action.actionType || 'venta') === type);
+}
+
 function resetCurrentAction() {
   currentAction.value = {
     id: null,
+    actionType: 'venta',
     playerName: '',
     tournamentName: '',
     price: 0,
@@ -274,17 +322,29 @@ function saveCurrentAction() {
 
   if (currentAction.value.id === null) {
     // New action - add to saved list
-    const newAction = { ...currentAction.value, id: nextId++ };
+    const newAction = {
+      ...currentAction.value,
+      id: nextId++,
+      createdAt: new Date().toISOString()
+    };
     savedActions.value.push(newAction);
-    showToastMessage('Torneo guardado correctamente');
+    showToastMessage('✅ Torneo guardado correctamente');
+    console.log('💾 Nuevo torneo guardado:', newAction.tournamentName);
   } else {
     // Editing existing action - update it
     const index = savedActions.value.findIndex(a => a.id === currentAction.value.id);
     if (index !== -1) {
-      savedActions.value[index] = { ...currentAction.value };
-      showToastMessage('Torneo actualizado correctamente');
+      savedActions.value[index] = {
+        ...currentAction.value,
+        updatedAt: new Date().toISOString()
+      };
+      showToastMessage('✅ Torneo actualizado correctamente');
+      console.log('🔄 Torneo actualizado:', currentAction.value.tournamentName);
     }
   }
+
+  // Force immediate save to localStorage
+  saveToLocalStorage();
 
   // Reset form and switch to saved tab
   resetCurrentAction();
@@ -301,10 +361,31 @@ function editAction(action) {
 function deleteSavedAction(id) {
   const index = savedActions.value.findIndex(a => a.id === id);
   if (index !== -1) {
-    const actionName = savedActions.value[index].tournamentName || 'este torneo';
-    if (confirm(`¿Estás seguro de que quieres eliminar ${actionName}?`)) {
+    const action = savedActions.value[index];
+    const actionName = action.tournamentName || 'este torneo';
+
+    // Enhanced confirmation with details
+    const confirmMessage = `⚠️ CONFIRMACIÓN DE ELIMINACIÓN\n\n` +
+      `Estás a punto de eliminar:\n` +
+      `- Torneo: ${actionName}\n` +
+      `- Jugador: ${action.playerName || 'N/A'}\n` +
+      `- Precio: ${action.price}€\n\n` +
+      `Esta acción NO se puede deshacer.\n\n` +
+      `¿Estás completamente seguro de que quieres eliminar este torneo?`;
+
+    if (confirm(confirmMessage)) {
+      // Create a backup before deletion
+      const deletedActionBackup = { ...action };
+      localStorage.setItem('lastDeletedAction', JSON.stringify({
+        action: deletedActionBackup,
+        deletedAt: new Date().toISOString()
+      }));
+
       savedActions.value.splice(index, 1);
-      showToastMessage('Torneo eliminado');
+      showToastMessage(`Torneo "${actionName}" eliminado permanentemente`);
+
+      console.log('🗑️ Torneo eliminado:', actionName);
+      console.log('💾 Copia de seguridad creada en lastDeletedAction');
     }
   }
 }
@@ -336,25 +417,108 @@ function showToastMessage(message) {
   }, 3000);
 }
 
-// Load data from localStorage on mount
+// Enhanced save function with error handling and backup
+function saveToLocalStorage() {
+  try {
+    const dataToSave = {
+      actions: savedActions.value,
+      lastSaved: new Date().toISOString(),
+      version: '1.0'
+    };
+
+    // Save main data
+    localStorage.setItem('tournamentActions', JSON.stringify(dataToSave));
+
+    // Create automatic backup (keep last 3 backups)
+    const backups = JSON.parse(localStorage.getItem('tournamentActions_backups') || '[]');
+    backups.unshift({
+      data: dataToSave,
+      timestamp: new Date().toISOString()
+    });
+
+    // Keep only last 3 backups
+    if (backups.length > 3) {
+      backups.splice(3);
+    }
+
+    localStorage.setItem('tournamentActions_backups', JSON.stringify(backups));
+
+    console.log('✅ Datos guardados correctamente:', new Date().toLocaleString());
+  } catch (e) {
+    console.error('❌ Error al guardar datos:', e);
+    showToastMessage('Error al guardar. Verifica el espacio en localStorage');
+  }
+}
+
+// Load data from localStorage on mount with backup recovery
 onMounted(() => {
-  const saved = localStorage.getItem('tournamentActions');
-  if (saved) {
-    try {
-      savedActions.value = JSON.parse(saved);
+  try {
+    const saved = localStorage.getItem('tournamentActions');
+
+    if (saved) {
+      const parsedData = JSON.parse(saved);
+
+      // Check if it's new format (with metadata) or old format (just array)
+      if (Array.isArray(parsedData)) {
+        // Old format - migrate to new format
+        savedActions.value = parsedData;
+        console.log('📦 Datos migrados al nuevo formato');
+        saveToLocalStorage(); // Save in new format
+      } else if (parsedData.actions) {
+        // New format
+        savedActions.value = parsedData.actions;
+        console.log('✅ Datos cargados correctamente. Última actualización:', parsedData.lastSaved);
+      }
+
       // Find the highest ID to continue from there
       if (savedActions.value.length > 0) {
         nextId = Math.max(...savedActions.value.map(a => a.id)) + 1;
       }
-    } catch (e) {
-      console.error('Error loading tournament actions:', e);
+
+      console.log(`📊 ${savedActions.value.length} torneos cargados`);
+
+      // Show data persistence info
+      console.log('\n🔒 INFORMACIÓN DE PERSISTENCIA:');
+      console.log('✅ Tus datos están guardados de forma permanente en el navegador');
+      console.log('✅ Los datos se mantienen incluso si cierras la aplicación');
+      console.log('✅ Sistema de respaldo automático activo (últimas 3 versiones)');
+      console.log('✅ Los datos solo se eliminan si tú lo haces manualmente');
+      console.log('⚠️ Los datos están vinculados a este navegador y dispositivo');
+      console.log('💡 Para mayor seguridad, exporta tus datos periódicamente\n');
+    } else {
+      console.log('📭 No hay datos guardados previos');
+    }
+  } catch (e) {
+    console.error('❌ Error al cargar datos:', e);
+
+    // Try to restore from backup
+    try {
+      const backups = JSON.parse(localStorage.getItem('tournamentActions_backups') || '[]');
+      if (backups.length > 0) {
+        const lastBackup = backups[0];
+        savedActions.value = lastBackup.data.actions;
+        showToastMessage('Datos restaurados desde respaldo');
+        console.log('🔄 Datos restaurados desde respaldo:', lastBackup.timestamp);
+      }
+    } catch (backupError) {
+      console.error('❌ Error al restaurar desde respaldo:', backupError);
+      showToastMessage('Error al cargar datos. Los datos pueden haberse perdido.');
     }
   }
 });
 
-// Save to localStorage whenever savedActions change
+// Save to localStorage whenever savedActions change with debounce
+let saveTimeout;
 watch(savedActions, () => {
-  localStorage.setItem('tournamentActions', JSON.stringify(savedActions.value));
+  // Clear previous timeout
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+
+  // Debounce save to avoid excessive writes
+  saveTimeout = setTimeout(() => {
+    saveToLocalStorage();
+  }, 500);
 }, { deep: true });
 </script>
 
@@ -611,6 +775,105 @@ watch(savedActions, () => {
 }
 
 /* ========================================
+   ACTION TYPE SELECTOR
+   ======================================== */
+.action-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.3) 0%, rgba(31, 41, 55, 0.5) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.type-selector-btn {
+  padding: 1rem 1.5rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: rgba(55, 65, 81, 0.3);
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
+}
+
+.type-selector-btn:hover {
+  color: #d1d5db;
+  background: rgba(55, 65, 81, 0.5);
+}
+
+.type-selector-btn.active.venta {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.3) 100%);
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #4ade80;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+}
+
+.type-selector-btn.active.compra {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #60a5fa;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+/* ========================================
+   FILTERS BAR
+   ======================================== */
+.filters-bar {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.3) 0%, rgba(31, 41, 55, 0.5) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.1);
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  background: rgba(55, 65, 81, 0.4);
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
+}
+
+.filter-btn:hover {
+  color: #d1d5db;
+  background: rgba(55, 65, 81, 0.6);
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  border-color: rgba(168, 85, 247, 0.6);
+  color: white;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+}
+
+.filter-btn.venta.active {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(22, 163, 74, 0.4) 100%);
+  border-color: rgba(34, 197, 94, 0.6);
+  color: #4ade80;
+}
+
+.filter-btn.compra.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.4) 100%);
+  border-color: rgba(59, 130, 246, 0.6);
+  color: #60a5fa;
+}
+
+/* ========================================
    ACTION CARD
    ======================================== */
 .action-card {
@@ -635,11 +898,39 @@ watch(savedActions, () => {
   border-bottom: 1px solid rgba(168, 85, 247, 0.15);
 }
 
+.action-card-header .header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .action-card-header h3 {
   margin: 0;
   font-size: 1.3rem;
   font-weight: 700;
   color: #f9fafb;
+}
+
+.action-type-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 20px;
+  letter-spacing: 0.025em;
+  width: fit-content;
+}
+
+.action-type-badge.venta {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.3) 100%);
+  border: 1.5px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.action-type-badge.compra {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%);
+  border: 1.5px solid rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
 }
 
 .action-header-buttons {
@@ -1026,12 +1317,48 @@ watch(savedActions, () => {
     gap: 0.75rem;
   }
 
+  .action-type-selector {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .type-selector-btn {
+    padding: 0.85rem 1.25rem;
+    font-size: 1rem;
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .filter-btn {
+    min-width: 100%;
+    padding: 0.65rem 1rem;
+    font-size: 0.9rem;
+  }
+
   .action-card {
     padding: 1.25rem;
   }
 
+  .action-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .action-card-header .header-left {
+    width: 100%;
+  }
+
   .action-card-header h3 {
     font-size: 1.1rem;
+  }
+
+  .action-type-badge {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
   }
 
   .action-header-buttons {
