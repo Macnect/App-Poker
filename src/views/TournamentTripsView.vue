@@ -155,14 +155,17 @@
                       placeholder="Nombre del comprador"
                       class="buyer-name-input"
                     >
-                    <input
-                      type="number"
-                      v-model.number="newBuyer.percentage"
-                      placeholder="%"
-                      min="0"
-                      :max="remainingPercentage"
-                      class="buyer-percentage-input"
-                    >
+                    <div class="percentage-input-wrapper">
+                      <input
+                        type="number"
+                        v-model.number="newBuyer.percentage"
+                        placeholder="0"
+                        min="0"
+                        :max="remainingPercentage"
+                        class="buyer-percentage-input"
+                      >
+                      <span class="percentage-symbol">%</span>
+                    </div>
                     <button @click="addBuyer" type="button" class="add-buyer-btn">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                         <path fill-rule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clip-rule="evenodd" />
@@ -1471,8 +1474,7 @@ watch(savedActions, () => {
   box-sizing: border-box;
 }
 
-.buyer-name-input,
-.buyer-percentage-input {
+.buyer-name-input {
   padding: 0.75rem 1rem;
   font-size: 0.95rem;
   font-weight: 500;
@@ -1487,12 +1489,49 @@ watch(savedActions, () => {
   min-width: 0;
 }
 
-.buyer-percentage-input {
-  text-align: center;
-  font-weight: 600;
+.percentage-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.buyer-name-input:focus,
+.buyer-percentage-input {
+  padding: 0.75rem 2rem 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  color: #f9fafb;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  text-align: center;
+}
+
+.percentage-symbol {
+  position: absolute;
+  right: 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #a855f7;
+  pointer-events: none;
+  user-select: none;
+}
+
+.buyer-name-input:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
 .buyer-percentage-input:focus {
   outline: none;
   border-color: rgba(168, 85, 247, 0.6);
@@ -1501,7 +1540,10 @@ watch(savedActions, () => {
     0 0 0 3px rgba(168, 85, 247, 0.1);
 }
 
-.buyer-name-input:hover,
+.buyer-name-input:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
 .buyer-percentage-input:hover {
   border-color: rgba(168, 85, 247, 0.3);
 }
@@ -1994,9 +2036,18 @@ watch(savedActions, () => {
     gap: 0.5rem;
   }
 
-  .buyer-name-input,
-  .buyer-percentage-input {
+  .buyer-name-input {
     padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .buyer-percentage-input {
+    padding: 0.65rem 1.75rem 0.65rem 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .percentage-symbol {
+    right: 0.65rem;
     font-size: 0.9rem;
   }
 
@@ -2021,6 +2072,15 @@ watch(savedActions, () => {
 
   .add-buyer-inputs {
     grid-template-columns: 1fr 70px auto;
+  }
+
+  .buyer-percentage-input {
+    padding: 0.65rem 1.75rem 0.65rem 0.85rem;
+  }
+
+  .percentage-symbol {
+    right: 0.6rem;
+    font-size: 0.85rem;
   }
 
   .summary-row {
