@@ -24,6 +24,7 @@
         <button @click="navigateTo('ChartsView')">📈 Gráficos</button>
         <button @click="navigateTo('TournamentTripsView')">✈️ Viajes</button>
         <button @click="navigateTo('SavedTournamentTripsView')">🗂️ Viajes Guardados</button>
+        <button @click="navigateTo('TripAccountsView')">💳 Cuentas Viajes</button>
         <button @click="navigateTo('SettingsView')">⚙️ Configuración</button>
         <button @click="authStore.signOut()" class="logout-btn">🚪 Salir</button>
       </div>
@@ -76,6 +77,7 @@ import SavedTournamentHandsView from './SavedTournamentHandsView.vue';
 import SavedTournamentSessionsView from './SavedTournamentSessionsView.vue';
 import TournamentTripsView from './TournamentTripsView.vue';
 import SavedTournamentTripsView from './SavedTournamentTripsView.vue';
+import TripAccountsView from './TripAccountsView.vue';
 import ChartsView from './ChartsView.vue';
 import SettingsView from './SettingsView.vue';
 import AdminView from './AdminView.vue';
@@ -100,6 +102,7 @@ const views = shallowRef({
   SavedTournamentSessionsView,
   TournamentTripsView,
   SavedTournamentTripsView,
+  TripAccountsView,
   ChartsView,
   SettingsView,
   AdminView,

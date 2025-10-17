@@ -120,5 +120,23 @@
     "feature3": "ROI and profitability analysis",
     "feature4": "Buy-ins, re-entries and add-ons management",
     "backToSelector": "Back to Mode Selector"
+  },
+  "tripAccounts": {
+    "title": "Trip Accounts",
+    "subtitle": "Tap a card to edit the name",
+    "shuffle": "Shuffle",
+    "shuffling": "Shuffling...",
+    "playAgain": "Play Again",
+    "addCard": "Add card",
+    "removeCard": "Remove card",
+    "cards": "cards",
+    "minCards": "Minimum 2 cards",
+    "maxCards": "Maximum 10 cards",
+    "clickToEdit": "Click to edit",
+    "playerName": "Player",
+    "cardHolder": "CARDHOLDER",
+    "expires": "EXPIRES",
+    "paysTheBill": "pays the bill!",
+    "editName": "Edit name"
   }
 }

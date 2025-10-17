@@ -122,5 +122,23 @@
     "feature3": "Análisis de ROI y rentabilidad",
     "feature4": "Gestión de buy-ins, re-entries y add-ons",
     "backToSelector": "Volver al Selector de Modo"
+  },
+  "tripAccounts": {
+    "title": "Cuentas Viajes",
+    "subtitle": "Toca una tarjeta para editar el nombre",
+    "shuffle": "Mover",
+    "shuffling": "Mezclando...",
+    "playAgain": "Jugar de nuevo",
+    "addCard": "Añadir tarjeta",
+    "removeCard": "Eliminar tarjeta",
+    "cards": "tarjetas",
+    "minCards": "Mínimo 2 tarjetas",
+    "maxCards": "Máximo 10 tarjetas",
+    "clickToEdit": "Click para editar",
+    "playerName": "Jugador",
+    "cardHolder": "TITULAR",
+    "expires": "VENCE",
+    "paysTheBill": "paga la cuenta!",
+    "editName": "Editar nombre"
   }
 }
