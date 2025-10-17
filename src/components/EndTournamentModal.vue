@@ -10,25 +10,25 @@
         <div class="summary-item total-investment"><span>Inversión Total:</span> <span>{{ sessionStore.currency }}{{ totalInvestment }}</span></div>
       </div>
 
-      <!-- Toggle Día 2 -->
+      <!-- Toggle Día siguiente -->
       <div class="day2-toggle-container">
         <label class="toggle-label">
-          <input type="checkbox" v-model="isDay2" class="toggle-checkbox">
+          <input type="checkbox" v-model="isDay2" class="toggle-checkbox" :disabled="nextDay > 15">
           <span class="toggle-slider"></span>
-          <span class="toggle-text">Día 2</span>
+          <span class="toggle-text">{{ nextDay > 15 ? 'Máximo 15 días' : `Día ${nextDay}` }}</span>
         </label>
       </div>
 
-      <!-- Si es Día 2: Solo pedir stack -->
+      <!-- Si continúa al día siguiente: Solo pedir stack -->
       <div v-if="isDay2" class="input-section">
-        <label for="day2-stack">Stack para el Día 2:</label>
+        <label for="day2-stack">Stack para el Día {{ nextDay }}:</label>
         <div class="input-group">
           <span>Fichas</span>
           <input id="day2-stack" type="number" v-model.number="day2Stack" placeholder="Stack en fichas" ref="inputRef">
         </div>
       </div>
 
-      <!-- Si NO es Día 2: Pedir posición y premio -->
+      <!-- Si finaliza el torneo: Pedir posición y premio -->
       <div v-else class="input-section">
         <label for="position">Posición Final:</label>
         <div class="input-group">
@@ -79,6 +79,10 @@ const prizeWon = ref(0);
 const inputRef = ref(null);
 
 const totalInvestment = computed(() => sessionStore.buyIn + sessionStore.totalRebuys);
+
+const nextDay = computed(() => {
+  return sessionStore.currentDay + 1;
+});
 
 const tournamentResult = computed(() => {
   if (isDay2.value) return 0;
@@ -258,6 +262,16 @@ h3 {
 .toggle-checkbox:checked + .toggle-slider::before {
   transform: translateX(26px);
   background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+}
+
+.toggle-checkbox:disabled + .toggle-slider {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-label:has(.toggle-checkbox:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .toggle-text {

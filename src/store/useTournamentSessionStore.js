@@ -20,6 +20,7 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
     gameType: 'holdem',
     tournamentType: 'Normal',
     structure: 'Normal',
+    currentDay: 1, // Día actual del torneo (1-15)
   });
 
   const savedSessions = ref([]);
@@ -146,8 +147,9 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
         tipo_juego: sessionState.value.gameType,
         tipo_torneo: sessionState.value.tournamentType,
         estructura: sessionState.value.structure,
-        // Nuevos campos específicos de torneos
+        // Nuevos campos específicos de torneos multi-día
         es_dia_2: tournamentData.isDay2,
+        dia_torneo: tournamentData.isDay2 ? (sessionState.value.currentDay + 1) : 1, // Incrementar día si continúa
         stack_dia_2: tournamentData.day2Stack,
         posicion_final: tournamentData.finalPosition,
         premio_ganado: tournamentData.prizeWon,
@@ -195,6 +197,58 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
     localStorage.setItem('tournament-sessions', JSON.stringify(savedSessions.value));
   }
 
+  function resumeTournament(sessionData) {
+    if (!sessionData.es_dia_2) {
+      throw new Error('Solo se pueden reanudar torneos multi-día');
+    }
+
+    // Calcular el tiempo ya transcurrido del día anterior
+    const previousElapsedSeconds = sessionData.duracion_segundos || 0;
+    const previousBreakSeconds = sessionData.tiempo_descanso_segundos || 0;
+
+    // Calcular el startTime ajustado para que el temporizador continúe desde donde se quedó
+    // startTime debe ser: ahora - tiempo_transcurrido - tiempo_descanso
+    const now = Date.now();
+    const adjustedStartTime = now - (previousElapsedSeconds * 1000) - (previousBreakSeconds * 1000);
+
+    // Obtener el día actual del torneo (por defecto 2 si no existe el campo)
+    const currentDay = sessionData.dia_torneo || 2;
+
+    // Restaurar la configuración del torneo y activarlo automáticamente
+    sessionState.value = {
+      ...sessionState.value,
+      location: sessionData.ubicacion,
+      currency: sessionData.moneda,
+      buyIn: sessionData.buy_in,
+      initialStack: sessionData.stack_dia_2 || sessionData.initialStack || 5000,
+      gameType: sessionData.tipo_juego,
+      tournamentType: sessionData.tipo_torneo,
+      structure: sessionData.estructura || 'Normal',
+      totalRebuys: sessionData.total_recompras,
+      totalExpenses: sessionData.total_gastos || 0,
+      currentDay: currentDay, // Restaurar el día actual del torneo
+      isActive: true, // Activar automáticamente
+      startTime: adjustedStartTime, // Tiempo ajustado para continuar desde donde se quedó
+      isOnBreak: false,
+      breakStartTime: null,
+      totalBreakDuration: previousBreakSeconds * 1000, // Restaurar el tiempo de descanso acumulado
+    };
+
+    saveStateToLocalStorage();
+    startUiUpdater(); // Iniciar el actualizador del temporizador
+  }
+
+  function updateSession(sessionId, updatedData) {
+    const index = savedSessions.value.findIndex(s => s.id === sessionId);
+    if (index !== -1) {
+      savedSessions.value[index] = {
+        ...savedSessions.value[index],
+        ...updatedData
+      };
+      localStorage.setItem('tournament-sessions', JSON.stringify(savedSessions.value));
+    }
+  }
+
   // Cargar estados al inicializar
   loadStateFromLocalStorage();
   loadSavedSessions();
@@ -230,6 +284,7 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
       get: () => sessionState.value.structure,
       set: (val) => { sessionState.value.structure = val; saveStateToLocalStorage(); }
     }),
+    currentDay: computed(() => sessionState.value.currentDay),
     totalRebuys: computed(() => sessionState.value.totalRebuys),
     totalExpenses: computed(() => sessionState.value.totalExpenses),
     elapsedTime,
@@ -240,6 +295,8 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
     endBreak,
     stopAndSaveSession,
     deleteSession,
+    resumeTournament,
+    updateSession,
     addRebuy,
     addExpense,
     clearActiveSession,

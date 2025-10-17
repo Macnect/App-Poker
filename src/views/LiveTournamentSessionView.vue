@@ -7,6 +7,9 @@
         <div class="widget-header">
           <span class="status-indicator"></span>
           <span>{{ sessionStore.isOnBreak ? 'EN DESCANSO' : (sessionStore.isActive ? 'TORNEO ACTIVO' : 'TORNEO DETENIDO') }}</span>
+          <span v-if="sessionStore.currentDay > 1" class="day-badge">
+            DÍA {{ sessionStore.currentDay }}
+          </span>
         </div>
         <div class="timer-display">
           {{ formattedTime }}
@@ -338,6 +341,36 @@ const formattedTime = computed(() => {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 1.5rem;
+}
+
+.day-badge {
+  margin-left: auto;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(168, 85, 247, 0.35) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.5);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e9d5ff;
+  letter-spacing: 0.5px;
+  box-shadow:
+    0 2px 8px rgba(168, 85, 247, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    box-shadow:
+      0 2px 8px rgba(168, 85, 247, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
+  50% {
+    box-shadow:
+      0 2px 12px rgba(168, 85, 247, 0.3),
+      0 0 16px rgba(168, 85, 247, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  }
 }
 
 .timer-widget { grid-area: timer; }
@@ -851,6 +884,11 @@ const formattedTime = computed(() => {
     margin-bottom: 1rem;
   }
 
+  .day-badge {
+    padding: 5px 12px;
+    font-size: 0.75rem;
+  }
+
   .action-group {
     gap: 0.5rem;
   }
@@ -931,6 +969,11 @@ const formattedTime = computed(() => {
 
   .widget-header {
     font-size: 0.8rem;
+  }
+
+  .day-badge {
+    padding: 4px 10px;
+    font-size: 0.7rem;
   }
 
   .rebuy-controls {

@@ -30,14 +30,23 @@
             <span v-if="session.tipo_torneo" class="tournament-type-badge">
               {{ session.tipo_torneo }}
             </span>
+            <span v-if="session.es_dia_2" class="day2-badge">
+              ⏸️ Día {{ session.dia_torneo || 2 }}
+            </span>
           </div>
           <span class="date">{{ new Date(session.fecha + 'T12:00:00').toLocaleDateString() }}</span>
         </div>
 
-        <div class="session-result" :class="getResultClass(session.resultado)">
+        <div v-if="!session.es_dia_2" class="session-result" :class="getResultClass(session.resultado)">
           <span>Resultado</span>
           <span class="result-amount">
             {{ formatResult(session.resultado, session.moneda) }}
+          </span>
+        </div>
+        <div v-else class="session-result day2-status">
+          <span>Stack Día {{ session.dia_torneo || 2 }}</span>
+          <span class="result-amount">
+            {{ session.stack_dia_2 || 'N/A' }} fichas
           </span>
         </div>
 
@@ -59,7 +68,19 @@
                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
              </svg>
            </button>
-           <button class="delete-btn" @click="confirmDelete(session.id)">Eliminar Sesión</button>
+           <button v-if="session.es_dia_2" class="resume-btn" @click="resumeTournament(session)" title="Reanudar Torneo">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+             </svg>
+             Reanudar
+           </button>
+           <button class="edit-btn" @click="openEditModal(session)" title="Editar Torneo">
+             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+               <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+             </svg>
+             Editar
+           </button>
+           <button class="delete-btn" @click="confirmDelete(session.id)">Eliminar</button>
          </div>
       </li>
     </ul>
@@ -88,10 +109,35 @@
        </div>
      </div>
 
+     <!-- Edit Modal -->
+     <div v-if="showEditModal" class="modal-overlay" @click="closeEditModal">
+       <div class="modal-content edit-modal" @click.stop>
+         <h3>Editar Torneo</h3>
+         <div class="edit-form">
+           <div class="form-group">
+             <label>Posición Final:</label>
+             <input type="number" v-model.number="editFormData.posicion_final" placeholder="Ej: 1, 2, 3...">
+           </div>
+           <div class="form-group">
+             <label>Premio Ganado ({{ editFormData.moneda }}):</label>
+             <input type="number" v-model.number="editFormData.premio_ganado" placeholder="0">
+           </div>
+           <div class="form-group">
+             <label>Stack Día {{ editFormData.dia_torneo || 2 }} (Fichas):</label>
+             <input type="number" v-model.number="editFormData.stack_dia_2" placeholder="Stack en fichas">
+           </div>
+         </div>
+         <div class="modal-actions">
+           <button class="cancel-btn" @click="closeEditModal">Cancelar</button>
+           <button class="confirm-btn" @click="saveEdit">Guardar Cambios</button>
+         </div>
+       </div>
+     </div>
+
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
       <div class="toast-icon">✓</div>
-      <div class="toast-message">Sesión eliminada con éxito</div>
+      <div class="toast-message">{{ toastMessage }}</div>
     </div>
   </div>
 </template>
@@ -100,15 +146,28 @@
 import { ref, computed } from 'vue';
 import { useTournamentSessionStore } from '../store/useTournamentSessionStore';
 
+const emit = defineEmits(['switch-view']);
+
 const tournamentSessionStore = useTournamentSessionStore();
 const selectedFilter = ref('all');
 const showModal = ref(false);
 const showToast = ref(false);
+const toastMessage = ref('Sesión eliminada con éxito');
 const selectedSessionId = ref(null);
 
 const showNotesModal = ref(false);
 const sessionNotes = ref('');
 const notesSessionId = ref(null);
+
+const showEditModal = ref(false);
+const editFormData = ref({
+  id: null,
+  posicion_final: null,
+  premio_ganado: null,
+  stack_dia_2: null,
+  moneda: '$',
+  dia_torneo: 2
+});
 
 const filteredSessions = computed(() => {
   const filter = selectedFilter.value;
@@ -213,11 +272,79 @@ function closeModal() {
 function deleteAndClose() {
   if (selectedSessionId.value) {
     tournamentSessionStore.deleteSession(selectedSessionId.value);
+    toastMessage.value = 'Sesión eliminada con éxito';
     showToast.value = true;
     setTimeout(() => {
       showToast.value = false;
     }, 3000);
     closeModal();
+  }
+}
+
+function openEditModal(session) {
+  editFormData.value = {
+    id: session.id,
+    posicion_final: session.posicion_final,
+    premio_ganado: session.premio_ganado,
+    stack_dia_2: session.stack_dia_2,
+    moneda: session.moneda,
+    dia_torneo: session.dia_torneo || 2
+  };
+  showEditModal.value = true;
+}
+
+function closeEditModal() {
+  showEditModal.value = false;
+  editFormData.value = {
+    id: null,
+    posicion_final: null,
+    premio_ganado: null,
+    stack_dia_2: null,
+    moneda: '$',
+    dia_torneo: 2
+  };
+}
+
+function saveEdit() {
+  if (editFormData.value.id) {
+    // Calcular el nuevo resultado
+    const session = tournamentSessionStore.savedSessions.find(s => s.id === editFormData.value.id);
+    const investment = (session.buy_in || 0) + (session.total_recompras || 0);
+    const prize = editFormData.value.premio_ganado || 0;
+    const newResult = prize - investment;
+
+    tournamentSessionStore.updateSession(editFormData.value.id, {
+      posicion_final: editFormData.value.posicion_final,
+      premio_ganado: editFormData.value.premio_ganado,
+      stack_dia_2: editFormData.value.stack_dia_2,
+      resultado: newResult
+    });
+
+    toastMessage.value = 'Torneo actualizado correctamente';
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
+    closeEditModal();
+  }
+}
+
+function resumeTournament(session) {
+  try {
+    tournamentSessionStore.resumeTournament(session);
+    toastMessage.value = '✅ Torneo reanudado y en marcha desde donde lo dejaste';
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+      // Cambiar a la vista de torneo en vivo
+      emit('switch-view', 'LiveTournamentSessionView');
+    }, 2000);
+  } catch (error) {
+    toastMessage.value = '❌ Error: ' + error.message;
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
   }
 }
 
@@ -440,6 +567,33 @@ h2 {
   border: 1px solid rgba(168, 85, 247, 0.3);
 }
 
+.day2-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.7) 0%, rgba(217, 119, 6, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 8px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 16px rgba(245, 158, 11, 0.5);
+  }
+}
+
 .session-result {
   display: flex;
   flex-direction: column;
@@ -484,6 +638,12 @@ h2 {
   color: #a0aec0;
 }
 
+.day2-status {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+
 .session-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -516,24 +676,33 @@ h2 {
 
 .session-actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-top: 1rem;
-  gap: 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.notes-btn {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+.notes-btn,
+.edit-btn,
+.resume-btn {
   padding: 12px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   border-radius: 10px;
   border: 1px solid rgba(168, 85, 247, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+}
+
+.notes-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
   box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+  color: white;
 }
 
 .notes-btn:hover {
@@ -548,10 +717,47 @@ h2 {
   color: white;
 }
 
+.edit-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+.edit-btn:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.edit-btn svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.resume-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  color: white;
+  padding: 12px 18px;
+}
+
+.resume-btn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.resume-btn svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
 .delete-btn {
   background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-  padding: 12px 24px;
-  font-size: 1rem;
+  padding: 12px 18px;
+  font-size: 0.95rem;
   font-weight: 600;
   border-radius: 10px;
   border: 1px solid rgba(168, 85, 247, 0.2);
@@ -692,6 +898,50 @@ h2 {
 
 .notes-modal .confirm-btn:hover {
   background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+}
+
+.edit-modal {
+  max-width: 500px;
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: rgba(168, 85, 247, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input {
+  padding: 14px 16px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
 }
 
 .toast {
