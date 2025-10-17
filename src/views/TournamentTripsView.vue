@@ -108,21 +108,71 @@
 
             <!-- Columna 2 -->
             <div class="column">
-              <!-- VENTA: Campo de comprador -->
-              <div v-if="currentAction.actionType === 'venta'" class="form-field">
-                <label>Comprador</label>
-                <input type="text" v-model="currentAction.buyer" placeholder="Nombre del comprador">
-              </div>
-
               <!-- COMPRA: Campo de vendedor (quien juega el torneo) -->
               <div v-if="currentAction.actionType === 'compra'" class="form-field">
                 <label>Vendedor (Quien juega)</label>
                 <input type="text" v-model="currentAction.buyer" placeholder="Nombre del jugador">
               </div>
 
-              <div class="form-field">
-                <label>{{ currentAction.actionType === 'venta' ? '% Vendido' : '% Comprado' }}</label>
+              <div v-if="currentAction.actionType === 'compra'" class="form-field">
+                <label>% Comprado</label>
                 <input type="number" v-model.number="currentAction.percentageBought" @input="calculateTotals(currentAction)" min="0" max="100" placeholder="0">
+              </div>
+
+              <!-- VENTA: Sección de múltiples compradores -->
+              <div v-if="currentAction.actionType === 'venta'" class="form-field full-width-in-column">
+                <label class="section-label">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="label-icon">
+                    <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
+                  </svg>
+                  Compradores
+                </label>
+
+                <!-- Lista de compradores agregados -->
+                <div v-if="currentAction.buyers && currentAction.buyers.length > 0" class="buyers-list">
+                  <div v-for="(buyer, index) in currentAction.buyers" :key="index" class="buyer-item">
+                    <div class="buyer-info">
+                      <div class="buyer-name">{{ buyer.name }}</div>
+                      <div class="buyer-details">
+                        <span class="buyer-percentage">{{ buyer.percentage }}%</span>
+                        <span class="buyer-total">{{ buyer.totalPaid?.toFixed(2) }}{{ currentAction.currency || '€' }}</span>
+                      </div>
+                    </div>
+                    <button @click="removeBuyer(index)" class="remove-buyer-btn" type="button">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Formulario para agregar comprador -->
+                <div class="add-buyer-form">
+                  <div class="add-buyer-inputs">
+                    <input
+                      type="text"
+                      v-model="newBuyer.name"
+                      placeholder="Nombre del comprador"
+                      class="buyer-name-input"
+                    >
+                    <input
+                      type="number"
+                      v-model.number="newBuyer.percentage"
+                      placeholder="%"
+                      min="0"
+                      :max="remainingPercentage"
+                      class="buyer-percentage-input"
+                    >
+                    <button @click="addBuyer" type="button" class="add-buyer-btn">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clip-rule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="remaining-percentage">
+                    Disponible: <strong>{{ remainingPercentage }}%</strong> de {{ currentAction.percentageForSale }}%
+                  </div>
+                </div>
               </div>
 
               <div class="form-field calculated">
@@ -216,13 +266,32 @@
                   <span class="summary-label">{{ action.actionType === 'compra' ? 'Comprador' : 'Vendedor' }}:</span>
                   <span class="summary-value">{{ action.playerName || 'N/A' }}</span>
                 </div>
-                <div class="summary-item">
+                <div v-if="action.actionType === 'compra' || !action.buyers || action.buyers.length === 0" class="summary-item">
                   <span class="summary-label">{{ action.actionType === 'compra' ? 'Vendedor' : 'Comprador' }}:</span>
                   <span class="summary-value">{{ action.buyer || 'N/A' }}</span>
                 </div>
                 <div class="summary-item">
                   <span class="summary-label">Precio Torneo:</span>
                   <span class="summary-value">{{ action.price }}{{ action.currency || '€' }}</span>
+                </div>
+              </div>
+
+              <!-- Múltiples compradores (si existen) -->
+              <div v-if="action.actionType === 'venta' && action.buyers && action.buyers.length > 0" class="summary-buyers-section">
+                <div class="summary-buyers-header">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="buyers-icon">
+                    <path d="M4.5 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM14.25 8.625a3.375 3.375 0 116.75 0 3.375 3.375 0 01-6.75 0zM1.5 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.122zM17.25 19.128l-.001.144a2.25 2.25 0 01-.233.96 10.088 10.088 0 005.06-1.01.75.75 0 00.42-.643 4.875 4.875 0 00-6.957-4.611 8.586 8.586 0 011.71 5.157v.003z" />
+                  </svg>
+                  <span class="summary-label">Compradores ({{ action.buyers.length }}):</span>
+                </div>
+                <div class="summary-buyers-grid">
+                  <div v-for="(buyer, idx) in action.buyers" :key="idx" class="summary-buyer-item">
+                    <div class="summary-buyer-name">{{ buyer.name }}</div>
+                    <div class="summary-buyer-stats">
+                      <span class="summary-buyer-percentage">{{ buyer.percentage }}%</span>
+                      <span class="summary-buyer-total">{{ buyer.totalPaid?.toFixed(2) }}{{ action.currency || '€' }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -297,7 +366,14 @@ const currentAction = ref({
   totalPaid: 0,
   percentageRetained: 100,
   status: 'Pendiente',
-  notes: ''
+  notes: '',
+  buyers: [] // Array de compradores para ventas múltiples
+});
+
+// Campos para agregar nuevo comprador
+const newBuyer = ref({
+  name: '',
+  percentage: 0
 });
 
 // Computed property for filtered actions
@@ -308,9 +384,62 @@ const filteredActions = computed(() => {
   return savedActions.value.filter(action => (action.actionType || 'venta') === filterType.value);
 });
 
+// Computed property for total percentage sold to buyers
+const totalBuyersPercentage = computed(() => {
+  if (!currentAction.value.buyers || currentAction.value.buyers.length === 0) {
+    return 0;
+  }
+  return currentAction.value.buyers.reduce((sum, buyer) => sum + (buyer.percentage || 0), 0);
+});
+
+// Computed property for remaining percentage available to sell
+const remainingPercentage = computed(() => {
+  return (currentAction.value.percentageForSale || 0) - totalBuyersPercentage.value;
+});
+
 // Helper function for filtering by type (for badges)
 function filteredByType(type) {
   return savedActions.value.filter(action => (action.actionType || 'venta') === type);
+}
+
+// Add buyer to the list
+function addBuyer() {
+  if (!newBuyer.value.name || !newBuyer.value.percentage || newBuyer.value.percentage <= 0) {
+    showToastMessage('Por favor ingresa nombre y porcentaje válido');
+    return;
+  }
+
+  const totalAfterAdd = totalBuyersPercentage.value + newBuyer.value.percentage;
+  if (totalAfterAdd > currentAction.value.percentageForSale) {
+    showToastMessage(`No puedes vender más del ${currentAction.value.percentageForSale}%. Disponible: ${remainingPercentage.value}%`);
+    return;
+  }
+
+  // Calculate total paid for this buyer
+  const buyerTotalPaid = currentAction.value.pricePerPercent * newBuyer.value.percentage;
+
+  currentAction.value.buyers.push({
+    name: newBuyer.value.name,
+    percentage: newBuyer.value.percentage,
+    totalPaid: buyerTotalPaid
+  });
+
+  // Reset new buyer form
+  newBuyer.value = {
+    name: '',
+    percentage: 0
+  };
+
+  // Recalculate totals
+  calculateTotals(currentAction.value);
+  showToastMessage('Comprador agregado correctamente');
+}
+
+// Remove buyer from the list
+function removeBuyer(index) {
+  currentAction.value.buyers.splice(index, 1);
+  calculateTotals(currentAction.value);
+  showToastMessage('Comprador eliminado');
 }
 
 function resetCurrentAction() {
@@ -329,7 +458,12 @@ function resetCurrentAction() {
     totalPaid: 0,
     percentageRetained: 100,
     status: 'Pendiente',
-    notes: ''
+    notes: '',
+    buyers: []
+  };
+  newBuyer.value = {
+    name: '',
+    percentage: 0
   };
   showToastMessage('Formulario limpiado');
 }
@@ -417,11 +551,26 @@ function calculateTotals(action) {
   const baseValuePerPercent = (action.price || 0) / 100;
   action.pricePerPercent = baseValuePerPercent * (action.markup || 1);
 
-  // Calculate Total Pagado: Precio por 1% × % Comprado
-  action.totalPaid = action.pricePerPercent * (action.percentageBought || 0);
+  // Si hay múltiples compradores (venta), calcular basado en ellos
+  if (action.actionType === 'venta' && action.buyers && action.buyers.length > 0) {
+    // Recalcular el total pagado de cada comprador
+    action.buyers.forEach(buyer => {
+      buyer.totalPaid = action.pricePerPercent * (buyer.percentage || 0);
+    });
 
-  // Calculate % Retenido Jugador: 100 - % Comprado
-  action.percentageRetained = 100 - (action.percentageBought || 0);
+    // Calcular el total vendido sumando todos los compradores
+    const totalSoldPercentage = action.buyers.reduce((sum, buyer) => sum + (buyer.percentage || 0), 0);
+    action.percentageBought = totalSoldPercentage;
+    action.totalPaid = action.buyers.reduce((sum, buyer) => sum + (buyer.totalPaid || 0), 0);
+    action.percentageRetained = 100 - totalSoldPercentage;
+  } else {
+    // Modo simple (compra o venta a un solo comprador)
+    // Calculate Total Pagado: Precio por 1% × % Comprado
+    action.totalPaid = action.pricePerPercent * (action.percentageBought || 0);
+
+    // Calculate % Retenido Jugador: 100 - % Comprado
+    action.percentageRetained = 100 - (action.percentageBought || 0);
+  }
 }
 
 function getStatusClass(status) {
@@ -557,6 +706,13 @@ watch(savedActions, () => {
   font-feature-settings: 'liga' 1, 'calt' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 .tournament-manager-container {
@@ -566,6 +722,10 @@ watch(savedActions, () => {
   min-height: calc(100vh - 70px);
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
 }
 
 /* ========================================
@@ -577,6 +737,9 @@ watch(savedActions, () => {
   margin-bottom: 2rem;
   justify-content: center;
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .tab-btn {
@@ -619,6 +782,9 @@ watch(savedActions, () => {
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.3) 0%, rgba(31, 41, 55, 0.5) 100%);
   border-radius: 12px;
   border: 1px solid rgba(168, 85, 247, 0.1);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .sub-tab-btn {
@@ -693,6 +859,8 @@ watch(savedActions, () => {
     0 10px 25px -3px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
   animation: slideIn 0.4s ease-out;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 @keyframes slideIn {
@@ -793,6 +961,10 @@ watch(savedActions, () => {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 /* ========================================
@@ -853,6 +1025,9 @@ watch(savedActions, () => {
   border-radius: 12px;
   border: 1px solid rgba(168, 85, 247, 0.1);
   flex-wrap: wrap;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .filter-btn {
@@ -903,6 +1078,10 @@ watch(savedActions, () => {
   border-radius: 14px;
   padding: 1.5rem;
   transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .action-card:hover {
@@ -930,6 +1109,8 @@ watch(savedActions, () => {
   font-size: 1.3rem;
   font-weight: 700;
   color: #f9fafb;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .action-type-badge {
@@ -957,6 +1138,7 @@ watch(savedActions, () => {
 .action-header-buttons {
   display: flex;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .edit-btn,
@@ -1026,22 +1208,36 @@ watch(savedActions, () => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .action-form-grid-two-columns .column {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .form-field.full-width {
   grid-column: 1 / -1;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .form-field label {
@@ -1064,6 +1260,9 @@ watch(savedActions, () => {
   color: #f9fafb;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) inset;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .form-field input:focus,
@@ -1109,6 +1308,254 @@ watch(savedActions, () => {
   text-align: center;
   color: #a855f7;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Multiple Buyers Section */
+.form-field.full-width-in-column {
+  grid-column: 1 / -1;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #a855f7;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.label-icon {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.3));
+}
+
+.buyers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.buyers-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.buyers-list::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 10px;
+}
+
+.buyers-list::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 10px;
+}
+
+.buyers-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
+}
+
+.buyer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.2);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.buyer-item:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.1);
+}
+
+.buyer-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.buyer-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #f9fafb;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.buyer-details {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.buyer-percentage {
+  color: #a855f7;
+  font-weight: 700;
+}
+
+.buyer-total {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.remove-buyer-btn {
+  width: 36px;
+  height: 36px;
+  padding: 8px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%);
+  border: 1.5px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-buyer-btn svg {
+  width: 20px;
+  height: 20px;
+  color: #f87171;
+}
+
+.remove-buyer-btn:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.3) 0%, rgba(185, 28, 28, 0.4) 100%);
+  border-color: rgba(220, 38, 38, 0.5);
+  transform: scale(1.05);
+}
+
+.remove-buyer-btn:hover svg {
+  color: #fca5a5;
+}
+
+.add-buyer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.3) 0%, rgba(31, 41, 55, 0.5) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.15);
+  border-radius: 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.add-buyer-inputs {
+  display: grid;
+  grid-template-columns: 1fr 100px auto;
+  gap: 0.75rem;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.buyer-name-input,
+.buyer-percentage-input {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
+  border: 1.5px solid rgba(156, 163, 175, 0.2);
+  color: #f9fafb;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.buyer-percentage-input {
+  text-align: center;
+  font-weight: 600;
+}
+
+.buyer-name-input:focus,
+.buyer-percentage-input:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 3px rgba(168, 85, 247, 0.1);
+}
+
+.buyer-name-input:hover,
+.buyer-percentage-input:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.add-buyer-btn {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 2px 6px rgba(124, 58, 237, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.add-buyer-btn svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.add-buyer-btn:hover {
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 12px rgba(124, 58, 237, 0.4),
+    0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+.add-buyer-btn:active {
+  transform: translateY(0);
+}
+
+.remaining-percentage {
+  font-size: 0.9rem;
+  color: #d1d5db;
+  text-align: center;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(147, 51, 234, 0.15) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.remaining-percentage strong {
+  color: #a855f7;
+  font-weight: 700;
+  font-size: 1.05rem;
 }
 
 /* Save Action Button */
@@ -1160,6 +1607,10 @@ watch(savedActions, () => {
   flex-direction: column;
   gap: 1rem;
   padding: 0.5rem 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .summary-row {
@@ -1167,6 +1618,9 @@ watch(savedActions, () => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
   padding: 0.75rem 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .summary-item {
@@ -1187,12 +1641,16 @@ watch(savedActions, () => {
   font-size: 1.1rem;
   font-weight: 600;
   color: #f9fafb;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .summary-value.highlight {
   font-size: 1.3rem;
   color: #a855f7;
   font-weight: 700;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .summary-notes {
@@ -1208,6 +1666,89 @@ watch(savedActions, () => {
   color: #d1d5db;
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+/* Summary Buyers Section */
+.summary-buyers-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.3) 0%, rgba(31, 41, 55, 0.5) 100%);
+  border-radius: 10px;
+  border: 1.5px solid rgba(168, 85, 247, 0.15);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.summary-buyers-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.buyers-icon {
+  width: 20px;
+  height: 20px;
+  color: #a855f7;
+  filter: drop-shadow(0 2px 4px rgba(168, 85, 247, 0.3));
+}
+
+.summary-buyers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.summary-buyer-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.summary-buyer-item:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.1);
+}
+
+.summary-buyer-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #f9fafb;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.summary-buyer-stats {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.summary-buyer-percentage {
+  color: #a855f7;
+  font-weight: 700;
+}
+
+.summary-buyer-total {
+  color: #10b981;
+  font-weight: 600;
 }
 
 /* Status colors */
@@ -1429,11 +1970,62 @@ watch(savedActions, () => {
     font-size: 1.15rem;
   }
 
+  .summary-buyers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tournament-manager-container {
+    padding: 1rem;
+  }
+
+  .section-panel {
+    padding: 1.5rem;
+  }
+
   .form-field input,
   .form-field select,
   .form-field textarea {
     padding: 0.75rem 0.9rem;
     font-size: 0.95rem;
+  }
+
+  .add-buyer-inputs {
+    grid-template-columns: 1fr 80px auto;
+    gap: 0.5rem;
+  }
+
+  .buyer-name-input,
+  .buyer-percentage-input {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.9rem;
+  }
+
+  .add-buyer-btn {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+
+  .add-buyer-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .summary-buyers-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-form-grid-two-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .add-buyer-inputs {
+    grid-template-columns: 1fr 70px auto;
+  }
+
+  .summary-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
   .planner-placeholder {
