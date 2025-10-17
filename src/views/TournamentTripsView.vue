@@ -1,190 +1,361 @@
 <template>
-  <div class="trip-planner-container">
-    <!-- Panel de Planificación -->
-    <div v-if="!tripStore.isTripActive" class="planner-panel">
-      <h2>Planificador de Viajes de Poker - Torneos</h2>
-      <div class="form-grid">
-        <div class="form-column">
-          <div class="config-item"><label for="trip-city">Ciudad</label><input id="trip-city" type="text" v-model="tripStore.city" placeholder="Ej: Las Vegas"></div>
-          <div class="config-item"><label for="trip-casino">Casino / Club</label><input id="trip-casino" type="text" v-model="tripStore.casino" placeholder="Ej: Bellagio"></div>
-
-          <!-- SELECTOR DE MONEDA ACTUALIZADO CON LA LISTA COMPLETA -->
-          <div class="config-item">
-            <label for="trip-currency">Moneda</label>
-            <select id="trip-currency" v-model="tripStore.currency">
-              <option v-for="c in currencies" :key="c.symbol" :value="c.symbol">
-                {{ c.symbol }} - {{ c.name }}
-              </option>
-            </select>
-          </div>
-
-          <div class="config-item"><label for="player-count">Número de Jugadores</label><select id="player-count" v-model.number="tripStore.playerCount" @change="tripStore.setPlayerCount(tripStore.playerCount)"><option v-for="n in 14" :key="n" :value="n + 1">{{ n + 1 }} Jugadores</option></select></div>
-          <div class="config-item collective-bankroll"><label>Banca Colectiva (Total)</label><div class="calculated-value">{{ tripStore.collectiveBankroll }} {{ tripStore.currency }}</div></div>
-        </div>
-        <div class="form-column">
-          <div class="config-item">
-            <label for="reparto-type">Tipo de Reparto Final</label>
-            <select id="reparto-type" v-model="tripStore.repartoType">
-              <option value="participation">Reparto por Aportación</option>
-              <option value="hours">Reparto por Horas Jugadas</option>
-            </select>
-          </div>
-          <div class="config-item">
-            <label>Nombres y Aportación</label>
-            <div class="player-list">
-              <div v-for="player in tripStore.players" :key="player.id" class="player-entry">
-                <input type="text" v-model="player.name" class="player-name-input" placeholder="Nombre">
-                <div v-if="tripStore.repartoType === 'participation'" class="participation-input-group">
-                  <input type="number" :value="player.individualBankroll" @input="tripStore.updatePlayerBankroll(player.id, $event.target.value)" class="player-participation-input" min="0">
-                  <span class="currency-symbol">{{ tripStore.currency }}</span>
-                  <span class="participation-percentage">({{ player.participation.toFixed(2) }}%)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="actions-footer"><button class="start-trip-btn" @click="tripStore.startTrip()">Iniciar Viaje</button></div>
+  <div class="tournament-manager-container">
+    <!-- Tab Navigation -->
+    <div class="tabs-header">
+      <button
+        @click="activeTab = 'actions'"
+        :class="{ active: activeTab === 'actions' }"
+        class="tab-btn"
+      >
+        Acciones de Torneos
+      </button>
+      <button
+        @click="activeTab = 'planner'"
+        :class="{ active: activeTab === 'planner' }"
+        class="tab-btn"
+      >
+        Planificador de viajes
+      </button>
     </div>
 
-    <!-- Panel de Seguimiento por Días -->
-    <div v-else class="tracking-panel">
-      <header class="tracking-header">
-        <h2>Seguimiento del Viaje</h2>
-        <div class="trip-info"><span><strong>Destino:</strong> {{ tripStore.city || 'N/A' }}, {{ tripStore.casino || 'N/A' }}</span></div>
-        <div class="trip-actions-header">
-          <button @click="handleSaveTrip()" class="save-trip-btn">Guardar Viaje</button>
-          <button @click="tripStore.resetCurrentTrip()" class="new-trip-btn">Nuevo Viaje</button>
-        </div>
-        <div class="add-day-form">
-          <input type="date" v-model="newDayDateString" class="date-input">
-          <button @click="confirmAddDay" class="add-day-btn">Añadir Día</button>
-        </div>
-      </header>
+    <!-- Acciones de Torneos Section -->
+    <div v-if="activeTab === 'actions'" class="section-panel">
+      <div class="section-header">
+        <h2>Acciones de Torneos</h2>
+      </div>
 
-      <div class="days-container">
-        <div v-for="day in tripStore.tripDays" :key="day" class="day-card">
-          <h3>Día: {{ new Date(day + 'T12:00:00').toLocaleDateString() }}</h3>
-          <div class="player-results-list">
-            <div v-for="player in tripStore.players" :key="player.id" class="player-session-details">
-              <span class="player-name">{{ player.name }}</span>
-              <div class="player-inputs-grid">
-                <div class="input-group"><label>Resultado ({{ tripStore.currency }})</label><input type="number" :value="tripStore.dailyResults[day]?.[player.id]?.result" @input="tripStore.updatePlayerDailyData(day, player.id, 'result', $event.target.value)"></div>
-                <div class="input-group"><label>Horas</label><input type="number" :value="tripStore.dailyResults[day]?.[player.id]?.hours" @input="tripStore.updatePlayerDailyData(day, player.id, 'hours', $event.target.value)"></div>
-                <div class="input-group"><label>Stake</label><input type="text" :value="tripStore.dailyResults[day]?.[player.id]?.stake" @input="tripStore.updatePlayerDailyData(day, player.id, 'stake', $event.target.value)" placeholder="1/2"></div>
-                <div class="input-group calculated"><label>{{ tripStore.currency }} / Hora</label><span :class="getResultClass(calculateWinRate(tripStore.dailyResults[day]?.[player.id]))">{{ calculateWinRate(tripStore.dailyResults[day]?.[player.id]).toFixed(2) }}</span></div>
+      <!-- Sub-tabs -->
+      <div class="sub-tabs-header">
+        <button
+          @click="activeSubTab = 'new'"
+          :class="{ active: activeSubTab === 'new' }"
+          class="sub-tab-btn"
+        >
+          Nuevo Torneo
+        </button>
+        <button
+          @click="activeSubTab = 'saved'"
+          :class="{ active: activeSubTab === 'saved' }"
+          class="sub-tab-btn"
+        >
+          Torneos Guardados
+          <span v-if="savedActions.length > 0" class="badge">{{ savedActions.length }}</span>
+        </button>
+      </div>
+
+      <!-- Nuevo Torneo -->
+      <div v-if="activeSubTab === 'new'" class="sub-section">
+        <div class="action-card">
+          <div class="action-card-header">
+            <h3>Nueva Acción de Torneo</h3>
+            <button @click="resetCurrentAction" class="reset-btn">🔄 Limpiar</button>
+          </div>
+
+          <div class="action-form-grid-two-columns">
+            <!-- Columna 1 -->
+            <div class="column">
+              <div class="form-field">
+                <label>Nombre del Jugador</label>
+                <input type="text" v-model="currentAction.playerName" placeholder="Ej: Juan Pérez">
               </div>
+
+              <div class="form-field">
+                <label>Torneo</label>
+                <input type="text" v-model="currentAction.tournamentName" placeholder="Ej: Main Event WSOP">
+              </div>
+
+              <div class="form-field">
+                <label>Precio (€)</label>
+                <input type="number" v-model.number="currentAction.price" @input="calculateTotals(currentAction)" min="0" placeholder="0">
+              </div>
+
+              <div class="form-field">
+                <label>% en Venta</label>
+                <input type="number" v-model.number="currentAction.percentageForSale" @input="calculateTotals(currentAction)" min="0" max="100" placeholder="0">
+              </div>
+
+              <div class="form-field">
+                <label>Mark-Up</label>
+                <input type="number" v-model.number="currentAction.markup" @input="calculateTotals(currentAction)" min="1" step="0.1" placeholder="1.0">
+              </div>
+
+              <div class="form-field calculated">
+                <label>Precio por 1% (€)</label>
+                <div class="calculated-value">{{ currentAction.pricePerPercent?.toFixed(2) || '0.00' }}</div>
+              </div>
+            </div>
+
+            <!-- Columna 2 -->
+            <div class="column">
+              <div class="form-field">
+                <label>Comprador</label>
+                <input type="text" v-model="currentAction.buyer" placeholder="Nombre del comprador">
+              </div>
+
+              <div class="form-field">
+                <label>% Comprado</label>
+                <input type="number" v-model.number="currentAction.percentageBought" @input="calculateTotals(currentAction)" min="0" max="100" placeholder="0">
+              </div>
+
+              <div class="form-field calculated">
+                <label>Total Pagado (€)</label>
+                <div class="calculated-value">{{ currentAction.totalPaid?.toFixed(2) || '0.00' }}</div>
+              </div>
+
+              <div class="form-field calculated">
+                <label>% Retenido Jugador</label>
+                <div class="calculated-value">{{ currentAction.percentageRetained?.toFixed(2) || '0.00' }}%</div>
+              </div>
+
+              <div class="form-field">
+                <label>Estado</label>
+                <select v-model="currentAction.status">
+                  <option value="Confirmado">Confirmado</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="En venta">En venta</option>
+                </select>
+              </div>
+
+              <div class="form-field">
+                <button @click="saveCurrentAction" class="save-action-btn">💾 Guardar Torneo</button>
+              </div>
+            </div>
+
+            <!-- Notas en toda la fila -->
+            <div class="form-field full-width">
+              <label>Notas</label>
+              <textarea v-model="currentAction.notes" placeholder="Añade notas adicionales aquí..." rows="2"></textarea>
             </div>
           </div>
         </div>
       </div>
 
-      <div v-if="tripStore.tripDays.length > 0" class="totals-section">
-        <h3>Resultados Acumulados</h3>
-        <div class="player-totals-list">
-           <div v-for="player in tripStore.players" :key="player.id" class="player-total-item-detailed">
-              <span class="player-name">
-                {{ player.name }}
-                <span v-if="tripStore.repartoType === 'participation'">({{ player.participation || 0 }}%)</span>
-              </span>
-              <div class="player-financials">
-                <div class="financial-item"><label>Horas Totales</label><span class="value">{{ tripStore.playerTotalHours[player.id]?.toFixed(1) || '0.0' }} h</span></div>
-                <div class="financial-item"><label>Media {{tripStore.currency}}/h</label><span class="value" :class="getResultClass(tripStore.playerAverageWinRates[player.id])">{{ tripStore.playerAverageWinRates[player.id]?.toFixed(2) || '0.00' }}</span></div>
-                <div class="financial-item"><label>P/L Individual</label><span class="value" :class="getResultClass(tripStore.playerTotals[player.id])">{{ tripStore.playerTotals[player.id]?.toFixed(2) || '0.00' }} {{ tripStore.currency }}</span></div>
-                <div class="financial-item"><label>{{ repartoLabel }}</label><span class="value">{{ tripStore.playerFinalShares[player.id]?.toFixed(2) || '0.00' }} {{ tripStore.currency }}</span></div>
+      <!-- Torneos Guardados -->
+      <div v-if="activeSubTab === 'saved'" class="sub-section">
+        <div v-if="savedActions.length === 0" class="empty-state">
+          <p>No hay torneos guardados. Crea uno en la pestaña "Nuevo Torneo".</p>
+        </div>
+
+        <div v-else class="actions-list">
+          <div v-for="(action, index) in savedActions" :key="action.id" class="action-card">
+            <div class="action-card-header">
+              <h3>{{ action.tournamentName || `Torneo #${index + 1}` }}</h3>
+              <div class="action-header-buttons">
+                <button @click="editAction(action)" class="edit-btn">✏️ Editar</button>
+                <button @click="deleteSavedAction(action.id)" class="delete-btn">🗑️</button>
               </div>
             </div>
+
+            <div class="action-summary">
+              <div class="summary-row">
+                <div class="summary-item">
+                  <span class="summary-label">Jugador:</span>
+                  <span class="summary-value">{{ action.playerName || 'N/A' }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Precio:</span>
+                  <span class="summary-value">{{ action.price }}€</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Mark-Up:</span>
+                  <span class="summary-value">{{ action.markup }}</span>
+                </div>
+              </div>
+
+              <div class="summary-row">
+                <div class="summary-item">
+                  <span class="summary-label">Comprador:</span>
+                  <span class="summary-value">{{ action.buyer || 'N/A' }}</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">% Comprado:</span>
+                  <span class="summary-value">{{ action.percentageBought }}%</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Total Pagado:</span>
+                  <span class="summary-value highlight">{{ action.totalPaid?.toFixed(2) }}€</span>
+                </div>
+              </div>
+
+              <div class="summary-row">
+                <div class="summary-item">
+                  <span class="summary-label">% Retenido:</span>
+                  <span class="summary-value">{{ action.percentageRetained?.toFixed(2) }}%</span>
+                </div>
+                <div class="summary-item">
+                  <span class="summary-label">Estado:</span>
+                  <span class="summary-value" :class="getStatusClass(action.status)">{{ action.status }}</span>
+                </div>
+              </div>
+
+              <div v-if="action.notes" class="summary-notes">
+                <span class="summary-label">Notas:</span>
+                <p>{{ action.notes }}</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="trip-totals-summary">
-          <div class="trip-total-item"><label>Horas Totales del Viaje</label><span class="trip-total-value">{{ tripStore.tripTotalHours.toFixed(1) }} h</span></div>
-          <div class="trip-total-item"><label>Media {{tripStore.currency}}/h del Viaje</label><span class="trip-total-value" :class="getResultClass(tripStore.tripAverageWinRate)">{{ tripStore.tripAverageWinRate.toFixed(2) }}</span></div>
-          <div class="trip-total-item main-total"><label>Beneficio Total del Viaje</label><span class="trip-total-value" :class="getResultClass(tripStore.tripTotalProfit)">{{ tripStore.tripTotalProfit.toFixed(2) }} {{ tripStore.currency }}</span></div>
-        </div>
+      </div>
+    </div>
+
+    <!-- Planificador de viajes Section -->
+    <div v-if="activeTab === 'planner'" class="section-panel">
+      <div class="section-header">
+        <h2>Planificador de viajes</h2>
+      </div>
+
+      <div class="planner-placeholder">
+        <div class="placeholder-icon">✈️</div>
+        <p class="placeholder-text">Esta sección estará disponible próximamente.</p>
+        <p class="placeholder-subtext">Aquí podrás planificar tus viajes de poker con todos los detalles necesarios.</p>
       </div>
     </div>
 
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
       <div class="toast-icon">✓</div>
-      <div class="toast-message">Viaje guardado con éxito</div>
+      <div class="toast-message">{{ toastMessage }}</div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref, computed } from 'vue';
-import { useTournamentTripStore } from '../store/useTournamentTripStore';
+import { ref, onMounted, watch } from 'vue';
 
-const tripStore = useTournamentTripStore();
+const activeTab = ref('actions');
+const activeSubTab = ref('new');
+const savedActions = ref([]);
 const showToast = ref(false);
+const toastMessage = ref('');
+let nextId = 1;
 
-// --- LISTA AMPLIADA DE LAS 30 MONEDAS MÁS USADAS ---
-const currencies = ref([
-  { symbol: '$', name: 'USD - Dólar estadounidense' },
-  { symbol: '€', name: 'EUR - Euro' },
-  { symbol: '¥', name: 'JPY - Yen japonés' },
-  { symbol: '£', name: 'GBP - Libra esterlina' },
-  { symbol: 'A$', name: 'AUD - Dólar australiano' },
-  { symbol: 'C$', name: 'CAD - Dólar canadiense' },
-  { symbol: 'CHF', name: 'CHF - Franco suizo' },
-  { symbol: 'CN¥', name: 'CNY - Yuan chino' },
-  { symbol: 'SEK', name: 'SEK - Corona sueca' },
-  { symbol: 'NZ$', name: 'NZD - Dólar neozelandés' },
-  { symbol: 'Mex$', name: 'MXN - Peso mexicano' },
-  { symbol: 'S$', name: 'SGD - Dólar de Singapur' },
-  { symbol: 'HK$', name: 'HKD - Dólar de Hong Kong' },
-  { symbol: 'NOK', name: 'NOK - Corona noruega' },
-  { symbol: '₩', name: 'KRW - Won surcoreano' },
-  { symbol: '₺', name: 'TRY - Lira turca' },
-  { symbol: '₽', name: 'RUB - Rublo ruso' },
-  { symbol: '₹', name: 'INR - Rupia india' },
-  { symbol: 'R$', name: 'BRL - Real brasileño' },
-  { symbol: 'R', name: 'ZAR - Rand sudafricano' },
-  { symbol: 'zł', name: 'PLN - Zloty polaco' },
-  { symbol: '฿', name: 'THB - Baht tailandés' },
-  { symbol: 'Rp', name: 'IDR - Rupia indonesia' },
-  { symbol: 'Ft', name: 'HUF - Forinto húngaro' },
-  { symbol: 'Kč', name: 'CZK - Corona checa' },
-  { symbol: '₪', name: 'ILS - Nuevo séquel israelí' },
-  { symbol: 'CLP$', name: 'CLP - Peso chileno' },
-  { symbol: '₱', name: 'PHP - Peso filipino' },
-  { symbol: 'د.إ', name: 'AED - Dírham de los EAU' },
-  { symbol: 'Col$', name: 'COP - Peso colombiano' }
-]);
-
-const newDayDateString = ref(new Date().toISOString().split('T')[0]);
-
-const repartoLabel = computed(() => {
-  return tripStore.repartoType === 'hours' ? 'Reparto Final (x Horas)' : 'Reparto Final (x Aport.)';
+// Current action being created/edited
+const currentAction = ref({
+  id: null,
+  playerName: '',
+  tournamentName: '',
+  price: 0,
+  percentageForSale: 0,
+  markup: 1,
+  pricePerPercent: 0,
+  buyer: '',
+  percentageBought: 0,
+  totalPaid: 0,
+  percentageRetained: 100,
+  status: 'Pendiente',
+  notes: ''
 });
 
-function getResultClass(result) {
-  if (result === undefined || result === null || result === 0) return 'even';
-  return result > 0 ? 'profit' : 'loss';
+function resetCurrentAction() {
+  currentAction.value = {
+    id: null,
+    playerName: '',
+    tournamentName: '',
+    price: 0,
+    percentageForSale: 0,
+    markup: 1,
+    pricePerPercent: 0,
+    buyer: '',
+    percentageBought: 0,
+    totalPaid: 0,
+    percentageRetained: 100,
+    status: 'Pendiente',
+    notes: ''
+  };
+  showToastMessage('Formulario limpiado');
 }
 
-function calculateWinRate(playerData) {
-  if (!playerData || !playerData.hours || playerData.hours <= 0) { return 0; }
-  return playerData.result / playerData.hours;
+function saveCurrentAction() {
+  // Validate basic fields
+  if (!currentAction.value.playerName || !currentAction.value.tournamentName || !currentAction.value.price) {
+    showToastMessage('Por favor completa al menos: Jugador, Torneo y Precio');
+    return;
+  }
+
+  if (currentAction.value.id === null) {
+    // New action - add to saved list
+    const newAction = { ...currentAction.value, id: nextId++ };
+    savedActions.value.push(newAction);
+    showToastMessage('Torneo guardado correctamente');
+  } else {
+    // Editing existing action - update it
+    const index = savedActions.value.findIndex(a => a.id === currentAction.value.id);
+    if (index !== -1) {
+      savedActions.value[index] = { ...currentAction.value };
+      showToastMessage('Torneo actualizado correctamente');
+    }
+  }
+
+  // Reset form and switch to saved tab
+  resetCurrentAction();
+  activeSubTab.value = 'saved';
 }
 
-function confirmAddDay() {
-  if (newDayDateString.value) { tripStore.addTripDay(newDayDateString.value); }
+function editAction(action) {
+  // Load the action into the form for editing
+  currentAction.value = { ...action };
+  activeSubTab.value = 'new';
+  showToastMessage('Editando torneo');
 }
 
-function handleSaveTrip() {
-  tripStore.saveCurrentTrip();
+function deleteSavedAction(id) {
+  const index = savedActions.value.findIndex(a => a.id === id);
+  if (index !== -1) {
+    const actionName = savedActions.value[index].tournamentName || 'este torneo';
+    if (confirm(`¿Estás seguro de que quieres eliminar ${actionName}?`)) {
+      savedActions.value.splice(index, 1);
+      showToastMessage('Torneo eliminado');
+    }
+  }
+}
+
+function calculateTotals(action) {
+  // Calculate Precio por 1%: (Precio del torneo / 100) × Mark-Up
+  // Ejemplo: Torneo de 1000€, mark-up 1.2 → (1000/100) × 1.2 = 10 × 1.2 = 12€ por cada 1%
+  const baseValuePerPercent = (action.price || 0) / 100;
+  action.pricePerPercent = baseValuePerPercent * (action.markup || 1);
+
+  // Calculate Total Pagado: Precio por 1% × % Comprado
+  action.totalPaid = action.pricePerPercent * (action.percentageBought || 0);
+
+  // Calculate % Retenido Jugador: 100 - % Comprado
+  action.percentageRetained = 100 - (action.percentageBought || 0);
+}
+
+function getStatusClass(status) {
+  if (status === 'Confirmado') return 'status-confirmed';
+  if (status === 'En venta') return 'status-sale';
+  return 'status-pending';
+}
+
+function showToastMessage(message) {
+  toastMessage.value = message;
   showToast.value = true;
   setTimeout(() => {
     showToast.value = false;
   }, 3000);
 }
 
+// Load data from localStorage on mount
 onMounted(() => {
-  if (tripStore.players.length !== tripStore.playerCount) {
-    tripStore.setPlayerCount(tripStore.playerCount);
+  const saved = localStorage.getItem('tournamentActions');
+  if (saved) {
+    try {
+      savedActions.value = JSON.parse(saved);
+      // Find the highest ID to continue from there
+      if (savedActions.value.length > 0) {
+        nextId = Math.max(...savedActions.value.map(a => a.id)) + 1;
+      }
+    } catch (e) {
+      console.error('Error loading tournament actions:', e);
+    }
   }
 });
+
+// Save to localStorage whenever savedActions change
+watch(savedActions, () => {
+  localStorage.setItem('tournamentActions', JSON.stringify(savedActions.value));
+}, { deep: true });
 </script>
 
 <style scoped>
@@ -203,31 +374,143 @@ onMounted(() => {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.trip-planner-container {
+.tournament-manager-container {
   display: flex;
-  justify-content: center;
-  padding: 2rem;
-  height: calc(100vh - 70px);
+  flex-direction: column;
+  padding: 1.5rem;
+  min-height: calc(100vh - 70px);
   background: linear-gradient(135deg, #0a0e1a 0%, #1a1f35 100%);
   overflow-y: auto;
 }
 
-.planner-panel,
-.tracking-panel {
+/* ========================================
+   TABS NAVIGATION
+   ======================================== */
+.tabs-header {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 2px solid rgba(168, 85, 247, 0.2);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
+  color: #d1d5db;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tab-btn:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
+  color: #f9fafb;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  border-color: rgba(168, 85, 247, 0.6);
+  color: white;
+  box-shadow:
+    0 4px 12px rgba(168, 85, 247, 0.4),
+    0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+/* ========================================
+   SUB-TABS NAVIGATION
+   ======================================== */
+.sub-tabs-header {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.3) 0%, rgba(31, 41, 55, 0.5) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.1);
+}
+
+.sub-tab-btn {
+  flex: 1;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.025em;
+  position: relative;
+}
+
+.sub-tab-btn:hover {
+  color: #d1d5db;
+  background: rgba(168, 85, 247, 0.05);
+}
+
+.sub-tab-btn.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+}
+
+.sub-tab-btn .badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+}
+
+.sub-tab-btn.active .badge {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.sub-section {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   SECTION PANEL
+   ======================================== */
+.section-panel {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1400px;
+  margin: 0 auto;
   background: linear-gradient(145deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
   border: 1px solid rgba(168, 85, 247, 0.15);
   border-radius: 20px;
-  padding: 2.5rem;
+  padding: 2rem;
   box-shadow:
     0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 10px 25px -3px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-  animation: cardSlideIn 0.5s ease-out;
+  animation: slideIn 0.4s ease-out;
 }
 
-@keyframes cardSlideIn {
+@keyframes slideIn {
   from {
     opacity: 0;
     transform: translateY(20px);
@@ -238,10 +521,20 @@ onMounted(() => {
   }
 }
 
-h2 {
-  margin: 0 0 2rem 0;
-  text-align: center;
-  font-size: 2.5rem;
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid rgba(168, 85, 247, 0.2);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 2rem;
   font-weight: 700;
   background: linear-gradient(135deg, #f9fafb 0%, #a855f7 100%);
   -webkit-background-clip: text;
@@ -250,608 +543,389 @@ h2 {
   letter-spacing: -0.02em;
 }
 
-h3 {
-  font-size: 1.8rem;
-  color: #f9fafb;
-  border-bottom: 1.5px solid rgba(168, 85, 247, 0.2);
-  padding-bottom: 0.75rem;
-  margin-bottom: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-/* ========================================
-   FORM ELEMENTS - Premium Inputs
-   ======================================== */
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-  gap: 2.5rem;
-}
-
-.form-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-}
-
-.config-item {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.config-item label {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: #d1d5db;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.config-item input,
-.config-item select {
-  padding: 16px 20px;
-  font-size: 1.1rem;
-  font-weight: 500;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-  border: 1.5px solid rgba(156, 163, 175, 0.2);
-  color: #f9fafb;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.2) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-}
-
-.config-item input:hover,
-.config-item select:hover {
-  border-color: rgba(168, 85, 247, 0.4);
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.7) 0%, rgba(31, 41, 55, 0.9) 100%);
-}
-
-.config-item input:focus,
-.config-item select:focus {
-  outline: none;
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.3) inset,
-    0 0 0 3px rgba(168, 85, 247, 0.1),
-    0 0 12px rgba(168, 85, 247, 0.08);
-}
-
-.config-item select option {
-  background-color: #1f2937;
-  color: #f9fafb;
-  padding: 12px 16px;
-  font-weight: 500;
-}
-
-.collective-bankroll .calculated-value {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(147, 51, 234, 0.2) 100%);
-  border: 1.5px solid rgba(168, 85, 247, 0.3);
-  padding: 18px;
-  font-size: 1.8rem;
-  font-weight: 700;
-  border-radius: 12px;
-  text-align: center;
-  color: #a855f7;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  box-shadow: 0 4px 8px rgba(168, 85, 247, 0.15);
-}
-
-/* ========================================
-   PLAYER LIST - Premium Cards
-   ======================================== */
-.player-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 450px;
-  overflow-y: auto;
-  padding-right: 10px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(168, 85, 247, 0.3) rgba(31, 41, 55, 0.5);
-}
-
-.player-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.player-list::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.5);
-  border-radius: 10px;
-}
-
-.player-list::-webkit-scrollbar-thumb {
-  background: rgba(168, 85, 247, 0.3);
-  border-radius: 10px;
-}
-
-.player-entry {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: center;
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(156, 163, 175, 0.1);
-  transition: all 0.3s ease;
-}
-
-.player-entry:hover {
-  border-color: rgba(168, 85, 247, 0.2);
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
-}
-
-.player-name-input {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 1.05rem;
-  font-weight: 500;
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-  border: 1.5px solid rgba(156, 163, 175, 0.2);
-  color: #f9fafb;
-  transition: all 0.3s ease;
-}
-
-.player-name-input:focus {
-  outline: none;
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
-}
-
-.participation-input-group {
-  display: flex;
-  align-items: center;
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-  border: 1.5px solid rgba(156, 163, 175, 0.2);
-  border-radius: 8px;
-  padding-left: 12px;
-  transition: all 0.3s ease;
-}
-
-.participation-input-group:focus-within {
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
-}
-
-.player-participation-input {
-  border: none;
-  background: transparent;
-  width: 110px;
-  padding: 12px 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f9fafb;
-  -moz-appearance: textfield;
-}
-
-.player-participation-input::-webkit-outer-spin-button,
-.player-participation-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.player-participation-input:focus {
-  outline: none;
-}
-
-.participation-input-group .currency-symbol {
-  color: #a855f7;
-  padding: 0 6px;
-  font-weight: 600;
-}
-
-.participation-input-group .participation-percentage {
-  color: #d1d5db;
-  font-size: 0.95rem;
-  padding-right: 12px;
-  min-width: 70px;
-  text-align: right;
-  font-weight: 500;
-}
-
-/* ========================================
-   BUTTONS - Premium Actions
-   ======================================== */
-.actions-footer {
-  margin-top: 2.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.start-trip-btn {
+.add-action-btn {
   background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
   color: white;
-  font-size: 1.35rem;
-  font-weight: 700;
-  padding: 18px 48px;
-  border-radius: 14px;
-  border: none;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  box-shadow:
-    0 4px 6px -1px rgba(124, 58, 237, 0.3),
-    0 10px 20px -3px rgba(124, 58, 237, 0.2),
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-.start-trip-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
-  );
-  transition: left 0.6s ease;
-}
-
-.start-trip-btn:hover {
-  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
-  transform: translateY(-3px) scale(1.02);
-  box-shadow:
-    0 8px 16px -2px rgba(124, 58, 237, 0.35),
-    0 16px 32px -4px rgba(124, 58, 237, 0.25),
-    0 0 24px rgba(168, 85, 247, 0.15);
-}
-
-.start-trip-btn:hover::before {
-  left: 100%;
-}
-
-.start-trip-btn:active {
-  transform: translateY(-1px) scale(1);
-}
-
-/* ========================================
-   TRACKING PANEL - Dashboard Style
-   ======================================== */
-.tracking-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
-  padding-bottom: 2rem;
-  border-bottom: 1.5px solid rgba(168, 85, 247, 0.2);
-}
-
-.trip-info {
-  font-size: 1.2rem;
-  color: #d1d5db;
-  font-weight: 500;
-  text-align: center;
-}
-
-.trip-info strong {
-  color: #a855f7;
-  font-weight: 600;
-}
-
-.trip-actions-header {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.save-trip-btn,
-.new-trip-btn,
-.add-day-btn {
-  padding: 14px 28px;
   font-size: 1.05rem;
   font-weight: 600;
+  padding: 0.9rem 1.8rem;
   border-radius: 12px;
   border: none;
   cursor: pointer;
   letter-spacing: 0.025em;
-  text-transform: uppercase;
-  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-}
-
-.save-trip-btn {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  color: white;
   box-shadow:
     0 4px 6px -1px rgba(124, 58, 237, 0.3),
     0 10px 20px -3px rgba(124, 58, 237, 0.2);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.save-trip-btn:hover {
+.add-action-btn:hover {
   background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(124, 58, 237, 0.4);
 }
 
-.new-trip-btn {
-  background: linear-gradient(135deg, rgba(113, 128, 150, 0.6) 0%, rgba(74, 85, 104, 0.8) 100%);
-  border: 1.5px solid rgba(156, 163, 175, 0.2);
-  color: #f9fafb;
-}
-
-.new-trip-btn:hover {
-  background: linear-gradient(135deg, rgba(113, 128, 150, 0.8) 0%, rgba(74, 85, 104, 1) 100%);
-  transform: translateY(-2px);
-}
-
-.add-day-form {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-  padding: 1.25rem;
-  border-radius: 12px;
-  border: 1px solid rgba(168, 85, 247, 0.15);
-}
-
-.date-input {
-  padding: 14px 18px;
-  font-size: 1.05rem;
-  font-weight: 500;
-  border-radius: 10px;
-  border: 1.5px solid rgba(156, 163, 175, 0.2);
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-  color: #f9fafb;
-  color-scheme: dark;
-  transition: all 0.3s ease;
-}
-
-.date-input:focus {
-  outline: none;
-  border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
-}
-
-.add-day-btn {
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-  color: white;
-}
-
-.add-day-btn:hover {
-  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
-  transform: translateY(-2px);
+.add-action-btn:active {
+  transform: translateY(0);
 }
 
 /* ========================================
-   DAY CARDS - Premium Session Cards
+   ACTIONS TABLE
    ======================================== */
-.days-container {
+.actions-table-container {
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.actions-table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.actions-table-container::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 10px;
+}
+
+.actions-table-container::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 10px;
+}
+
+.actions-table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #9ca3af;
+  font-size: 1.1rem;
+}
+
+.actions-list {
   display: flex;
   flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ========================================
+   ACTION CARD
+   ======================================== */
+.action-card {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.15);
+  border-radius: 14px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.action-card:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.1);
+}
+
+.action-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.action-card-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f9fafb;
+}
+
+.action-header-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn,
+.reset-btn,
+.delete-btn {
+  font-size: 0.95rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1.5px solid;
+  font-weight: 600;
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+
+.edit-btn:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.4) 100%);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #93c5fd;
+  transform: scale(1.05);
+}
+
+.reset-btn {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(202, 138, 4, 0.3) 100%);
+  border-color: rgba(234, 179, 8, 0.3);
+  color: #fbbf24;
+}
+
+.reset-btn:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.3) 0%, rgba(202, 138, 4, 0.4) 100%);
+  border-color: rgba(234, 179, 8, 0.5);
+  color: #fcd34d;
+  transform: scale(1.05);
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #f87171;
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.3) 0%, rgba(185, 28, 28, 0.4) 100%);
+  border-color: rgba(220, 38, 38, 0.5);
+  color: #fca5a5;
+  transform: scale(1.05);
+}
+
+/* ========================================
+   ACTION FORM GRID - TWO COLUMNS
+   ======================================== */
+.action-form-grid-two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
 }
 
-.day-card {
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
-  padding: 1.75rem;
-  border-radius: 14px;
-  border: 1px solid rgba(168, 85, 247, 0.15);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.day-card:hover {
-  border-color: rgba(168, 85, 247, 0.25);
-  transform: translateX(3px);
-}
-
-.day-card h3 {
-  font-size: 1.5rem;
-  margin-bottom: 1.5rem;
-  color: #f9fafb;
-  border-bottom-color: rgba(168, 85, 247, 0.25);
-}
-
-.player-results-list {
+.action-form-grid-two-columns .column {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  gap: 1rem;
 }
 
-.player-session-details {
-  border-bottom: 1px solid rgba(168, 85, 247, 0.1);
-  padding-bottom: 1.5rem;
-}
-
-.player-session-details:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.player-name {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  display: block;
-  color: #f9fafb;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.player-inputs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1.25rem;
-  align-items: flex-end;
-}
-
-.input-group {
+.form-field {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.5rem;
 }
 
-.input-group label {
+.form-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-field label {
+  font-weight: 600;
   font-size: 0.9rem;
   color: #d1d5db;
-  font-weight: 600;
   letter-spacing: 0.025em;
   text-transform: uppercase;
 }
 
-.input-group input {
-  width: 100%;
-  padding: 12px 16px;
-  font-size: 1.05rem;
+.form-field input,
+.form-field select,
+.form-field textarea {
+  padding: 0.9rem 1rem;
+  font-size: 1rem;
   font-weight: 500;
-  border-radius: 8px;
+  border-radius: 10px;
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
   border: 1.5px solid rgba(156, 163, 175, 0.2);
   color: #f9fafb;
   transition: all 0.3s ease;
-  box-sizing: border-box;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) inset;
 }
 
-.input-group input:focus {
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
   outline: none;
   border-color: rgba(168, 85, 247, 0.6);
-  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3) inset,
+    0 0 0 3px rgba(168, 85, 247, 0.1);
 }
 
-.input-group.calculated span {
-  font-size: 1.3rem;
+.form-field input:hover,
+.form-field select:hover,
+.form-field textarea:hover {
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.form-field select {
+  cursor: pointer;
+}
+
+.form-field select option {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 0.75rem;
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+/* Calculated fields */
+.form-field.calculated .calculated-value {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(147, 51, 234, 0.2) 100%);
+  border: 1.5px solid rgba(168, 85, 247, 0.3);
+  padding: 0.9rem 1rem;
+  font-size: 1rem;
   font-weight: 700;
-  padding: 12px 16px;
+  border-radius: 10px;
   text-align: center;
-  border-radius: 8px;
-  background: rgba(26, 32, 44, 0.5);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  color: #a855f7;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Save Action Button */
+.save-action-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.025em;
+  box-shadow:
+    0 4px 6px -1px rgba(16, 185, 129, 0.3),
+    0 10px 20px -3px rgba(16, 185, 129, 0.2);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.save-action-btn:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+}
+
+.save-action-btn:active {
+  transform: translateY(0);
 }
 
 /* ========================================
-   TOTALS SECTION - Premium Summary
+   ACTION SUMMARY (for saved tournaments)
    ======================================== */
-.totals-section {
-  margin-top: 3rem;
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.5) 0%, rgba(31, 41, 55, 0.7) 100%);
-  padding: 2rem;
-  border-radius: 16px;
-  border: 1px solid rgba(168, 85, 247, 0.2);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
-}
-
-.totals-section h3 {
-  margin-top: 0;
-}
-
-.player-totals-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
-}
-
-.player-total-item-detailed {
-  padding: 1.25rem;
-  border: 1.5px solid rgba(168, 85, 247, 0.15);
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(31, 41, 55, 0.4) 0%, rgba(17, 24, 39, 0.6) 100%);
-  transition: all 0.3s ease;
-}
-
-.player-total-item-detailed:hover {
-  border-color: rgba(168, 85, 247, 0.3);
-  transform: scale(1.01);
-}
-
-.player-total-item-detailed > .player-name {
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1.5px solid rgba(168, 85, 247, 0.15);
-}
-
-.player-financials {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-}
-
-.financial-item {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.financial-item label {
-  font-size: 0.9rem;
-  color: #d1d5db;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
-}
-
-.financial-item .value {
-  font-weight: 700;
-  font-size: 1.3rem;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.trip-totals-summary {
+.action-summary {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  border-top: 2px solid rgba(168, 85, 247, 0.3);
-  padding-top: 2rem;
+  padding: 0.5rem 0;
 }
 
-.trip-total-item {
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  padding: 0.75rem 0;
+}
+
+.summary-item {
   display: flex;
-  justify-content: space-between;
-  font-size: 1.2rem;
-  padding: 0.75rem;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.summary-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f9fafb;
+}
+
+.summary-value.highlight {
+  font-size: 1.3rem;
+  color: #a855f7;
+  font-weight: 700;
+}
+
+.summary-notes {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.3) 0%, rgba(31, 41, 55, 0.5) 100%);
   border-radius: 8px;
-  background: rgba(26, 32, 44, 0.3);
-  transition: all 0.3s ease;
+  border: 1px solid rgba(168, 85, 247, 0.1);
 }
 
-.trip-total-item:hover {
-  background: rgba(26, 32, 44, 0.5);
+.summary-notes p {
+  margin: 0.5rem 0 0 0;
+  color: #d1d5db;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
-.trip-total-item.main-total {
-  font-size: 1.8rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
-  border: 2px solid rgba(168, 85, 247, 0.3);
-  padding: 1.25rem;
-}
-
-.trip-total-value {
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-/* ========================================
-   RESULT COLORS
-   ======================================== */
-.profit {
+/* Status colors */
+.status-confirmed {
   color: #10b981;
+  font-weight: 700;
 }
 
-.loss {
-  color: #fc8181;
+.status-pending {
+  color: #f59e0b;
+  font-weight: 700;
 }
 
-.even {
-  color: #e2e8f0;
+.status-sale {
+  color: #60a5fa;
+  font-weight: 700;
 }
 
 /* ========================================
-   TOAST NOTIFICATIONS - Premium
+   PLANIFICADOR PLACEHOLDER
+   ======================================== */
+.planner-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+  text-align: center;
+}
+
+.placeholder-icon {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+}
+
+.placeholder-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #d1d5db;
+  margin-bottom: 0.75rem;
+}
+
+.placeholder-subtext {
+  font-size: 1.1rem;
+  color: #9ca3af;
+  max-width: 500px;
+}
+
+/* ========================================
+   TOAST NOTIFICATIONS
    ======================================== */
 .toast {
   position: fixed;
@@ -865,8 +939,8 @@ h3 {
   box-shadow:
     0 4px 15px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  z-index: 1000;
-  animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2000;
+  animation: toastSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
 }
 
@@ -886,7 +960,7 @@ h3 {
   letter-spacing: 0.025em;
 }
 
-@keyframes slideIn {
+@keyframes toastSlideIn {
   from {
     transform: translateX(100%);
     opacity: 0;
@@ -897,233 +971,139 @@ h3 {
   }
 }
 
-/* ========================================================== */
-/* ===> ADAPTACIÓN COMPLETA PARA MÓVILES <=== */
-/* ========================================================== */
-@media (max-width: 640px) {
-  .trip-planner-container {
-    padding: 0.5rem;
-  }
-
-  .planner-panel, .tracking-panel {
-    padding: 1rem;
-    border-radius: 8px;
-  }
-
-  h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-
-  h3 {
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .form-column {
-    gap: 1rem;
-  }
-
-  .config-item label {
-    font-size: 0.95rem;
-  }
-
-  .config-item input,
-  .config-item select {
-    padding: 10px;
-    font-size: 0.95rem;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .config-item select option {
-    font-size: 0.9rem;
-  }
-
-  .collective-bankroll .calculated-value {
-    font-size: 1.2rem;
-    padding: 12px;
-  }
-
-  .player-list {
-    max-height: 300px;
-  }
-
-  .player-entry {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .player-name-input {
-    font-size: 0.95rem;
-    padding: 10px;
-  }
-
-  .participation-input-group {
-    width: 100%;
-    padding-left: 8px;
-  }
-
-  .player-participation-input {
-    width: 80px;
-    font-size: 0.95rem;
-    padding: 8px;
-  }
-
-  .participation-input-group .currency-symbol,
-  .participation-input-group .participation-percentage {
-    font-size: 0.85rem;
-  }
-
-  .start-trip-btn {
-    font-size: 1.1rem;
-    padding: 12px 30px;
-  }
-
-  .tracking-header {
-    gap: 1rem;
-  }
-
-  .trip-info {
-    font-size: 1rem;
-    text-align: center;
-    padding: 0 0.5rem;
-  }
-
-  .trip-actions-header {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .save-trip-btn,
-  .new-trip-btn {
-    width: 100%;
-    padding: 10px 20px;
-    font-size: 1rem;
-  }
-
-  .add-day-form {
-    flex-direction: column;
-    width: 100%;
-    gap: 0.75rem;
-  }
-
-  .date-input {
-    width: 100%;
-    padding: 10px;
-    font-size: 1rem;
-    box-sizing: border-box;
-  }
-
-  .add-day-btn {
-    width: 100%;
-    padding: 10px 20px;
-    font-size: 1rem;
-  }
-
-  .day-card {
+/* ========================================
+   RESPONSIVE DESIGN - MOBILE
+   ======================================== */
+@media (max-width: 768px) {
+  .tournament-manager-container {
     padding: 1rem;
   }
 
-  .day-card h3 {
-    font-size: 1.2rem;
+  .tabs-header {
+    margin-bottom: 1.5rem;
   }
 
-  .player-session-details {
-    padding-bottom: 1rem;
-  }
-
-  .player-name {
-    font-size: 1.1rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .player-inputs-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .input-group {
-    gap: 6px;
-  }
-
-  .input-group label {
-    font-size: 0.85rem;
-  }
-
-  .input-group input {
-    padding: 8px;
+  .tab-btn {
+    padding: 0.8rem 1.5rem;
     font-size: 0.95rem;
-    box-sizing: border-box;
   }
 
-  .input-group.calculated span {
-    font-size: 1.1rem;
-    padding: 8px;
-  }
-
-  .totals-section {
-    margin-top: 2rem;
-    padding: 1rem;
-  }
-
-  .player-total-item-detailed {
-    padding: 0.75rem;
-  }
-
-  .player-total-item-detailed > .player-name {
-    font-size: 1.1rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .player-financials {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .financial-item label {
-    font-size: 0.85rem;
-  }
-
-  .financial-item .value {
-    font-size: 1.1rem;
-  }
-
-  .trip-totals-summary {
+  .sub-tabs-header {
+    flex-direction: column;
     gap: 0.5rem;
-    padding-top: 1rem;
   }
 
-  .trip-total-item {
+  .sub-tab-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .section-panel {
+    padding: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .section-header {
     flex-direction: column;
-    gap: 0.25rem;
+    align-items: flex-start;
+  }
+
+  .section-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .add-action-btn {
+    width: 100%;
+    padding: 0.8rem 1.5rem;
+  }
+
+  .action-form-grid-two-columns {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .action-form-grid-two-columns .column {
+    gap: 0.75rem;
+  }
+
+  .action-card {
+    padding: 1.25rem;
+  }
+
+  .action-card-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .action-header-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .edit-btn,
+  .reset-btn,
+  .delete-btn {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    width: 100%;
+  }
+
+  .summary-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .summary-value {
     font-size: 1rem;
   }
 
-  .trip-total-item.main-total {
-    font-size: 1.3rem;
+  .summary-value.highlight {
+    font-size: 1.15rem;
+  }
+
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    padding: 0.75rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .planner-placeholder {
+    padding: 4rem 1.5rem;
+  }
+
+  .placeholder-icon {
+    font-size: 3.5rem;
+  }
+
+  .placeholder-text {
+    font-size: 1.2rem;
+  }
+
+  .placeholder-subtext {
+    font-size: 1rem;
   }
 
   .toast {
     top: 10px;
     right: 10px;
     left: 10px;
-    padding: 12px 15px;
+  }
+}
+
+/* ========================================
+   LANDSCAPE MODE
+   ======================================== */
+@media (orientation: landscape) and (max-height: 600px) {
+  .tournament-manager-container {
+    padding: 1rem;
   }
 
-  .toast-icon {
-    font-size: 1.2rem;
+  .section-panel {
+    padding: 1.5rem;
   }
 
-  .toast-message {
-    font-size: 0.9rem;
+  .actions-table-container {
+    max-height: calc(100vh - 250px);
   }
 }
 </style>
