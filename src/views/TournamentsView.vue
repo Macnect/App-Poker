@@ -365,6 +365,14 @@ nav button.active svg {
   flex-direction: column;
   gap: 0.75rem;
 
+  /* Permitir scroll para ver todo el contenido */
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.3) rgba(31, 41, 55, 0.3);
+
   /* Multi-layer shadow for depth */
   box-shadow:
     0 -4px 6px -1px rgba(0, 0, 0, 0.3),
@@ -380,6 +388,26 @@ nav button.active svg {
   /* Enable touch manipulation */
   touch-action: pan-y;
   user-select: none;
+}
+
+/* Estilos personalizados para el scrollbar en navegadores Webkit */
+.more-menu-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.more-menu-panel::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.3);
+  border-radius: 3px;
+}
+
+.more-menu-panel::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.3);
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.more-menu-panel::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.5);
 }
 
 @keyframes slide-up {
