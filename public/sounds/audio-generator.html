@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Sonidos para Poker Replayer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        h1 {
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .sound-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        button {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(67, 233, 123, 0.4);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .download-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Generador de Sonidos para Tarjetas de Crédito 🎵</h1>
+
+    <div class="sound-section">
+        <h2>1. Sonido de Mezclar Cartas (Shuffle)</h2>
+        <p>Un sonido de cartas mezclándose rápidamente</p>
+        <button onclick="playShuffleSound()">▶ Reproducir Shuffle</button>
+        <button onclick="generateShuffleSound()">🔄 Generar y Descargar</button>
+        <div id="shuffle-download"></div>
+    </div>
+
+    <div class="sound-section">
+        <h2>2. Redoble de Tambores (Drum Roll)</h2>
+        <p>Un redoble de tambores dramático de 5 segundos</p>
+        <button onclick="playDrumRoll()">▶ Reproducir Drum Roll</button>
+        <button onclick="generateDrumRoll()">🔄 Generar y Descargar</button>
+        <div id="drumroll-download"></div>
+    </div>
+
+    <div class="sound-section">
+        <h2>3. Música de Victoria</h2>
+        <p>Una fanfarria de victoria épica</p>
+        <button onclick="playVictorySound()">▶ Reproducir Victoria</button>
+        <button onclick="generateVictorySound()">🔄 Generar y Descargar</button>
+        <div id="victory-download"></div>
+    </div>
+
+    <div class="instructions">
+        <h3>📝 Instrucciones:</h3>
+        <ol>
+            <li>Haz clic en "Generar y Descargar" para cada sonido</li>
+            <li>Los archivos se descargarán como .wav</li>
+            <li>Renombra los archivos a:
+                <ul>
+                    <li>shuffle.mp3</li>
+                    <li>drum-roll.mp3</li>
+                    <li>victory.mp3</li>
+                </ul>
+            </li>
+            <li>Colócalos en la carpeta <code>/public/sounds/</code></li>
+            <li>Convierte los .wav a .mp3 usando un convertidor online si es necesario</li>
+        </ol>
+    </div>
+
+    <script>
+        // Web Audio API context
+        let audioContext;
+
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        // Generate shuffle sound (card shuffling)
+        function generateShuffleSound() {
+            const ctx = getAudioContext();
+            const duration = 2;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(2, length, sampleRate);
+
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = buffer.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    // Create shuffling noise with varying intensity
+                    const envelope = Math.sin((i / length) * Math.PI * 4) * 0.5 + 0.5;
+                    const noise = (Math.random() - 0.5) * 2;
+                    const flutter = Math.sin(i * 0.01) * Math.sin(i * 0.003);
+                    channelData[i] = noise * envelope * 0.3 + flutter * 0.1;
+                }
+            }
+
+            const wav = audioBufferToWav(buffer);
+            downloadWav(wav, 'shuffle.wav', 'shuffle-download');
+            playBuffer(buffer);
+        }
+
+        function playShuffleSound() {
+            generateShuffleSound();
+        }
+
+        // Generate drum roll
+        function generateDrumRoll() {
+            const ctx = getAudioContext();
+            const duration = 5;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(2, length, sampleRate);
+
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = buffer.getChannelData(channel);
+                for (let i = 0; i < length; i++) {
+                    // Create drum roll with increasing intensity
+                    const time = i / sampleRate;
+                    const intensity = Math.min(time / 3, 1); // Crescendo
+
+                    // Multiple drum hits at different frequencies
+                    const hit1 = Math.sin(2 * Math.PI * 50 * time) * Math.exp(-10 * (time % 0.05));
+                    const hit2 = Math.sin(2 * Math.PI * 80 * time) * Math.exp(-15 * (time % 0.03));
+                    const hit3 = Math.sin(2 * Math.PI * 120 * time) * Math.exp(-20 * (time % 0.02));
+
+                    // Add some noise for snare effect
+                    const snare = (Math.random() - 0.5) * 0.1 * Math.exp(-30 * (time % 0.01));
+
+                    channelData[i] = (hit1 * 0.3 + hit2 * 0.3 + hit3 * 0.2 + snare) * intensity * 0.5;
+                }
+            }
+
+            const wav = audioBufferToWav(buffer);
+            downloadWav(wav, 'drum-roll.wav', 'drumroll-download');
+            playBuffer(buffer);
+        }
+
+        function playDrumRoll() {
+            generateDrumRoll();
+        }
+
+        // Generate victory sound
+        function generateVictorySound() {
+            const ctx = getAudioContext();
+            const duration = 3;
+            const sampleRate = ctx.sampleRate;
+            const length = sampleRate * duration;
+            const buffer = ctx.createBuffer(2, length, sampleRate);
+
+            // Victory fanfare notes (C major chord progression)
+            const notes = [
+                {freq: 261.63, start: 0, duration: 0.3},    // C
+                {freq: 329.63, start: 0.3, duration: 0.3},  // E
+                {freq: 392.00, start: 0.6, duration: 0.3},  // G
+                {freq: 523.25, start: 0.9, duration: 0.5},  // C (octave)
+                {freq: 659.25, start: 1.4, duration: 0.2},  // E (octave)
+                {freq: 783.99, start: 1.6, duration: 0.2},  // G (octave)
+                {freq: 1046.50, start: 1.8, duration: 1.0}, // C (2 octaves)
+            ];
+
+            for (let channel = 0; channel < 2; channel++) {
+                const channelData = buffer.getChannelData(channel);
+
+                for (let noteData of notes) {
+                    const startSample = Math.floor(noteData.start * sampleRate);
+                    const endSample = Math.floor((noteData.start + noteData.duration) * sampleRate);
+
+                    for (let i = startSample; i < endSample && i < length; i++) {
+                        const time = (i - startSample) / sampleRate;
+                        const envelope = Math.exp(-time * 2) * 0.5;
+
+                        // Main tone
+                        const tone = Math.sin(2 * Math.PI * noteData.freq * time);
+                        // Harmonics for richness
+                        const harmonic2 = Math.sin(2 * Math.PI * noteData.freq * 2 * time) * 0.3;
+                        const harmonic3 = Math.sin(2 * Math.PI * noteData.freq * 3 * time) * 0.2;
+
+                        channelData[i] += (tone + harmonic2 + harmonic3) * envelope;
+                    }
+                }
+
+                // Add sparkle effect
+                for (let i = 0; i < length; i++) {
+                    const time = i / sampleRate;
+                    if (time > 1.5) {
+                        const sparkle = Math.sin(2 * Math.PI * 2000 * time) *
+                                       Math.sin(2 * Math.PI * 10 * time) *
+                                       Math.exp(-(time - 1.5) * 3) * 0.1;
+                        channelData[i] += sparkle;
+                    }
+                }
+            }
+
+            const wav = audioBufferToWav(buffer);
+            downloadWav(wav, 'victory.wav', 'victory-download');
+            playBuffer(buffer);
+        }
+
+        function playVictorySound() {
+            generateVictorySound();
+        }
+
+        // Helper function to play an audio buffer
+        function playBuffer(buffer) {
+            const ctx = getAudioContext();
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.start();
+        }
+
+        // Convert AudioBuffer to WAV
+        function audioBufferToWav(buffer) {
+            const length = buffer.length * buffer.numberOfChannels * 2 + 44;
+            const arrayBuffer = new ArrayBuffer(length);
+            const view = new DataView(arrayBuffer);
+            const channels = [];
+            let offset = 0;
+            let pos = 0;
+
+            // Write WAV header
+            const setUint16 = (data) => {
+                view.setUint16(pos, data, true);
+                pos += 2;
+            };
+            const setUint32 = (data) => {
+                view.setUint32(pos, data, true);
+                pos += 4;
+            };
+
+            // RIFF identifier
+            setUint32(0x46464952);
+            // file length
+            setUint32(length - 8);
+            // RIFF type
+            setUint32(0x45564157);
+            // format chunk identifier
+            setUint32(0x20746d66);
+            // format chunk length
+            setUint32(16);
+            // sample format (raw)
+            setUint16(1);
+            // channel count
+            setUint16(buffer.numberOfChannels);
+            // sample rate
+            setUint32(buffer.sampleRate);
+            // byte rate (sample rate * block align)
+            setUint32(buffer.sampleRate * 4);
+            // block align (channel count * bytes per sample)
+            setUint16(buffer.numberOfChannels * 2);
+            // bits per sample
+            setUint16(16);
+            // data chunk identifier
+            setUint32(0x61746164);
+            // data chunk length
+            setUint32(length - pos - 4);
+
+            // Write interleaved data
+            const volume = 0.8;
+            for (let i = 0; i < buffer.numberOfChannels; i++) {
+                channels.push(buffer.getChannelData(i));
+            }
+
+            while (pos < length) {
+                for (let i = 0; i < buffer.numberOfChannels; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
+        }
+
+        // Download WAV file
+        function downloadWav(blob, filename, containerId) {
+            const url = URL.createObjectURL(blob);
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <a href="${url}" download="${filename}" class="download-link">
+                    📥 Descargar ${filename}
+                </a>
+            `;
+        }
+    </script>
+</body>
+</html>

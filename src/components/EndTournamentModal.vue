@@ -5,7 +5,27 @@
 
       <div class="summary">
         <div class="summary-item"><span>Buy-in Inicial:</span> <span>{{ sessionStore.currency }}{{ sessionStore.buyIn }}</span></div>
-        <div class="summary-item"><span>Recompras:</span> <span>{{ sessionStore.currency }}{{ sessionStore.totalRebuys }}</span></div>
+      </div>
+
+      <!-- Campo de Duración -->
+      <div class="input-section">
+        <label for="duration">{{ durationLabel }}:</label>
+        <div class="input-group">
+          <span>⏱️</span>
+          <input id="duration" type="time" v-model="durationTime" ref="inputRef">
+        </div>
+      </div>
+
+      <!-- Campo de Recompras -->
+      <div class="input-section">
+        <label for="rebuys">Recompras ({{ sessionStore.currency }}):</label>
+        <div class="input-group">
+          <span>{{ sessionStore.currency }}</span>
+          <input id="rebuys" type="number" v-model.number="rebuyAmount" placeholder="0" min="0">
+        </div>
+      </div>
+
+      <div class="summary">
         <hr>
         <div class="summary-item total-investment"><span>Inversión Total:</span> <span>{{ sessionStore.currency }}{{ totalInvestment }}</span></div>
       </div>
@@ -76,12 +96,40 @@ const isDay2 = ref(false);
 const day2Stack = ref(null);
 const finalPosition = ref(null);
 const prizeWon = ref(0);
+// Si es día 2 o superior, iniciar recompras en 0, sino usar el valor del store
+const rebuyAmount = ref(sessionStore.currentDay > 1 ? 0 : (sessionStore.totalRebuys || 0));
 const inputRef = ref(null);
 
-const totalInvestment = computed(() => sessionStore.buyIn + sessionStore.totalRebuys);
+// Computed property bidireccional para manejar la duración en formato HH:MM
+const durationTime = computed({
+  get() {
+    const hours = String(sessionStore.durationHours || 0).padStart(2, '0');
+    const minutes = String(sessionStore.durationMinutes || 0).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  },
+  set(value) {
+    if (!value) {
+      sessionStore.durationHours = 0;
+      sessionStore.durationMinutes = 0;
+      return;
+    }
+    const [hours, minutes] = value.split(':').map(v => parseInt(v) || 0);
+    sessionStore.durationHours = hours;
+    sessionStore.durationMinutes = minutes;
+  }
+});
+
+const totalInvestment = computed(() => sessionStore.buyIn + (rebuyAmount.value || 0));
 
 const nextDay = computed(() => {
   return sessionStore.currentDay + 1;
+});
+
+const durationLabel = computed(() => {
+  if (sessionStore.currentDay > 1) {
+    return `Duración del Día ${sessionStore.currentDay} (HH:MM)`;
+  }
+  return 'Duración del Torneo (HH:MM)';
 });
 
 const tournamentResult = computed(() => {
@@ -112,6 +160,7 @@ function confirm() {
     finalPosition: !isDay2.value ? finalPosition.value : null,
     prizeWon: !isDay2.value ? (prizeWon.value || 0) : null,
     result: !isDay2.value ? tournamentResult.value : null,
+    totalRebuys: rebuyAmount.value || 0,
   };
   emit('confirm', sessionData);
 }
@@ -143,6 +192,7 @@ onMounted(() => {
   z-index: 2000;
   padding: 1rem;
   animation: fadeIn 0.2s ease-out;
+  overflow-y: auto;
 }
 
 @keyframes fadeIn {
@@ -162,12 +212,15 @@ onMounted(() => {
   border: 1px solid rgba(168, 85, 247, 0.2);
   width: 100%;
   max-width: 450px;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   text-align: center;
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.5),
     0 8px 24px rgba(0, 0, 0, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.05);
   animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: auto;
 }
 
 @keyframes slideUp {
@@ -329,6 +382,23 @@ h3 {
   font-weight: 600;
 }
 
+/* Estilos específicos para input type="time" */
+.input-group input[type="time"] {
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+}
+
+.input-group input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.input-group input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 .result-display {
   margin: 1.5rem 0;
   padding: 1rem;
@@ -420,25 +490,118 @@ h3 {
 }
 
 @media (max-width: 480px) {
+  .modal-overlay {
+    padding: 0.5rem;
+    align-items: flex-start;
+  }
+
   .modal-content {
-    padding: 1.5rem;
+    padding: 1.25rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    max-height: calc(100vh - 1rem);
   }
+
   h3 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
   }
+
   .summary {
-    font-size: 1rem;
+    font-size: 0.95rem;
+    margin: 1rem 0;
   }
+
+  .input-section {
+    margin: 1rem 0;
+  }
+
+  .input-section label {
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .input-group {
+    border-radius: 8px;
+  }
+
   .input-group input {
     font-size: 1.2rem;
-    padding: 12px;
+    padding: 12px 10px;
   }
+
+  .input-group span {
+    padding: 0 12px;
+    font-size: 1.1rem;
+  }
+
+  .result-display {
+    margin: 1rem 0;
+    padding: 0.8rem;
+  }
+
+  .result-display h4 {
+    font-size: 0.9rem;
+    margin-bottom: 0.4rem;
+  }
+
   .result-display p {
     font-size: 2rem;
   }
+
+  .modal-actions {
+    margin-top: 1.5rem;
+    gap: 0.75rem;
+  }
+
   .modal-actions button {
-    padding: 12px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+  }
+
+  .day2-toggle-container {
+    margin: 1rem 0;
+  }
+
+  .toggle-text {
     font-size: 1rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .modal-content {
+    padding: 1rem;
+  }
+
+  h3 {
+    font-size: 1.2rem;
+  }
+
+  .summary {
+    font-size: 0.9rem;
+  }
+
+  .input-section label {
+    font-size: 0.8rem;
+  }
+
+  .input-group input {
+    font-size: 1.1rem;
+    padding: 10px 8px;
+  }
+
+  .input-group span {
+    padding: 0 10px;
+    font-size: 1rem;
+  }
+
+  .result-display p {
+    font-size: 1.75rem;
+  }
+
+  .modal-actions button {
+    padding: 10px 14px;
+    font-size: 0.9rem;
   }
 }
 </style>

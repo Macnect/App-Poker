@@ -2,44 +2,13 @@
   <div class="live-session-container">
     <div class="session-panel">
 
-      <!-- WIDGET DEL TEMPORIZADOR -->
-      <div class="widget timer-widget" :class="{ 'on-break': sessionStore.isOnBreak }">
-        <div class="widget-header">
-          <span class="status-indicator"></span>
-          <span>{{ sessionStore.isOnBreak ? 'EN DESCANSO' : (sessionStore.isActive ? 'TORNEO ACTIVO' : 'TORNEO DETENIDO') }}</span>
-          <span v-if="sessionStore.currentDay > 1" class="day-badge">
-            DÍA {{ sessionStore.currentDay }}
-          </span>
-        </div>
-        <div class="timer-display">
-          {{ formattedTime }}
-        </div>
-      </div>
-
-      <!-- WIDGET DE ACCIONES RÁPIDAS (solo visible durante la sesión) -->
-      <div v-if="sessionStore.isActive && !sessionStore.isOnBreak" class="widget actions-widget">
-        <div class="widget-header">
-          <span>ACCIONES RÁPIDAS</span>
-        </div>
-        <div class="live-actions">
-          <div class="action-group">
-            <div class="rebuy-label">Recompra</div>
-            <div class="rebuy-controls">
-              <div class="rebuy-amount">{{ sessionStore.currency }}{{ sessionStore.buyIn }}</div>
-              <button @click="handleAddRebuy" class="btn-add">+</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- WIDGET DE CONFIGURACIÓN -->
-      <div v-if="!sessionStore.isActive" class="widget config-widget">
+      <div class="widget config-widget">
         <!-- Botón de guardar minimalista en la esquina superior -->
         <button
           class="save-icon-btn"
           @click="saveConfiguration"
           :title="saveButtonText"
-          :disabled="sessionStore.isActive"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="save-icon">
             <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
@@ -50,7 +19,7 @@
          <div class="widget-header">
           <span>CONFIGURACIÓN DEL TORNEO</span>
         </div>
-        <fieldset class="config-fieldset" :disabled="sessionStore.isActive">
+        <fieldset class="config-fieldset">
           <div class="config-grid">
             <div class="config-item">
               <label for="game-type">Tipo de Juego</label>
@@ -98,36 +67,26 @@
               <label for="initial-stack">Stack Inicial</label>
               <input type="number" id="initial-stack" v-model.number="sessionStore.initialStack" placeholder="Ej: 5000">
             </div>
+            <div class="config-item">
+              <label for="duration">Duración (HH:MM)</label>
+              <input type="time" id="duration" v-model="durationTime" placeholder="00:00">
+            </div>
           </div>
         </fieldset>
       </div>
 
       <!-- CONTROLES PRINCIPALES -->
       <div class="main-controls">
-        <button v-if="!sessionStore.isActive" @click="sessionStore.startSession()" class="btn-play">
+        <button @click="openCreateTournamentModal" class="btn-play">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
-          <span>INICIAR TORNEO</span>
+          <span>CREAR TORNEO</span>
         </button>
-        <template v-if="sessionStore.isActive">
-          <button v-if="!sessionStore.isOnBreak" @click="sessionStore.startBreak()" class="btn-pause">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.25 9v6m-4.5 0V9M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <span>DESCANSO</span>
-          </button>
-          <button v-else @click="sessionStore.endBreak()" class="btn-play">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" /></svg>
-            <span>FIN DEL DESCANSO</span>
-          </button>
-          <button @click="showEndSessionModal = true" class="btn-stop">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 019 14.437V9.564z" /></svg>
-            <span>FINALIZAR TORNEO</span>
-          </button>
-        </template>
       </div>
     </div>
     <EndTournamentModal
       v-if="showEndSessionModal"
       @confirm="handleConfirmEndSession"
-      @cancel="showEndSessionModal = false"
+      @cancel="handleCancelModal"
       :is-saving="isSaving"
     />
 
@@ -158,6 +117,25 @@ const isSaving = ref(false);
 
 const saveButtonText = ref('Guardar cambios');
 
+// Computed property bidireccional para manejar la duración en formato HH:MM
+const durationTime = computed({
+  get() {
+    const hours = String(sessionStore.durationHours || 0).padStart(2, '0');
+    const minutes = String(sessionStore.durationMinutes || 0).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  },
+  set(value) {
+    if (!value) {
+      sessionStore.durationHours = 0;
+      sessionStore.durationMinutes = 0;
+      return;
+    }
+    const [hours, minutes] = value.split(':').map(v => parseInt(v) || 0);
+    sessionStore.durationHours = hours;
+    sessionStore.durationMinutes = minutes;
+  }
+});
+
 // Sistema de notificaciones toast
 const showToast = ref(false);
 const toastMessage = ref('');
@@ -178,25 +156,44 @@ function showNotification(message, type = 'success') {
   }, 3000);
 }
 
-function handleAddRebuy() {
-  const amount = sessionStore.buyIn;
-  if (amount > 0) {
-    sessionStore.addRebuy(amount);
-    showNotification(`💰 Recompra de ${sessionStore.currency}${amount} añadida correctamente`);
-  }
-}
-
 async function handleConfirmEndSession(sessionData) {
   isSaving.value = true;
   try {
-    await sessionStore.stopAndSaveSession(sessionData);
+    await sessionStore.saveTournament(sessionData);
     showEndSessionModal.value = false;
-    showNotification('✅ Torneo finalizado y guardado correctamente');
+
+    // Determinar el mensaje según si continúa o finaliza
+    const message = sessionData.isDay2
+      ? '✅ Día guardado. Torneo en progreso'
+      : '✅ Torneo finalizado y guardado';
+    showNotification(message);
+
+    // Limpiar el flag de reanudación si estaba activo
+    if (sessionStore.isResuming) {
+      sessionStore.clearResumingFlag();
+    }
   } catch (error) {
-    alert(`Error al guardar la sesión: ${error.message}`);
+    alert(`Error al guardar el torneo: ${error.message}`);
   } finally {
     isSaving.value = false;
   }
+}
+
+function openCreateTournamentModal() {
+  // Si no estamos reanudando, resetear currentDay a 1 para torneo nuevo
+  if (!sessionStore.isResuming) {
+    sessionStore.resetCurrentDay();
+  }
+  showEndSessionModal.value = true;
+}
+
+function handleCancelModal() {
+  // Limpiar el flag de reanudación si estaba activo
+  if (sessionStore.isResuming) {
+    sessionStore.clearResumingFlag();
+    sessionStore.resetCurrentDay(); // También resetear currentDay al cancelar
+  }
+  showEndSessionModal.value = false;
 }
 
 // Guardar configuración de sesión en localStorage
@@ -244,14 +241,6 @@ function loadConfiguration() {
 onMounted(() => {
   loadConfiguration();
 });
-
-const formattedTime = computed(() => {
-  const totalSeconds = sessionStore.isOnBreak ? sessionStore.breakElapsedTime : sessionStore.elapsedTime;
-  const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
-  const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
-  const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
-});
 </script>
 
 <style scoped>
@@ -293,11 +282,10 @@ const formattedTime = computed(() => {
   width: 100%;
   max-width: 950px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   grid-template-areas:
-    "timer timer"
-    "actions config"
-    "controls controls";
+    "config"
+    "controls";
   gap: 1.5rem;
   box-sizing: border-box;
 }
@@ -373,11 +361,13 @@ const formattedTime = computed(() => {
   }
 }
 
-.timer-widget { grid-area: timer; }
-.actions-widget { grid-area: actions; }
 .config-widget {
   grid-area: config;
   position: relative;
+}
+
+.duration-widget {
+  grid-area: config;
 }
 
 /* ========================================
@@ -467,113 +457,40 @@ const formattedTime = computed(() => {
 }
 
 /* ========================================
-   TIMER WIDGET - Premium Digital Display
+   DURATION WIDGET - Active Session Duration Entry
    ======================================== */
-.status-indicator {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background-color: #6b7280;
-  transition: background-color 0.3s ease;
-  box-shadow: 0 0 8px rgba(107, 114, 128, 0.4);
-}
-
-.timer-widget:not(.on-break) .status-indicator {
-  background-color: #10b981;
-  animation: pulseGreen 2s infinite;
-}
-
-.timer-widget.on-break .status-indicator {
-  background-color: #3b82f6;
-  animation: pulseBlue 2s infinite;
-}
-
-@keyframes pulseGreen {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.8), 0 0 40px rgba(16, 185, 129, 0.4);
-  }
-}
-
-@keyframes pulseBlue {
-  0%, 100% {
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
-  }
-  50% {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 40px rgba(59, 130, 246, 0.4);
-  }
-}
-
-.timer-display {
-  font-family: 'Poppins', 'Courier New', Courier, monospace;
-  font-size: clamp(3.5rem, 10vw, 6rem);
-  font-weight: 700;
-  color: #f9fafb;
-  text-align: center;
-  text-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
-}
-
-.timer-widget.on-break .timer-display {
-  color: #60a5fa;
-  text-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-/* ========================================
-   ACTIONS WIDGET - Premium Quick Actions
-   ======================================== */
-.live-actions {
+.duration-inputs-active {
   display: flex;
-  flex-direction: column;
   gap: 1.5rem;
+  align-items: flex-end;
 }
 
-.action-group {
+.time-input-group-active {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.rebuy-label {
-  font-size: 1.1rem;
+.time-input-group-active label {
   font-weight: 600;
+  font-size: 0.95rem;
   color: #d1d5db;
+  letter-spacing: 0.025em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.rebuy-controls {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-}
-
-.rebuy-amount {
-  flex: 1;
+.time-input-group-active input {
+  width: 100%;
   padding: 16px 20px;
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: 2.5rem;
+  font-weight: 700;
   text-align: center;
   border-radius: 10px;
+
   background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
   border: 1.5px solid rgba(168, 85, 247, 0.3);
   color: #a855f7;
-  box-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.2) inset,
-    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
-}
-
-.action-group input {
-  padding: 16px 20px;
-  font-size: 1.1rem;
-  font-weight: 500;
-  text-align: center;
-  border-radius: 10px;
-
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.6) 0%, rgba(31, 41, 55, 0.8) 100%);
-  border: 1.5px solid rgba(156, 163, 175, 0.2);
-  color: #f9fafb;
 
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow:
@@ -581,56 +498,20 @@ const formattedTime = computed(() => {
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
 }
 
-.action-group input:hover {
-  border-color: rgba(168, 85, 247, 0.4);
+.time-input-group-active input:hover {
+  border-color: rgba(168, 85, 247, 0.5);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.2) inset,
-    0 0 8px rgba(168, 85, 247, 0.05);
+    0 0 8px rgba(168, 85, 247, 0.1);
 }
 
-.action-group input:focus {
+.time-input-group-active input:focus {
   outline: none;
-  border-color: rgba(168, 85, 247, 0.6);
+  border-color: rgba(168, 85, 247, 0.7);
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.3) inset,
-    0 0 0 3px rgba(168, 85, 247, 0.1),
-    0 0 12px rgba(168, 85, 247, 0.08);
-}
-
-.action-group button {
-  padding: 16px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 10px;
-  cursor: pointer;
-  border: none;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
-  color: white;
-  box-shadow:
-    0 2px 6px rgba(4, 120, 87, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-}
-
-.action-group button:hover {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-  transform: translateY(-2px);
-  box-shadow:
-    0 4px 12px rgba(4, 120, 87, 0.4),
-    0 0 16px rgba(4, 120, 87, 0.2);
-}
-
-.btn-add {
-  width: 56px;
-  min-width: 56px;
-  padding: 16px !important;
-  font-size: 1.8rem !important;
-  font-weight: 700 !important;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    0 0 0 3px rgba(168, 85, 247, 0.15),
+    0 0 16px rgba(168, 85, 247, 0.1);
 }
 
 /* ========================================
@@ -682,6 +563,23 @@ const formattedTime = computed(() => {
   box-shadow:
     0 2px 4px rgba(0, 0, 0, 0.2) inset,
     0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+}
+
+/* Estilos específicos para input type="time" */
+.config-item input[type="time"] {
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+}
+
+.config-item input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.config-item input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .config-item input:hover,
@@ -812,8 +710,6 @@ const formattedTime = computed(() => {
   .session-panel {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "timer"
-      "actions"
       "config"
       "controls";
     gap: 1rem;
@@ -856,12 +752,9 @@ const formattedTime = computed(() => {
     height: 22px;
   }
 
-  .timer-display {
-    font-size: clamp(3rem, 10vw, 5rem);
-  }
-
-  .live-actions {
-    gap: 1.25rem;
+  .time-input-group-active input {
+    font-size: 2rem;
+    padding: 14px 18px;
   }
 }
 
@@ -889,33 +782,6 @@ const formattedTime = computed(() => {
     font-size: 0.75rem;
   }
 
-  .action-group {
-    gap: 0.5rem;
-  }
-
-  .rebuy-controls {
-    gap: 0.5rem;
-  }
-
-  .action-group input {
-    padding: 14px 16px;
-    font-size: 1rem;
-  }
-
-  .action-group button {
-    font-size: 1.5rem;
-  }
-
-  .btn-add {
-    width: 48px;
-    min-width: 48px;
-    padding: 14px !important;
-  }
-
-  .live-actions {
-    gap: 1rem;
-  }
-
   .config-item label {
     font-size: 0.85rem;
   }
@@ -926,8 +792,9 @@ const formattedTime = computed(() => {
     font-size: 0.95rem;
   }
 
-  .timer-display {
-    font-size: clamp(2.5rem, 12vw, 4rem);
+  .time-input-group-active input {
+    font-size: 1.75rem;
+    padding: 12px 16px;
   }
 
   .main-controls button {
@@ -976,41 +843,21 @@ const formattedTime = computed(() => {
     font-size: 0.7rem;
   }
 
-  .rebuy-controls {
-    gap: 0.5rem;
-  }
-
-  .rebuy-amount {
-    padding: 12px 16px;
-    font-size: 1.1rem;
-  }
-
-  .action-group input {
-    padding: 12px 14px;
-    font-size: 0.95rem;
-  }
-
-  .btn-add {
-    width: 44px;
-    min-width: 44px;
-    padding: 12px !important;
-    font-size: 1.4rem !important;
-  }
-
   .config-item input,
   .config-item select {
     padding: 10px 12px;
     font-size: 0.9rem;
   }
 
+  .time-input-group-active input {
+    font-size: 1.5rem;
+    padding: 10px 14px;
+  }
+
   .main-controls button {
     font-size: 0.95rem;
     padding: 12px 18px;
     gap: 8px;
-  }
-
-  .timer-display {
-    font-size: clamp(2rem, 10vw, 3.5rem);
   }
 }
 

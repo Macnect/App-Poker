@@ -7,10 +7,10 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
   // --- STATE ---
   const sessionState = ref({
     isActive: false,
-    startTime: null,
-    isOnBreak: false,
-    breakStartTime: null,
-    totalBreakDuration: 0,
+    isResuming: false, // Flag para indicar que se está reanudando un torneo
+    tournamentId: null, // ID único para agrupar días del mismo torneo
+    durationHours: 0,
+    durationMinutes: 0,
     totalRebuys: 0,
     totalExpenses: 0,
     location: '',
@@ -24,9 +24,6 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
   });
 
   const savedSessions = ref([]);
-
-  const timerDisplay = ref(0);
-  let sessionTimerInterval = null;
 
   // --- HELPERS ---
   function saveStateToLocalStorage() {
@@ -42,68 +39,27 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
     if (savedState) {
       const parsedState = JSON.parse(savedState);
       sessionState.value = { ...sessionState.value, ...parsedState };
-      if (sessionState.value.isActive) {
-        startUiUpdater();
-      }
     }
   }
 
   // --- COMPUTED PROPERTIES ---
-  const elapsedTime = computed(() => {
-    const _trigger = timerDisplay.value;
-    if (!sessionState.value.isActive || !sessionState.value.startTime) return 0;
-    const now = Date.now();
-    const currentBreakDuration = sessionState.value.isOnBreak && sessionState.value.breakStartTime
-      ? now - sessionState.value.breakStartTime
-      : 0;
-    const totalDuration = now - sessionState.value.startTime;
-    const netDuration = totalDuration - sessionState.value.totalBreakDuration - currentBreakDuration;
-    return Math.floor(netDuration / 1000);
-  });
-
-  const breakElapsedTime = computed(() => {
-    const _trigger = timerDisplay.value;
-    if (!sessionState.value.isOnBreak || !sessionState.value.breakStartTime) return 0;
-    return Math.floor((Date.now() - sessionState.value.breakStartTime) / 1000);
+  const totalDurationInSeconds = computed(() => {
+    const hours = parseInt(sessionState.value.durationHours) || 0;
+    const minutes = parseInt(sessionState.value.durationMinutes) || 0;
+    return (hours * 3600) + (minutes * 60);
   });
 
   // --- ACTIONS ---
-
-  function startUiUpdater() {
-    clearInterval(sessionTimerInterval);
-    sessionTimerInterval = setInterval(() => {
-      timerDisplay.value++;
-    }, 1000);
-  }
 
   function startSession() {
     sessionState.value = {
       ...sessionState.value,
       isActive: true,
-      startTime: Date.now(),
-      isOnBreak: false,
-      breakStartTime: null,
-      totalBreakDuration: 0,
+      durationHours: 0,
+      durationMinutes: 0,
       totalRebuys: 0,
       totalExpenses: 0,
     };
-    saveStateToLocalStorage();
-    startUiUpdater();
-  }
-
-  function startBreak() {
-    if (!sessionState.value.isActive) return;
-    sessionState.value.isOnBreak = true;
-    sessionState.value.breakStartTime = Date.now();
-    saveStateToLocalStorage();
-  }
-
-  function endBreak() {
-    if (!sessionState.value.isOnBreak || !sessionState.value.breakStartTime) return;
-    const breakDuration = Date.now() - sessionState.value.breakStartTime;
-    sessionState.value.totalBreakDuration += breakDuration;
-    sessionState.value.isOnBreak = false;
-    sessionState.value.breakStartTime = null;
     saveStateToLocalStorage();
   }
 
@@ -123,15 +79,12 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
 
   async function stopAndSaveSession(tournamentData) {
     try {
-      const finalElapsedTimeInSeconds = elapsedTime.value;
-      const finalTotalBreakTimeInSeconds = Math.floor(sessionState.value.totalBreakDuration / 1000);
+      const finalElapsedTimeInSeconds = totalDurationInSeconds.value;
 
       const ensureFloat = (value) => {
           const num = parseFloat(value);
           return isNaN(num) ? 0.0 : num;
       };
-
-      const currentInvestment = ensureFloat(sessionState.value.buyIn) + ensureFloat(sessionState.value.totalRebuys);
 
       // Aquí podrías guardar en la base de datos si lo necesitas
       // Por ahora solo guardamos localmente
@@ -139,11 +92,11 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
         id: Date.now(),
         fecha: new Date().toISOString().split('T')[0],
         duracion_segundos: finalElapsedTimeInSeconds,
-        tiempo_descanso_segundos: finalTotalBreakTimeInSeconds,
+        tiempo_descanso_segundos: 0, // Ya no usamos tiempo de descanso
         ubicacion: sessionState.value.location,
         moneda: sessionState.value.currency,
         buy_in: ensureFloat(sessionState.value.buyIn),
-        total_recompras: ensureFloat(sessionState.value.totalRebuys),
+        total_recompras: ensureFloat(tournamentData.totalRebuys),
         tipo_juego: sessionState.value.gameType,
         tipo_torneo: sessionState.value.tournamentType,
         estructura: sessionState.value.structure,
@@ -165,20 +118,83 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
       console.error('Error en el store al guardar sesión de torneo:', error);
       throw error;
     } finally {
-      clearInterval(sessionTimerInterval);
-      sessionTimerInterval = null;
       sessionState.value.isActive = false;
-      sessionState.value.startTime = null;
       clearStateFromLocalStorage();
     }
   }
 
+  async function saveTournament(tournamentData) {
+    try {
+      // Calcular duración desde los campos manuales
+      const finalElapsedTimeInSeconds = totalDurationInSeconds.value;
+
+      const ensureFloat = (value) => {
+          const num = parseFloat(value);
+          return isNaN(num) ? 0.0 : num;
+      };
+
+      // Generar tournamentId solo si no existe (torneo nuevo)
+      // Si ya existe, significa que estamos continuando un torneo multi-día
+      const tournamentId = sessionState.value.tournamentId || `tournament_${Date.now()}`;
+
+      // Crear el objeto de torneo con toda la información
+      const tournamentSession = {
+        id: Date.now(),
+        tournamentId: tournamentId, // ID para agrupar días del mismo torneo
+        fecha: new Date().toISOString().split('T')[0],
+        duracion_segundos: finalElapsedTimeInSeconds,
+        tiempo_descanso_segundos: 0,
+        ubicacion: sessionState.value.location,
+        moneda: sessionState.value.currency,
+        buy_in: ensureFloat(sessionState.value.buyIn),
+        total_recompras: ensureFloat(tournamentData.totalRebuys),
+        tipo_juego: sessionState.value.gameType,
+        tipo_torneo: sessionState.value.tournamentType,
+        estructura: sessionState.value.structure,
+        // Campos específicos de torneos multi-día
+        es_dia_2: tournamentData.isDay2,
+        dia_torneo: tournamentData.isDay2 ? (sessionState.value.currentDay + 1) : sessionState.value.currentDay,
+        stack_dia_2: tournamentData.day2Stack,
+        posicion_final: tournamentData.finalPosition,
+        premio_ganado: tournamentData.prizeWon,
+        resultado: tournamentData.result,
+      };
+
+      savedSessions.value.push(tournamentSession);
+
+      // Guardar en localStorage
+      localStorage.setItem('tournament-sessions', JSON.stringify(savedSessions.value));
+
+      // Si no va a continuar (no es día 2), resetear el tournamentId
+      if (!tournamentData.isDay2) {
+        sessionState.value.tournamentId = null;
+        sessionState.value.currentDay = 1;
+      }
+
+      // Resetear duración después de guardar
+      sessionState.value.durationHours = 0;
+      sessionState.value.durationMinutes = 0;
+      saveStateToLocalStorage();
+
+    } catch (error) {
+      console.error('Error al guardar torneo:', error);
+      throw error;
+    }
+  }
+
   function clearActiveSession() {
-    clearInterval(sessionTimerInterval);
-    sessionTimerInterval = null;
     sessionState.value.isActive = false;
-    sessionState.value.startTime = null;
     clearStateFromLocalStorage();
+  }
+
+  function clearResumingFlag() {
+    sessionState.value.isResuming = false;
+    saveStateToLocalStorage();
+  }
+
+  function resetCurrentDay() {
+    sessionState.value.currentDay = 1;
+    saveStateToLocalStorage();
   }
 
   function loadSavedSessions() {
@@ -204,17 +220,15 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
 
     // Calcular el tiempo ya transcurrido del día anterior
     const previousElapsedSeconds = sessionData.duracion_segundos || 0;
-    const previousBreakSeconds = sessionData.tiempo_descanso_segundos || 0;
 
-    // Calcular el startTime ajustado para que el temporizador continúe desde donde se quedó
-    // startTime debe ser: ahora - tiempo_transcurrido - tiempo_descanso
-    const now = Date.now();
-    const adjustedStartTime = now - (previousElapsedSeconds * 1000) - (previousBreakSeconds * 1000);
+    // Convertir segundos a horas y minutos
+    const previousHours = Math.floor(previousElapsedSeconds / 3600);
+    const previousMinutes = Math.floor((previousElapsedSeconds % 3600) / 60);
 
     // Obtener el día actual del torneo (por defecto 2 si no existe el campo)
     const currentDay = sessionData.dia_torneo || 2;
 
-    // Restaurar la configuración del torneo y activarlo automáticamente
+    // Restaurar la configuración del torneo y activar el flag de reanudación
     sessionState.value = {
       ...sessionState.value,
       location: sessionData.ubicacion,
@@ -227,15 +241,14 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
       totalRebuys: sessionData.total_recompras,
       totalExpenses: sessionData.total_gastos || 0,
       currentDay: currentDay, // Restaurar el día actual del torneo
-      isActive: true, // Activar automáticamente
-      startTime: adjustedStartTime, // Tiempo ajustado para continuar desde donde se quedó
-      isOnBreak: false,
-      breakStartTime: null,
-      totalBreakDuration: previousBreakSeconds * 1000, // Restaurar el tiempo de descanso acumulado
+      tournamentId: sessionData.tournamentId, // IMPORTANTE: Mantener el tournamentId
+      isActive: false, // No activar, solo cargar la configuración
+      isResuming: true, // Marcar que se está reanudando
+      durationHours: previousHours, // Restaurar horas del día anterior
+      durationMinutes: previousMinutes, // Restaurar minutos del día anterior
     };
 
     saveStateToLocalStorage();
-    startUiUpdater(); // Iniciar el actualizador del temporizador
   }
 
   function updateSession(sessionId, updatedData) {
@@ -255,7 +268,7 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
 
   return {
     isActive: computed(() => sessionState.value.isActive),
-    isOnBreak: computed(() => sessionState.value.isOnBreak),
+    isResuming: computed(() => sessionState.value.isResuming),
     location: computed({
       get: () => sessionState.value.location,
       set: (val) => { sessionState.value.location = val; saveStateToLocalStorage(); }
@@ -284,21 +297,29 @@ export const useTournamentSessionStore = defineStore('tournamentSession', () => 
       get: () => sessionState.value.structure,
       set: (val) => { sessionState.value.structure = val; saveStateToLocalStorage(); }
     }),
+    durationHours: computed({
+      get: () => sessionState.value.durationHours,
+      set: (val) => { sessionState.value.durationHours = val; saveStateToLocalStorage(); }
+    }),
+    durationMinutes: computed({
+      get: () => sessionState.value.durationMinutes,
+      set: (val) => { sessionState.value.durationMinutes = val; saveStateToLocalStorage(); }
+    }),
     currentDay: computed(() => sessionState.value.currentDay),
     totalRebuys: computed(() => sessionState.value.totalRebuys),
     totalExpenses: computed(() => sessionState.value.totalExpenses),
-    elapsedTime,
-    breakElapsedTime,
+    totalDurationInSeconds,
     savedSessions,
     startSession,
-    startBreak,
-    endBreak,
     stopAndSaveSession,
+    saveTournament,
     deleteSession,
     resumeTournament,
     updateSession,
     addRebuy,
     addExpense,
     clearActiveSession,
+    clearResumingFlag,
+    resetCurrentDay,
   };
 });

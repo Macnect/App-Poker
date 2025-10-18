@@ -15,73 +15,90 @@
       </select>
     </div>
 
-    <div v-if="filteredSessions.length === 0" class="no-sessions">
+    <div v-if="groupedTournaments.length === 0" class="no-sessions">
       No tienes sesiones guardadas que coincidan con el filtro seleccionado.
     </div>
     <ul v-else class="sessions-list">
-      <li v-for="session in filteredSessions" :key="session.id">
+      <li v-for="tournament in groupedTournaments" :key="tournament.tournamentId" class="tournament-group">
 
-        <div class="session-header">
-          <div class="session-title">
-            <span class="location">{{ session.ubicacion || 'Torneo Online' }}</span>
-            <span class="game-variant-badge" :class="getGameVariantClass(session.tipo_juego)">
-              {{ formatGameType(session.tipo_juego) }}
-            </span>
-            <span v-if="session.tipo_torneo" class="tournament-type-badge">
-              {{ session.tipo_torneo }}
-            </span>
-            <span v-if="session.es_dia_2" class="day2-badge">
-              ⏸️ Día {{ session.dia_torneo || 2 }}
-            </span>
+        <!-- Cabecera del torneo (siempre visible) -->
+        <div class="tournament-header" @click="toggleTournament(tournament.tournamentId)">
+          <div class="tournament-info">
+            <div class="tournament-title-row">
+              <span class="expand-icon">{{ isTournamentExpanded(tournament.tournamentId) ? '▼' : '▶' }}</span>
+              <span class="location">{{ tournament.mainSession.ubicacion || 'Torneo Online' }}</span>
+              <span class="game-variant-badge" :class="getGameVariantClass(tournament.mainSession.tipo_juego)">
+                {{ formatGameType(tournament.mainSession.tipo_juego) }}
+              </span>
+              <span v-if="tournament.mainSession.tipo_torneo" class="tournament-type-badge">
+                {{ tournament.mainSession.tipo_torneo }}
+              </span>
+              <span v-if="tournament.totalDays > 1" class="multi-day-badge">
+                {{ tournament.totalDays }} Días
+              </span>
+              <span v-if="!tournament.isFinished" class="in-progress-badge">
+                En Progreso
+              </span>
+            </div>
+            <div class="tournament-summary">
+              <span class="summary-item">{{ formatDuration(tournament.totalDuration) }}</span>
+              <span class="summary-item">{{ tournament.mainSession.moneda }}{{ tournament.mainSession.buy_in }} buy-in</span>
+              <span v-if="tournament.totalRebuys > 0" class="summary-item">+{{ tournament.mainSession.moneda }}{{ tournament.totalRebuys }} rebuys</span>
+            </div>
           </div>
-          <span class="date">{{ new Date(session.fecha + 'T12:00:00').toLocaleDateString() }}</span>
+          <span class="date">{{ tournament.latestDate.toLocaleDateString() }}</span>
         </div>
 
-        <div v-if="!session.es_dia_2" class="session-result" :class="getResultClass(session.resultado)">
-          <span>Resultado</span>
+        <!-- Resultado final del torneo (solo si está terminado) -->
+        <div v-if="tournament.isFinished" class="session-result" :class="getResultClass(tournament.lastDay.resultado)">
+          <span>Resultado Final</span>
           <span class="result-amount">
-            {{ formatResult(session.resultado, session.moneda) }}
+            {{ formatResult(tournament.lastDay.resultado, tournament.mainSession.moneda) }}
           </span>
         </div>
-        <div v-else class="session-result day2-status">
-          <span>Stack Día {{ session.dia_torneo || 2 }}</span>
-          <span class="result-amount">
-            {{ session.stack_dia_2 || 'N/A' }} fichas
-          </span>
-        </div>
 
-        <div class="session-details">
-          <div class="session-stats">
-            <div class="stat-item"><strong>Duración:</strong> <span>{{ formatDuration(session.duracion_segundos) }}</span></div>
-            <div class="stat-item"><strong>Descansos:</strong> <span>{{ formatDuration(session.tiempo_descanso_segundos) }}</span></div>
-            <div class="stat-item"><strong>Tipo Torneo:</strong> <span>{{ session.tipo_torneo || 'Normal' }}</span></div>
-            <div class="stat-item"><strong>Buy-in:</strong> <span>{{ session.moneda }}{{ session.buy_in }}</span></div>
-            <div class="stat-item"><strong>Recargas:</strong> <span>{{ session.moneda }}{{ session.total_recompras || 0 }}</span></div>
-            <div class="stat-item"><strong>Gastos:</strong> <span>-{{ session.moneda }}{{ session.total_gastos || 0 }}</span></div>
-            <div class="stat-item"><strong>Stack Final:</strong> <span>{{ session.moneda }}{{ session.stack_final !== undefined ? session.stack_final : 'N/A' }}</span></div>
+        <!-- Contenido expandible con los días -->
+        <div v-if="isTournamentExpanded(tournament.tournamentId)" class="tournament-days">
+          <div v-for="(day, index) in tournament.days" :key="day.id" class="day-card">
+            <div class="day-header">
+              <span class="day-label">Día {{ day.dia_torneo || 1 }}</span>
+              <span class="day-date">{{ new Date(day.fecha + 'T12:00:00').toLocaleDateString() }}</span>
+            </div>
+
+            <div class="day-stats">
+              <div class="stat-item"><strong>Duración:</strong> <span>{{ formatDuration(day.duracion_segundos) }}</span></div>
+              <div class="stat-item"><strong>Recompras:</strong> <span>{{ day.moneda }}{{ day.total_recompras || 0 }}</span></div>
+              <div v-if="day.stack_dia_2 && day.es_dia_2" class="stat-item"><strong>Stack Final:</strong> <span>{{ day.stack_dia_2 }} fichas</span></div>
+              <div v-if="day.posicion_final" class="stat-item"><strong>Posición:</strong> <span>#{{ day.posicion_final }}</span></div>
+              <div v-if="day.premio_ganado" class="stat-item"><strong>Premio:</strong> <span>{{ day.moneda }}{{ day.premio_ganado }}</span></div>
+            </div>
+
+            <div class="day-actions">
+              <button v-if="index === tournament.days.length - 1 && day.es_dia_2" class="resume-btn" @click="resumeTournament(day)" title="Reanudar Torneo">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+                Reanudar
+              </button>
+              <button class="edit-btn" @click="openEditModal(day)" title="Editar">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="session-actions">
-           <button class="notes-btn" @click="openNotesModal(session.id)" title="Añadir Notas">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-             </svg>
-           </button>
-           <button v-if="session.es_dia_2" class="resume-btn" @click="resumeTournament(session)" title="Reanudar Torneo">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-             </svg>
-             Reanudar
-           </button>
-           <button class="edit-btn" @click="openEditModal(session)" title="Editar Torneo">
-             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-               <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
-             </svg>
-             Editar
-           </button>
-           <button class="delete-btn" @click="confirmDelete(session.id)">Eliminar</button>
-         </div>
+        <!-- Acciones del torneo completo -->
+        <div class="tournament-actions">
+          <button v-if="!tournament.isFinished" class="resume-btn" @click="resumeTournament(tournament.lastDay)" title="Reanudar Torneo">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+            </svg>
+            Reanudar
+          </button>
+          <button class="delete-btn" @click="confirmDelete(tournament.mainSession.id)">Eliminar Torneo</button>
+        </div>
       </li>
     </ul>
 
@@ -134,6 +151,14 @@
        </div>
      </div>
 
+    <!-- Resume Tournament Modal -->
+    <EndTournamentModal
+      v-if="showResumeModal"
+      @confirm="handleConfirmResume"
+      @cancel="handleCancelResume"
+      :is-saving="isSavingResume"
+    />
+
     <!-- Success Toast -->
     <div v-if="showToast" class="toast success-toast">
       <div class="toast-icon">✓</div>
@@ -145,6 +170,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useTournamentSessionStore } from '../store/useTournamentSessionStore';
+import EndTournamentModal from '../components/EndTournamentModal.vue';
 
 const emit = defineEmits(['switch-view']);
 
@@ -168,6 +194,13 @@ const editFormData = ref({
   moneda: '$',
   dia_torneo: 2
 });
+
+// Estado para controlar torneos expandidos/colapsados
+const expandedTournaments = ref(new Set());
+
+// Estado para el modal de reanudación
+const showResumeModal = ref(false);
+const isSavingResume = ref(false);
 
 const filteredSessions = computed(() => {
   const filter = selectedFilter.value;
@@ -214,6 +247,55 @@ const filteredSessions = computed(() => {
     const dateB = new Date(b.fecha);
     return dateB - dateA;
   });
+});
+
+// Agrupar sesiones por tournamentId
+const groupedTournaments = computed(() => {
+  const sessions = filteredSessions.value;
+  const groups = new Map();
+
+  sessions.forEach(session => {
+    // Si la sesión tiene tournamentId, agruparla
+    const tournamentId = session.tournamentId || `single_${session.id}`;
+
+    if (!groups.has(tournamentId)) {
+      groups.set(tournamentId, []);
+    }
+    groups.get(tournamentId).push(session);
+  });
+
+  // Convertir Map a array y ordenar los días dentro de cada grupo
+  return Array.from(groups.entries()).map(([tournamentId, days]) => {
+    // Ordenar días por dia_torneo
+    const sortedDays = days.sort((a, b) => (a.dia_torneo || 1) - (b.dia_torneo || 1));
+
+    // El primer día tiene la info principal del torneo
+    const mainSession = sortedDays[0];
+
+    // El último día determina si el torneo está finalizado
+    const lastDay = sortedDays[sortedDays.length - 1];
+    const isFinished = !lastDay.es_dia_2;
+
+    // Calcular totales acumulados
+    const totalDuration = sortedDays.reduce((sum, day) => sum + (day.duracion_segundos || 0), 0);
+    const totalRebuys = sortedDays.reduce((sum, day) => sum + (day.total_recompras || 0), 0);
+
+    return {
+      tournamentId,
+      days: sortedDays,
+      mainSession,
+      lastDay,
+      isFinished,
+      totalDays: sortedDays.length,
+      totalDuration,
+      totalRebuys,
+      // Fecha más reciente
+      latestDate: sortedDays.reduce((latest, day) => {
+        const dayDate = new Date(day.fecha);
+        return dayDate > latest ? dayDate : latest;
+      }, new Date(sortedDays[0].fecha))
+    };
+  }).sort((a, b) => b.latestDate - a.latestDate); // Ordenar por fecha más reciente
 });
 
 function formatDuration(totalSeconds) {
@@ -331,14 +413,11 @@ function saveEdit() {
 
 function resumeTournament(session) {
   try {
+    // Cargar la configuración del torneo a reanudar
     tournamentSessionStore.resumeTournament(session);
-    toastMessage.value = '✅ Torneo reanudado y en marcha desde donde lo dejaste';
-    showToast.value = true;
-    setTimeout(() => {
-      showToast.value = false;
-      // Cambiar a la vista de torneo en vivo
-      emit('switch-view', 'LiveTournamentSessionView');
-    }, 2000);
+
+    // Abrir el modal de finalización directamente
+    showResumeModal.value = true;
   } catch (error) {
     toastMessage.value = '❌ Error: ' + error.message;
     showToast.value = true;
@@ -346,6 +425,44 @@ function resumeTournament(session) {
       showToast.value = false;
     }, 3000);
   }
+}
+
+async function handleConfirmResume(sessionData) {
+  isSavingResume.value = true;
+  try {
+    await tournamentSessionStore.saveTournament(sessionData);
+    showResumeModal.value = false;
+
+    // Determinar el mensaje según si continúa o finaliza
+    const message = sessionData.isDay2
+      ? '✅ Día guardado. Torneo en progreso'
+      : '✅ Torneo finalizado y guardado';
+
+    toastMessage.value = message;
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
+
+    // Limpiar el flag de reanudación
+    tournamentSessionStore.clearResumingFlag();
+    tournamentSessionStore.resetCurrentDay();
+  } catch (error) {
+    toastMessage.value = '❌ Error al guardar: ' + error.message;
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
+  } finally {
+    isSavingResume.value = false;
+  }
+}
+
+function handleCancelResume() {
+  showResumeModal.value = false;
+  // Limpiar el flag de reanudación al cancelar
+  tournamentSessionStore.clearResumingFlag();
+  tournamentSessionStore.resetCurrentDay();
 }
 
 function openNotesModal(sessionId) {
@@ -365,6 +482,20 @@ function saveNotes() {
     localStorage.setItem(`tournamentSessionNotes_${notesSessionId.value}`, sessionNotes.value);
     closeNotesModal();
   }
+}
+
+function toggleTournament(tournamentId) {
+  if (expandedTournaments.value.has(tournamentId)) {
+    expandedTournaments.value.delete(tournamentId);
+  } else {
+    expandedTournaments.value.add(tournamentId);
+  }
+  // Forzar reactividad
+  expandedTournaments.value = new Set(expandedTournaments.value);
+}
+
+function isTournamentExpanded(tournamentId) {
+  return expandedTournaments.value.has(tournamentId);
 }
 </script>
 
@@ -463,14 +594,14 @@ h2 {
   padding: 8px;
 }
 
-.sessions-list li {
+.sessions-list li,
+.tournament-group {
   background: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.98) 100%);
-  padding: 1.5rem;
+  padding: 0;
   border-radius: 14px;
   border: 1px solid rgba(168, 85, 247, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
   box-shadow:
     0 8px 24px rgba(0, 0, 0, 0.4),
     0 2px 8px rgba(0, 0, 0, 0.3),
@@ -490,12 +621,165 @@ h2 {
   background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.3), transparent);
 }
 
-.sessions-list li:hover {
+.sessions-list li:hover,
+.tournament-group:hover {
   border-color: rgba(168, 85, 247, 0.3);
   box-shadow:
     0 12px 32px rgba(0, 0, 0, 0.5),
     0 4px 12px rgba(0, 0, 0, 0.4),
     inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+.tournament-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+  transition: background-color 0.2s ease;
+}
+
+.tournament-header:hover {
+  background: rgba(168, 85, 247, 0.05);
+}
+
+.tournament-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tournament-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.expand-icon {
+  font-size: 0.9rem;
+  color: rgba(168, 85, 247, 0.8);
+  transition: transform 0.3s ease;
+  min-width: 20px;
+  display: inline-block;
+}
+
+.multi-day-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.7) 0%, rgba(37, 99, 235, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.in-progress-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.7) 0%, rgba(22, 163, 74, 0.8) 100%);
+  color: white;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  animation: pulse 2s infinite;
+}
+
+.tournament-summary {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-left: 32px;
+}
+
+.summary-item {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.tournament-days {
+  padding: 0 1.5rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: expandDown 0.3s ease-out;
+}
+
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+.day-card {
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.4) 0%, rgba(31, 41, 55, 0.6) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.day-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(168, 85, 247, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.day-date {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.day-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.day-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tournament-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(168, 85, 247, 0.15);
 }
 
 .session-header {
@@ -990,6 +1274,42 @@ h2 {
   h2 {
     font-size: 2rem;
   }
+  .tournament-group {
+    padding: 0;
+  }
+  .tournament-header {
+    padding: 1rem;
+  }
+  .tournament-summary {
+    padding-left: 28px;
+    gap: 1rem;
+  }
+  .summary-item {
+    font-size: 0.85rem;
+  }
+  .tournament-days {
+    padding: 0 1rem 1rem 1rem;
+  }
+  .day-card {
+    padding: 0.75rem;
+  }
+  .day-stats {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+  .day-actions {
+    flex-direction: column;
+  }
+  .day-actions button {
+    width: 100%;
+  }
+  .tournament-actions {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  .tournament-actions button {
+    width: 100%;
+  }
   .sessions-list li {
     padding: 1rem;
   }
@@ -1008,7 +1328,9 @@ h2 {
     font-size: 0.85rem;
   }
   .game-variant-badge,
-  .tournament-type-badge {
+  .tournament-type-badge,
+  .multi-day-badge,
+  .in-progress-badge {
     font-size: 0.7rem;
     padding: 3px 8px;
   }
